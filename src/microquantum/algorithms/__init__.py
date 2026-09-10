@@ -1,7 +1,8 @@
-"""Variational quantum algorithm implementations."""
+"""Quantum algorithm implementations."""
 
 from .adapt_vqe import AdaptResult, AdaptVQE
 from .amplitude_estimation import AmplitudeEstimation, AmplitudeEstimationResult
+from .base import Algorithm
 from .bernstein_vazirani import BernsteinVazirani, BVResult
 from .deutsch_jozsa import DeutschJozsa, DJResult
 from .grover import GroverResult, GroverSearch
@@ -24,6 +25,7 @@ from .vqd import VQD, VQDResult
 from .vqe import VQE, VQEResult
 
 __all__ = [
+    "Algorithm",
     "VQE",
     "VQEResult",
     "VQD",

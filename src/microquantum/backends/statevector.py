@@ -7,6 +7,7 @@ from typing import Optional
 import numpy as np
 from numpy.typing import NDArray
 
+from ..core.device import Target
 from ..core.engine import apply_gate
 from ..core.measurement import sample_state
 from ..core.state import StateVector
@@ -23,6 +24,11 @@ class StatevectorBackend(Backend):
     @property
     def name(self) -> str:
         return "statevector"
+
+    @property
+    def target(self) -> Target:
+        """Advertises a universal simulator gate set."""
+        return Target.universal(name=f"{self.name}_simulator")
 
     def run_circuit(
         self,

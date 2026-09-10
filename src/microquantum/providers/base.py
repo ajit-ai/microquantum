@@ -4,6 +4,7 @@ Provides the :class:`HardwareProvider` interface contract, job and
 credential models. Providers talk to vendor REST APIs directly using
 only the standard library - no Qiskit/Cirq/OpenQASM anywhere.
 """
+
 from __future__ import annotations
 
 import time
@@ -79,9 +80,7 @@ class HardwareJob:
                 )
             self.refresh()
             time.sleep(poll_interval)
-        raise TimeoutError(
-            f"Hardware job {self.job_id} did not complete within {timeout}s"
-        )
+        raise TimeoutError(f"Hardware job {self.job_id} did not complete within {timeout}s")
 
     def __repr__(self) -> str:
         return f"HardwareJob(id={self.job_id}, status={self.status.value})"
@@ -91,14 +90,16 @@ class HardwareJob:
 class ProviderCredentials:
     """Credentials for a real hardware provider.
 
+    Provider-specific subclasses add extra fields (e.g. an IBM ``channel``,
+    a region, or instance id) — vendor concepts never leak into the generic
+    core API.
+
     Attributes:
         api_token: Secret API token / key.
-        channel: IBM-specific channel ("ibm_quantum" or "ibm_cloud").
         base_url: Optional API base URL override (for mirrors/e2e).
     """
 
     api_token: str
-    channel: str = "ibm_quantum"
     base_url: Optional[str] = None
 
     @classmethod

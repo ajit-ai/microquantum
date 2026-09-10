@@ -11,6 +11,7 @@ from .algorithms import (
     VQE,
     AdaptResult,
     AdaptVQE,
+    Algorithm,
     AmplitudeEstimation,
     AmplitudeEstimationResult,
     BernsteinVazirani,
@@ -44,6 +45,7 @@ from .backends import (
     Executor,
     ExecutorResult,
     Job,
+    JobStatus,
     MatrixProductState,
     MPSBackend,
     NoiseChannel,
@@ -83,6 +85,8 @@ from .chemistry import (
 )
 from .core import (
     CouplingMap,
+    Device,
+    DeviceType,
     MeasurementResult,
     Operator,
     Parameter,
@@ -95,6 +99,7 @@ from .core import (
     ResourceEstimate,
     ResourceEstimator,
     StateVector,
+    Target,
     TargetGateSet,
     apply_gate,
     cancel_inverse_pairs,
@@ -192,6 +197,10 @@ __all__ = [
     "Pass",
     "PassManager",
     "TargetGateSet",
+    # Device & target contracts
+    "Device",
+    "DeviceType",
+    "Target",
     # Dynamic circuits
     "DynamicCircuit",
     "DynamicCircuitResult",
@@ -203,6 +212,7 @@ __all__ = [
     "Backend",
     "BackendResult",
     "Job",
+    "JobStatus",
     "StatevectorBackend",
     "DensityMatrixBackend",
     "MatrixProductState",
@@ -228,6 +238,7 @@ __all__ = [
     "SPSA",
     "QNSPSA",
     # Algorithms
+    "Algorithm",
     "VQE",
     "VQEResult",
     "QAOA",

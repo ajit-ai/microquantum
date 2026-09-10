@@ -12,6 +12,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from .._json import json_safe, json_string
+from ..core.device import Device, DeviceType, Target
 from ..core.state import StateVector
 
 if TYPE_CHECKING:
@@ -25,6 +26,7 @@ class JobStatus(Enum):
     RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
+    CANCELLED = "cancelled"
 
 
 @dataclass
@@ -101,13 +103,17 @@ class BackendResult:
 
 @dataclass
 class Job:
-    """A quantum execution job.
+    """A single circuit-execution job.
 
-    Tracks the lifecycle of a circuit execution submitted to a backend.
+    Local (simulator) backends return jobs that are already completed: the
+    lifecycle moves ``PENDING -> RUNNING -> COMPLETED`` (or ``FAILED`` / and
+    ``CANCELLED`` via :meth:`cancel`).  Hardware backends return jobs that
+    finish asynchronously once the provider responds (see
+    :class:`~microquantum.providers.HardwareJob`).
 
     Attributes:
         job_id: Unique identifier for the job.
-        status: Current job status.
+        status: Current :class:`JobStatus`.
         result: Execution result (if completed).
         error: Error message (if failed).
     """
@@ -117,6 +123,25 @@ class Job:
     result: Optional[BackendResult] = None
     error: Optional[str] = None
 
+    def cancel(self) -> None:
+        """Mark the job as cancelled.
+
+        A no-op once the job already completed, failed or was cancelled.
+        """
+        if self.status in (JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELLED):
+            return
+        self.status = JobStatus.CANCELLED
+
+    def metadata(self) -> dict[str, str]:
+        """Expose JSON-safe job lifecycle metadata."""
+        data: dict[str, str] = {
+            "job_id": self.job_id,
+            "status": self.status.value,
+        }
+        if self.error is not None:
+            data["error"] = self.error
+        return data
+
     def __repr__(self) -> str:
         return f"Job(id={self.job_id}, status={self.status.value})"
 
@@ -124,10 +149,21 @@ class Job:
 class Backend(ABC):
     """Abstract base class for quantum execution backends.
 
-    All backends must implement the run() method which takes a quantum circuit
-    and produces a BackendResult. Backends may use different simulation
-    strategies (state vector, density matrix, etc.) or connect to real
-    quantum hardware.
+    Every backend exposes:
+
+    * **Identity**: :attr:`name`, :attr:`num_qubits`.
+    * **Capabilities**: :attr:`device` and :attr:`target` describe the
+      compute device and the execution constraints the backend satisfies;
+      :meth:`metadata` returns them as a JSON-safe dictionary.
+    * **Execution**: :meth:`run_circuit` (low-level gate matrices),
+      :meth:`run` (high-level :class:`QuantumCircuit`) and
+      :meth:`submit_circuit` / :meth:`submit` which wrap execution in a
+      :class:`Job`.
+    * **Results**: :class:`BackendResult` carries state vectors / density
+      matrices, measurement counts/probabilities and metadata.
+
+    Backends may use different simulation strategies (state vector, density
+    matrix, ...) or connect to real quantum hardware.
     """
 
     @property
@@ -139,6 +175,37 @@ class Backend(ABC):
     def num_qubits(self) -> Optional[int]:
         """Maximum number of qubits supported. None = unlimited."""
         return None
+
+    @property
+    def device(self) -> Device:
+        """The compute device this backend runs on.
+
+        Simulators report the CPU/GPU executing the simulation; hardware
+        backends report the target QPU.  Override for accurate reporting.
+        """
+        return Device(
+            name=self.name,
+            device_type=DeviceType.SIMULATOR,
+            max_qubits=self.num_qubits,
+        )
+
+    @property
+    def target(self) -> Target:
+        """Execution constraints this backend satisfies.
+
+        Override to advertise native gates, connectivity, measurement
+        capabilities or dynamic-circuit support.
+        """
+        return Target(name=self.name, num_qubits=self.num_qubits)
+
+    def metadata(self) -> dict[str, Any]:
+        """Return JSON-safe backend identity and capability metadata."""
+        return {
+            "name": self.name,
+            "num_qubits": self.num_qubits,
+            "device": self.device.to_dict(),
+            "target": self.target.to_dict(),
+        }
 
     @abstractmethod
     def run_circuit(
@@ -186,8 +253,11 @@ class Backend(ABC):
         job.status = JobStatus.RUNNING
         try:
             result = self.run_circuit(
-                num_qubits, gates, shots=shots,
-                initial_state=initial_state, seed=seed,
+                num_qubits,
+                gates,
+                shots=shots,
+                initial_state=initial_state,
+                seed=seed,
             )
             job.result = result
             job.status = JobStatus.COMPLETED
@@ -228,6 +298,44 @@ class Backend(ABC):
             initial_state=initial_state,
             seed=seed,
         )
+
+    def submit_circuit(
+        self,
+        circuit: QuantumCircuit,
+        shots: int = 1024,
+        initial_state: Optional[StateVector] = None,
+        seed: Optional[int] = None,
+    ) -> Job:
+        """Submit a high-level circuit for execution and return a Job.
+
+        ``Circuit -> Backend.submit_circuit() -> Job``.  Simulator backends
+        return a completed :class:`Job` synchronously; hardware subclasses
+        may keep the job running until the provider responds.
+
+        Args:
+            circuit: The bound quantum circuit to execute.
+            shots: Number of measurement shots.
+            initial_state: Optional initial state vector.
+            seed: RNG seed for reproducibility.
+
+        Returns:
+            A :class:`Job` holding the execution result on completion.
+        """
+        job = Job()
+        job.status = JobStatus.RUNNING
+        try:
+            result = self.run(
+                circuit,
+                shots=shots,
+                initial_state=initial_state,
+                seed=seed,
+            )
+            job.result = result
+            job.status = JobStatus.COMPLETED
+        except Exception as exc:
+            job.error = str(exc)
+            job.status = JobStatus.FAILED
+        return job
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(name='{self.name}')"
