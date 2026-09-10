@@ -7,60 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-10
+
 ### Added
-- `Backend.run(circuit, shots, initial_state, seed)` high-level execution API on
-  all simulator backends; `run_circuit` remains the low-level contract.
-- `BackendResult.to_dict()` and `ExecutorResult.to_dict()` for JSON-safe
-  serialization of execution results.
-- `ExecutorResult.to_dict()`, `AnalysisResult.to_dict()`, `QuantumResult.to_dict()`
-  and `to_json()` on all result types (uniform JSON-safe serialization).
-- Uniform JSON-safe serialization (`to_dict()` / `to_json()`) on the remaining
-  algorithm, optimizer, benchmark, QML, mitigation, and core result types:
-  `VQEResult`, `VQDResult`, `AdaptResult`, `AmplitudeEstimationResult`,
-  `BVResult`, `DJResult`, `GroverResult`, `TrotterResult`, `HHLResult`,
-  `PhaseEstimationResult`, `QuantumWalkResult`, `ShorResult`,
-  `CycleBenchmarkingResult`, `LayerFidelityResult`, `TwirlingResult`,
-  `GSTResult`, `BenchmarkResult`, `RandomizedBenchmarkingResult`, `XEBResult`,
-  `OptimizerResult`, `ClassifierResult`, `ExtrapolationResult`,
-  `DynamicCircuitResult`, and `MeasurementResult`.
-- Generic visualization helpers `plot_allocation`, `plot_scatter`, and
-  `plot_distribution` alongside the pre-existing helpers.
-- `Result.improved_over_baseline` property.
-- `CONTRIBUTING.md` and this changelog.
-- `[project.optional-dependencies]` extras: `gpu` (CuPy-backed array backend) and `all`.
-- Ruff lint configuration and pytest-cov coverage reporting.
+- Developer Preview release with complete packaging & documentation pipeline.
+- Execution records / experiments layer: `ExecutionRecord`, `ExecutionFailure`,
+  `ExecutionStatus`, `ExecutionPlan` fingerprinting (`execution_fingerprint`,
+  `reproducibility_metadata`), `ParameterSweep`, `Experiment`, `ExperimentResult`.
+- Analysis layer: `SamplingAnalysis`, `ExpectationAnalysis`, `StateAnalysis`,
+  `ResultAggregator` and the `statistics` helpers (mean/variance/std/SE/CI).
+- `BackendResult` payload expansion: raw `samples`, labeled `expectations`,
+  `eigenvalues`, JSON-safe `native` payload.
+- `Backend.capabilities` / `BackendCapabilities`, `TargetClass`,
+  `supports(plan)`, `validate(plan)`, `BackendRegistry`, `Provider` /
+  `LocalProvider`, `BackendAdapter` boundary.
+- `ExecutionPlan`, `ExecutionRuntime`, `ExecutionStrategy`,
+  `ExecutionTrace`, `execute_batch` / `submit_batch` / `execute_records` /
+  `run_parameter_sweep` / `run_hybrid` / `run_experiment`.
+- `docs` optional dependency extra (`sphinx`, `sphinx-autoapi`, `furo`).
+- Sphinx documentation (Furo theme) with a full information architecture:
+  getting-started, concepts, algorithms, problems, execution, experiments,
+  analysis, examples, auto-generated API reference, developer guide, releases,
+  FAQ and troubleshooting.
+- GitHub Pages deployment workflow publishing the built HTML documentation
+  (`.github/workflows/docs.yml`, run on pushes to `main`).
+- Consolidated CI: single `ci.yml` with a multi-Python test matrix, lint +
+  warning-free docs build; the duplicate `python-app.yml` workflow was removed.
 
 ### Changed
-- `pyproject.toml`: SPDX `license = "MIT"`, `keywords`, dynamic version read from
-  `microquantum.__version__`, updated classifiers.
-- `HardwareBackend.run()` now matches the unified backend signature
-  (`circuit`, `shots`, `initial_state`, `seed`).
-- The `Result` contract is now generic SDK infrastructure: canonical fields
-  `solution` and `baseline` replace `decision` and `classical_baseline`.
-  `to_json()` now returns a JSON **string** (was a dict) to match the SDK-wide
-  `to_dict()`/`to_json()` convention.
-- Complex-valued fields are now encoded element-wise as
-  `{"real": ..., "imag": ...}` everywhere, including backend `statevector` /
-  `density_matrix` output (previously `{"real": [...], "imag": [...]}`).
-- Visualization helpers `plot_portfolio_allocation`, `plot_risk_return_scatter`,
-  and `plot_var_distribution` were renamed to the generic `plot_allocation`,
-  `plot_scatter`, and `plot_distribution`; the old names remain as deprecated
-  aliases.
-- Analytics and QUBO docstrings no longer reference industry-specific business
-  terminology.
-
-### Deprecated
-- `Result(decision=...)`, `Result(classical_baseline=...)`,
-  `Result.decision`, `Result.classical_baseline`, and
-  `Result.improved_over_classical` are deprecated aliases for the canonical
-  `solution`, `baseline`, and `improved_over_baseline` names. They emit
-  `DeprecationWarning` and will be removed in a future major release.
-- Plot helpers `plot_portfolio_allocation`, `plot_risk_return_scatter`, and
-  `plot_var_distribution` are deprecated aliases for the generic names.
-
-### Fixed
-- Docs no longer reference industry-specific domain adapters that live outside
-  the open SDK; examples use neutral problem identifiers.
+- Version bumped to `0.4.0` across `microquantum/__init__.py`,
+  `docs/conf.py` and packaging metadata.
+- `docs/conf.py` rewritten: Furo theme, version `0.4.0`, autoapi root `api`
+  (generated reference kept on disk and git-ignored), auto-api regenerated
+  from source; the build is warning-free with `--keep-going` in CI.  `nitpicky`
+  stays off because autoapi docstrings reference package-surface names
+  (e.g. `microquantum.BackendResult`) that are valid Python but not resolvable
+  cross-reference targets.
+- Curated API pages (`docs/api/*.rst`) promoted to lightweight subsystem
+  pointers that link into the single source-generated autoapi reference.
+- `pyproject.toml` URLs now point at the public documentation site and
+  changelog; `include-package-data = false`; dev dependency group uses
+  `furo` in place of `sphinx-rtd-theme`.
 
 ## [0.3.0] - 2026-09-10
 

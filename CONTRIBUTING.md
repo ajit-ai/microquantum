@@ -36,7 +36,11 @@ uv sync --group dev
    ```bash
    uv run ruff check src tests examples
    ```
-4. **Docs** — update Sphinx docs under `docs/` for public API changes.
+4. **Docs** — update Sphinx docs under `docs/` for public API changes and
+   verify a warning-free build (CI fails on warnings):
+   ```bash
+   uv run sphinx-build -E -W --keep-going -b html docs docs/_build/html
+   ```
 
 ## Branch workflow (REQUIRED)
 
