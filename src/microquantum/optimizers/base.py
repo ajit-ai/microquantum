@@ -6,11 +6,12 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Callable, Optional
 
+from .._json import JSONSerializable
 from ..core.parameter import Parameter
 
 
 @dataclass
-class OptimizerResult:
+class OptimizerResult(JSONSerializable):
     """Container for optimizer output.
 
     Attributes:

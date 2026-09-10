@@ -20,12 +20,13 @@ from typing import Callable, Optional, Union
 
 import numpy as np
 
+from .._json import JSONSerializable
 from ..core.circuit import QuantumCircuit
 from ..core.operators import Operator
 
 
 @dataclass
-class GroverResult:
+class GroverResult(JSONSerializable):
     """Result from Grover's search algorithm.
 
     Attributes:

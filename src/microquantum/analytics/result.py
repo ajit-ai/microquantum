@@ -8,13 +8,12 @@ attach their own meaning to the fields without the SDK assuming one.
 """
 from __future__ import annotations
 
-import json
 import warnings
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Optional
 
-import numpy as np
+from .._json import json_safe, json_string
 
 _UNSET = object()
 
@@ -94,36 +93,23 @@ class Result:
         else:
             self.duration = duration
 
-    @staticmethod
-    def _json_safe(value: Any) -> Any:
-        """Recursively convert numpy types to JSON-safe Python types."""
-        if isinstance(value, np.ndarray):
-            return value.tolist()
-        if isinstance(value, np.generic):
-            return value.item()
-        if isinstance(value, dict):
-            return {str(k): Result._json_safe(v) for k, v in value.items()}
-        if isinstance(value, (list, tuple)):
-            return [Result._json_safe(v) for v in value]
-        return value
-
     def to_dict(self) -> dict[str, Any]:
         """Serialize to a JSON-safe dictionary."""
         return {
             "problem": self.problem,
-            "solution": self._json_safe(self.solution),
+            "solution": json_safe(self.solution),
             "confidence": float(self.confidence),
             "fidelity": float(self.fidelity) if self.fidelity is not None else None,
             "qubit_count": int(self.qubit_count),
             "runtime_ms": float(self.runtime_ms),
-            "baseline": self._json_safe(self.baseline),
-            "quantum_trace": self._json_safe(self.quantum_trace),
+            "baseline": json_safe(self.baseline),
+            "quantum_trace": json_safe(self.quantum_trace),
             "duration": self.duration,
         }
 
     def to_json(self) -> str:
         """Serialize to a JSON string."""
-        return json.dumps(self.to_dict(), indent=2, default=str)
+        return json_string(self.to_dict())
 
     @property
     def improved_over_baseline(self) -> Optional[bool]:

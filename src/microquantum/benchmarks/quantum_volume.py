@@ -13,11 +13,12 @@ from typing import Optional
 
 import numpy as np
 
+from .._json import JSONSerializable
 from ..core.circuit import QuantumCircuit
 
 
 @dataclass
-class BenchmarkResult:
+class BenchmarkResult(JSONSerializable):
     """Result from a quantum benchmark.
 
     Attributes:

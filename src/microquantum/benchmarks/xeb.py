@@ -14,13 +14,14 @@ from dataclasses import dataclass
 import numpy as np
 from numpy.typing import NDArray
 
+from .._json import JSONSerializable
 from ..core.circuit import QuantumCircuit
 from ..core.operators import Operator
 from ..core.state import StateVector
 
 
 @dataclass
-class XEBResult:
+class XEBResult(JSONSerializable):
     """Result from cross-entropy benchmarking.
 
     Attributes:

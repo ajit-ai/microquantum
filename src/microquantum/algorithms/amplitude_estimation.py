@@ -19,13 +19,14 @@ from typing import Optional
 
 import numpy as np
 
+from .._json import JSONSerializable
 from ..core.circuit import QuantumCircuit
 from ..core.operators import Operator
 from ..core.tensor import expand_operator
 
 
 @dataclass
-class AmplitudeEstimationResult:
+class AmplitudeEstimationResult(JSONSerializable):
     """Result container for amplitude estimation.
 
     Attributes:

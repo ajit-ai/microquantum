@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional, Union
 
+from .._json import JSONSerializable
 from ..core.circuit import QuantumCircuit
 from ..core.gradient import gradient as compute_gradient
 from ..core.measurement import expectation_value
@@ -14,7 +15,7 @@ from ..optimizers.base import Optimizer, OptimizerResult
 
 
 @dataclass
-class VQEResult:
+class VQEResult(JSONSerializable):
     """Result container for VQE execution.
 
     Attributes:

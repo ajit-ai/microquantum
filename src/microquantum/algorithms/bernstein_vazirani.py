@@ -10,11 +10,12 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from .._json import JSONSerializable
 from ..core.circuit import QuantumCircuit
 
 
 @dataclass
-class BVResult:
+class BVResult(JSONSerializable):
     """Result container for Bernstein-Vazirani.
 
     Attributes:

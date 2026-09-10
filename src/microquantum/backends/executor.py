@@ -2,24 +2,19 @@
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
 import numpy as np
 from numpy.typing import NDArray
 
+from .._json import json_safe, json_string
 from ..core.circuit import QuantumCircuit
 from ..core.measurement import sample_state
 from ..core.operators import Operator
 from ..core.state import StateVector
 from .base import Backend
 from .noise import NoiseModel
-
-
-def _complex_array_to_dict(array: NDArray[np.complex128]) -> dict[str, Any]:
-    """JSON-safe encoding of a complex array as real/imag parts."""
-    return {"real": array.real.tolist(), "imag": array.imag.tolist()}
 
 
 @dataclass
@@ -51,25 +46,21 @@ class ExecutorResult:
     def to_dict(self) -> dict[str, Any]:
         """Serialize to a JSON-safe dictionary.
 
-        Complex-valued ``statevector`` entries are encoded as
-        ``{"real": [...], "imag": [...]}`` element pairs.
+        Complex-valued ``statevector`` entries are encoded element-wise
+        as ``{"real": ..., "imag": ...}`` pairs.
         """
         return {
             "counts": dict(self.counts),
             "probabilities": dict(self.probabilities),
             "shots": int(self.shots),
             "num_qubits": int(self.num_qubits),
-            "statevector": (
-                _complex_array_to_dict(self.statevector)
-                if self.statevector is not None
-                else None
-            ),
+            "statevector": json_safe(self.statevector),
             "metadata": dict(self.metadata),
         }
 
     def to_json(self) -> str:
         """Serialize to a JSON string."""
-        return json.dumps(self.to_dict(), indent=2, default=str)
+        return json_string(self.to_dict())
 
     def expectation(self, observable: Operator) -> float:
         """Compute the expectation value of an observable from probabilities.

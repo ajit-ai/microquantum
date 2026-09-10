@@ -13,12 +13,13 @@ from itertools import product as iterproduct
 import numpy as np
 from numpy.typing import NDArray
 
+from .._json import JSONSerializable
 from ..core.circuit import QuantumCircuit
 from ..core.operators import Operator
 
 
 @dataclass
-class RandomizedBenchmarkingResult:
+class RandomizedBenchmarkingResult(JSONSerializable):
     """Result from a randomized benchmarking experiment.
 
     Attributes:

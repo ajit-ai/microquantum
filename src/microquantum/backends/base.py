@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -12,6 +11,7 @@ from typing import TYPE_CHECKING, Any, Optional
 import numpy as np
 from numpy.typing import NDArray
 
+from .._json import json_safe, json_string
 from ..core.state import StateVector
 
 if TYPE_CHECKING:
@@ -25,11 +25,6 @@ class JobStatus(Enum):
     RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
-
-
-def _complex_array_to_dict(array: NDArray[np.complex128]) -> dict[str, Any]:
-    """JSON-safe encoding of a complex array as real/imag parts."""
-    return {"real": array.real.tolist(), "imag": array.imag.tolist()}
 
 
 @dataclass
@@ -70,21 +65,13 @@ class BackendResult:
         """Serialize to a JSON-safe dictionary.
 
         Complex-valued arrays (``statevector`` / ``density_matrix``) are
-        encoded as ``{"real": [...], "imag": [...]}`` element pairs.
+        encoded element-wise as ``{"real": ..., "imag": ...}`` pairs.
         """
         return {
             "num_qubits": self.num_qubits,
             "backend_name": self.backend_name,
-            "statevector": (
-                _complex_array_to_dict(self.statevector)
-                if self.statevector is not None
-                else None
-            ),
-            "density_matrix": (
-                _complex_array_to_dict(self.density_matrix)
-                if self.density_matrix is not None
-                else None
-            ),
+            "statevector": json_safe(self.statevector),
+            "density_matrix": json_safe(self.density_matrix),
             "counts": dict(self.counts),
             "probabilities": dict(self.probabilities),
             "metadata": dict(self.metadata),
@@ -92,7 +79,7 @@ class BackendResult:
 
     def to_json(self) -> str:
         """Serialize to a JSON string."""
-        return json.dumps(self.to_dict(), indent=2, default=str)
+        return json_string(self.to_dict())
 
     def __repr__(self) -> str:
         return (

@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
 
 import numpy as np
 
+from .._json import json_string
 from .operators import Operator
 from .state import StateVector
 from .tensor import expand_operator
@@ -60,6 +61,19 @@ class MeasurementResult:
         if not self._counts:
             return ""
         return max(self._counts, key=self._counts.get)  # type: ignore[arg-type]
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to a JSON-safe dictionary."""
+        return {
+            "counts": self.get_counts(),
+            "shots": int(self._shots),
+            "qubits": list(self._qubits),
+            "probabilities": self.get_probabilities(),
+        }
+
+    def to_json(self) -> str:
+        """Serialize to a JSON string."""
+        return json_string(self.to_dict())
 
     def __repr__(self) -> str:
         return (
