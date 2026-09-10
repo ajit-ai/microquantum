@@ -72,7 +72,7 @@ ENV/
 .ruff_cache/
 
 # uv
-uv.lock
+# uv.lock is intentionally committed for reproducible CI (setup-uv cache).
 
 # Sphinx docs
 docs/_build/
