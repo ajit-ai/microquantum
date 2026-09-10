@@ -12,6 +12,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from .._json import JSONSerializable
 from ..core.circuit import QuantumCircuit
 from ..core.operators import Operator
 from ..core.state import StateVector
@@ -148,7 +149,7 @@ def _decompose_to_basic(U: Operator) -> list[tuple[Operator, list[int]]]:
 
 
 @dataclass
-class HHLResult:
+class HHLResult(JSONSerializable):
     """Result container for HHL algorithm.
 
     Attributes:

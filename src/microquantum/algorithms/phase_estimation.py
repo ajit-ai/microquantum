@@ -10,6 +10,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from .._json import JSONSerializable
 from ..core.circuit import QuantumCircuit
 from ..core.operators import Operator
 from ..core.state import StateVector
@@ -48,7 +49,7 @@ def _controlled_u(unitary: Operator, total_qubits: int, control: int, targets: l
 
 
 @dataclass
-class PhaseEstimationResult:
+class PhaseEstimationResult(JSONSerializable):
     """Result from Quantum Phase Estimation.
 
     Attributes:

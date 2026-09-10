@@ -17,11 +17,12 @@ import math
 import random
 from dataclasses import dataclass, field
 
+from .._json import JSONSerializable
 from ..core.circuit import QuantumCircuit
 
 
 @dataclass
-class ShorResult:
+class ShorResult(JSONSerializable):
     """Result container for Shor's algorithm.
 
     Attributes:

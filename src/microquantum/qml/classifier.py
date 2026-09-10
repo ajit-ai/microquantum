@@ -12,6 +12,7 @@ from typing import Optional
 
 import numpy as np
 
+from .._json import JSONSerializable
 from ..core.circuit import QuantumCircuit
 from ..core.parameter import Parameter
 from ..core.tensor import expand_operator
@@ -21,7 +22,7 @@ from .encoding import AngleEncoding, BaseEncoder
 
 
 @dataclass
-class ClassifierResult:
+class ClassifierResult(JSONSerializable):
     """Result from a variational classifier.
 
     Attributes:

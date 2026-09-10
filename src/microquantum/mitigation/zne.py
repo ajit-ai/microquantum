@@ -15,11 +15,12 @@ from typing import Optional
 
 import numpy as np
 
+from .._json import JSONSerializable
 from ..core.circuit import QuantumCircuit
 
 
 @dataclass
-class ExtrapolationResult:
+class ExtrapolationResult(JSONSerializable):
     """Result from zero-noise extrapolation.
 
     Attributes:

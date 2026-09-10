@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
+from .._json import JSONSerializable
 from ..core.circuit import QuantumCircuit
 from ..core.parameter import Parameter
 from ..core.pauli import PauliString, PauliSum
@@ -13,7 +14,7 @@ from ..core.state import StateVector
 
 
 @dataclass
-class AdaptResult:
+class AdaptResult(JSONSerializable):
     """Result container for ADAPT-VQE execution.
 
     Attributes:

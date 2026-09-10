@@ -21,6 +21,7 @@ from typing import Any, Optional
 
 import numpy as np
 
+from .._json import json_safe, json_string
 from ..backends.base import Backend, BackendResult
 from ..core.circuit import QuantumCircuit
 
@@ -132,19 +133,6 @@ class QuantumResult:
             return self.backend_result.probabilities
         return {}
 
-    @staticmethod
-    def _json_safe(value: Any) -> Any:
-        """Recursively convert numpy types to JSON-safe Python types."""
-        if isinstance(value, np.ndarray):
-            return value.tolist()
-        if isinstance(value, np.generic):
-            return value.item()
-        if isinstance(value, dict):
-            return {str(k): QuantumResult._json_safe(v) for k, v in value.items()}
-        if isinstance(value, (list, tuple)):
-            return [QuantumResult._json_safe(v) for v in value]
-        return value
-
     def to_dict(self) -> dict[str, Any]:
         """Serialize to a JSON-safe dictionary."""
         return {
@@ -152,25 +140,25 @@ class QuantumResult:
                 "name": self.problem.name,
                 "domain": self.problem.domain,
                 "num_qubits": self.problem.num_qubits,
-                "parameters": self._json_safe(self.problem.parameters),
-                "constraints": self._json_safe(self.problem.constraints),
-                "metadata": self._json_safe(self.problem.metadata),
+                "parameters": json_safe(self.problem.parameters),
+                "constraints": json_safe(self.problem.constraints),
+                "metadata": json_safe(self.problem.metadata),
                 "status": self.problem.status.value,
             },
             "backend_result": (
                 self.backend_result.to_dict() if self.backend_result is not None else None
             ),
-            "decoded": self._json_safe(self.decoded),
+            "decoded": json_safe(self.decoded),
             "fidelity": float(self.fidelity),
             "execution_time": float(self.execution_time),
-            "metadata": self._json_safe(self.metadata),
+            "metadata": json_safe(self.metadata),
             "most_frequent_state": self.most_frequent_state,
             "probabilities": dict(self.probabilities),
         }
 
     def to_json(self) -> str:
         """Serialize to a JSON string."""
-        return json.dumps(self.to_dict(), indent=2, default=str)
+        return json_string(self.to_dict())
 
     def __repr__(self) -> str:
         return (

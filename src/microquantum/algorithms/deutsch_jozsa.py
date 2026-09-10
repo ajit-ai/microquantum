@@ -11,11 +11,12 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from .._json import JSONSerializable
 from ..core.circuit import QuantumCircuit
 
 
 @dataclass
-class DJResult:
+class DJResult(JSONSerializable):
     """Result container for Deutsch-Jozsa.
 
     Attributes:

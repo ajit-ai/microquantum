@@ -14,6 +14,7 @@ from typing import Optional
 
 import numpy as np
 
+from .._json import JSONSerializable
 from ..core.circuit import QuantumCircuit
 from ..core.pauli import PauliSum
 from ..core.state import StateVector
@@ -23,7 +24,7 @@ from ..core.state import StateVector
 # ------------------------------------------------------------------ #
 
 @dataclass
-class TrotterResult:
+class TrotterResult(JSONSerializable):
     """Result container for a Trotter-Suzuki Hamiltonian simulation.
 
     Attributes:

@@ -12,6 +12,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from .._json import JSONSerializable
 from ..core.circuit import QuantumCircuit
 from ..core.operators import Operator
 
@@ -19,7 +20,7 @@ PAULIS = [Operator.I(), Operator.X(), Operator.Y(), Operator.Z()]
 
 
 @dataclass
-class CycleBenchmarkingResult:
+class CycleBenchmarkingResult(JSONSerializable):
     """Result from cycle benchmarking.
 
     Attributes:
@@ -40,7 +41,7 @@ class CycleBenchmarkingResult:
 
 
 @dataclass
-class LayerFidelityResult:
+class LayerFidelityResult(JSONSerializable):
     """Result from layer fidelity benchmarking.
 
     Attributes:
@@ -57,7 +58,7 @@ class LayerFidelityResult:
 
 
 @dataclass
-class TwirlingResult:
+class TwirlingResult(JSONSerializable):
     """Result from Pauli twirling.
 
     Attributes:

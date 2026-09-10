@@ -11,6 +11,7 @@ from typing import Callable
 
 import numpy as np
 
+from .._json import JSONSerializable
 from ..core.circuit import QuantumCircuit
 from ..core.parameter import Parameter
 from ..core.pauli import PauliSum
@@ -18,7 +19,7 @@ from ..optimizers.base import Optimizer
 
 
 @dataclass
-class VQDResult:
+class VQDResult(JSONSerializable):
     """Result container for VQD execution.
 
     Attributes:

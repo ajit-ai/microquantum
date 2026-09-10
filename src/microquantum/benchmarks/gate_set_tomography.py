@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 import numpy as np
 from numpy.typing import NDArray
 
+from .._json import JSONSerializable
 from ..core.circuit import QuantumCircuit
 from ..core.operators import Operator
 
@@ -45,7 +46,7 @@ def _state_prep_circuit(
 
 
 @dataclass
-class GSTResult:
+class GSTResult(JSONSerializable):
     """Result from gate set tomography.
 
     Attributes:

@@ -227,6 +227,127 @@ class TestUniformSerialization:
         assert json.dumps(data)
         assert isinstance(result.to_json(), str)
 
+    def test_grover_result_serialization(self) -> None:
+        from microquantum import GroverSearch
+
+        result = GroverSearch(num_qubits=3, target=5).run()
+        data = result.to_dict()
+        assert data["num_qubits"] == 3
+        assert data["target"] == 5
+        assert "circuit" in data
+        assert data["circuit"]["num_qubits"] == 3
+        assert json.dumps(data)
+        assert isinstance(result.to_json(), str)
+
+    def test_optimizer_result_serialization(self) -> None:
+        from microquantum import Parameter
+        from microquantum.optimizers import OptimizerResult
+
+        result = OptimizerResult(
+            optimal_parameters={Parameter("theta"): 0.5},
+            optimal_value=-1.8,
+            history=[-1.0, -1.8],
+            iterations=7,
+            converged=True,
+        )
+        data = result.to_dict()
+        assert data["optimal_parameters"] == {"theta": 0.5}
+        assert data["optimal_value"] == -1.8
+        assert json.dumps(data)
+        assert isinstance(result.to_json(), str)
+
+    def test_vqe_result_nested_serialization(self) -> None:
+        from microquantum import Parameter
+        from microquantum.algorithms import VQEResult
+        from microquantum.optimizers import OptimizerResult
+
+        optimizer_result = OptimizerResult(
+            optimal_parameters={Parameter("theta"): 0.5},
+            optimal_value=-1.8,
+            iterations=7,
+            converged=True,
+        )
+        result = VQEResult(
+            eigenvalue=-1.8,
+            eigenstate={Parameter("theta"): 0.5},
+            optimizer_result=optimizer_result,
+        )
+        data = result.to_dict()
+        assert data["eigenvalue"] == -1.8
+        assert data["eigenstate"] == {"theta": 0.5}
+        assert data["optimizer_result"]["optimal_value"] == -1.8
+        assert json.dumps(data)
+        assert isinstance(result.to_json(), str)
+
+    def test_phase_estimation_complex_serialization(self) -> None:
+        from microquantum.algorithms import PhaseEstimationResult
+
+        result = PhaseEstimationResult(
+            phase=0.25,
+            phase_radians=1.5708,
+            eigenvalue=1 + 2j,
+            num_counting_qubits=4,
+            success_probability=0.95,
+        )
+        data = result.to_dict()
+        assert data["eigenvalue"] == {"real": 1.0, "imag": 2.0}
+        assert json.dumps(data)
+        assert isinstance(result.to_json(), str)
+
+    def test_benchmark_result_serialization(self) -> None:
+        from microquantum.benchmarks import BenchmarkResult
+
+        result = BenchmarkResult(
+            metric_name="quantum_volume",
+            value=16,
+            num_qubits=4,
+            depth=20,
+            success_rate=0.9,
+            confidence=0.95,
+            raw_data={"sv": np.array([1 + 2j, 3 + 4j])},
+            timestamp=1.0,
+        )
+        data = result.to_dict()
+        assert data["value"] == 16
+        assert data["raw_data"]["sv"] == [
+            {"real": 1.0, "imag": 2.0},
+            {"real": 3.0, "imag": 4.0},
+        ]
+        assert json.dumps(data)
+        assert isinstance(result.to_json(), str)
+
+    def test_mitigation_and_qml_result_serialization(self) -> None:
+        from microquantum.mitigation import ExtrapolationResult
+        from microquantum.optimizers import OptimizerResult
+        from microquantum.qml import ClassifierResult
+
+        mitigation = ExtrapolationResult(mitigated_value=-1.75, raw_value=-1.5)
+        mitigation_data = mitigation.to_dict()
+        assert mitigation_data["mitigated_value"] == -1.75
+        assert json.dumps(mitigation_data)
+
+        optimizer_result = OptimizerResult(optimal_value=-1.8)
+        classifier = ClassifierResult(
+            predictions=[0, 1],
+            accuracy=0.5,
+            optimizer_result=optimizer_result,
+        )
+        classifier_data = classifier.to_dict()
+        assert classifier_data["optimizer_result"]["optimal_value"] == -1.8
+        assert json.dumps(classifier_data)
+        assert isinstance(classifier.to_json(), str)
+
+    def test_measurement_result_serialization(self) -> None:
+        from microquantum import MeasurementResult
+
+        result = MeasurementResult(counts={"00": 300, "11": 212}, shots=512, qubits=[0, 1])
+        data = result.to_dict()
+        assert data["counts"] == {"00": 300, "11": 212}
+        assert data["shots"] == 512
+        assert data["probabilities"]["00"] == pytest.approx(300 / 512)
+        assert json.dumps(data)
+        assert isinstance(result.to_json(), str)
+
 
 class TestRepresentativeExecution:
     """Representative backend and algorithm workflows still execute."""

@@ -7,6 +7,7 @@ from typing import Callable, Optional, Union
 
 import numpy as np
 
+from .._json import JSONSerializable
 from .engine import apply_gate
 from .operators import Operator
 from .parameter import Parameter
@@ -78,7 +79,7 @@ class ClassicalRegister:
 
 
 @dataclass
-class DynamicCircuitResult:
+class DynamicCircuitResult(JSONSerializable):
     """Result of simulating a dynamic circuit.
 
     Attributes:

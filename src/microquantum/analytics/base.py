@@ -5,12 +5,11 @@ execution, and analysis result production.
 """
 from __future__ import annotations
 
-import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any
 
-import numpy as np
+from .._json import json_safe, json_string
 
 
 @dataclass
@@ -28,35 +27,21 @@ class AnalysisResult:
     success: bool = True
     error_message: str = ""
 
-    @staticmethod
-    def _json_safe(value: Any) -> Any:
-        """Recursively convert numpy types to JSON-safe Python types."""
-
-        if isinstance(value, np.ndarray):
-            return value.tolist()
-        if isinstance(value, np.generic):
-            return value.item()
-        if isinstance(value, dict):
-            return {str(k): AnalysisResult._json_safe(v) for k, v in value.items()}
-        if isinstance(value, (list, tuple)):
-            return [AnalysisResult._json_safe(v) for v in value]
-        return value
-
     def to_dict(self) -> dict[str, Any]:
         """Serialize to a JSON-safe dictionary."""
         return {
-            "solution": self._json_safe(self.solution),
-            "quantum_metrics": self._json_safe(self.quantum_metrics),
-            "classical_metrics": self._json_safe(self.classical_metrics),
-            "comparison": self._json_safe(self.comparison),
-            "metadata": self._json_safe(self.metadata),
+            "solution": json_safe(self.solution),
+            "quantum_metrics": json_safe(self.quantum_metrics),
+            "classical_metrics": json_safe(self.classical_metrics),
+            "comparison": json_safe(self.comparison),
+            "metadata": json_safe(self.metadata),
             "success": self.success,
             "error_message": self.error_message,
         }
 
     def to_json(self) -> str:
         """Serialize to a JSON string."""
-        return json.dumps(self.to_dict(), indent=2, default=str)
+        return json_string(self.to_dict())
 
 
 class BaseAnalytics(ABC):
