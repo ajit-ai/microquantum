@@ -27,6 +27,9 @@ microquantum provides:
 * **Measurement**: Sampling, expectation values, partial measurement
 * **Noise modeling**: Depolarizing, amplitude damping, phase damping channels
 * **Algorithms**: VQE, QAOA, Grover, Shor, Bernstein-Vazirani, Deutsch-Jozsa
+* **Problem abstractions**: Sampling, Optimization, Hamiltonian, Eigenvalue,
+  Search — JSON-safe inputs to the generic ``Algorithm`` lifecycle
+* **Classical optimizers**: GradientDescent, Adam, BFGS, COBYLA, NelderMead
 * **Compilation**: Transpiler with routing, noise-aware placement, gate decomposition
 * **Circuit optimization**: Gate fusion, identity removal, transpilation
 * **Benchmarks**: Quantum volume, randomized benchmarking, XEB, CLOPS, GST

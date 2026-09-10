@@ -7,6 +7,7 @@ U|ψ⟩ = e^(2πiθ)|ψ⟩, using controlled-U powers and the inverse QFT.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any, Optional, Union
 
 import numpy as np
 
@@ -15,6 +16,7 @@ from ..core.circuit import QuantumCircuit
 from ..core.operators import Operator
 from ..core.state import StateVector
 from ..core.tensor import expand_operator
+from ..problems.eigenvalue import EigenvalueProblem, HamiltonianProblem
 from .qft import inverse_qft_circuit
 
 
@@ -78,7 +80,13 @@ class PhaseEstimation:
     """
 
     def __init__(
-        self, unitary: Operator, num_counting_qubits: int = 4
+        self,
+        unitary: Operator,
+        num_counting_qubits: int = 4,
+        *,
+        runtime: Any = None,
+        shots: int = 4096,
+        seed: Optional[int] = None,
     ) -> None:
         if num_counting_qubits < 1:
             raise ValueError(
@@ -88,6 +96,9 @@ class PhaseEstimation:
             raise ValueError("Operator must be unitary")
         self._unitary = unitary
         self._num_counting_qubits = num_counting_qubits
+        self._runtime = runtime
+        self._shots = shots
+        self._seed = seed
 
     @property
     def unitary(self) -> Operator:
@@ -137,9 +148,25 @@ class PhaseEstimation:
         return self.estimate_from_state(eigenstate)
 
     def estimate_from_state(
-        self, eigenstate: StateVector
+        self,
+        eigenstate: StateVector,
+        *,
+        runtime: Any = None,
+        shots: Optional[int] = None,
+        seed: Optional[int] = None,
     ) -> PhaseEstimationResult:
-        """Run QPE with a provided eigenstate."""
+        """Run QPE with a provided eigenstate.
+
+        When ``runtime`` (or a runtime set at construction) is provided, the
+        QPE circuit is executed through the MQ-04 pipeline with the
+        eigenstate prepared as the circuit's initial state.
+
+        Args:
+            eigenstate: Eigenvector |ψ> of the unitary.
+            runtime: Optional execution runtime override.
+            shots: Shots override for runtime execution.
+            seed: Seed override for runtime execution.
+        """
         n_u = eigenstate.num_qubits
         n_c = self._num_counting_qubits
         total = n_c + n_u
@@ -157,7 +184,25 @@ class PhaseEstimation:
 
         initial = StateVector(total, amplitudes=amps)
         qc = self.build_circuit()
-        final_state = qc.run(initial)
+
+        active_runtime = runtime if runtime is not None else self._runtime
+        if active_runtime is None:
+            final_state = qc.run(initial)
+        else:
+            from ..runtime.plan import ExecutionPlan
+
+            plan = ExecutionPlan.from_circuit(
+                qc,
+                initial_state=initial,
+                shots=shots if shots is not None else self._shots,
+                seed=seed if seed is not None else self._seed,
+                name="phase-estimation",
+            )
+            result = active_runtime.execute(plan)
+            final_state = StateVector(
+                num_qubits=total,
+                amplitudes=np.asarray(result.statevector, dtype=np.complex128),
+            )
 
         probs = np.abs(final_state.amplitudes) ** 2
 
@@ -179,6 +224,112 @@ class PhaseEstimation:
             num_counting_qubits=n_c,
             success_probability=success_prob,
         )
+
+    # ------------------------------------------------------------------
+    # generic problem-driven entry points (MQ-05)
+    # ------------------------------------------------------------------
+
+    @classmethod
+    def from_problem(
+        cls,
+        problem: Union[EigenvalueProblem, HamiltonianProblem],
+        num_counting_qubits: int = 4,
+        *,
+        runtime: Any = None,
+        shots: int = 4096,
+        seed: Optional[int] = None,
+    ) -> "PhaseEstimation":
+        """Construct a PhaseEstimation for an eigenvalue problem.
+
+        QPE applies powers of a *unitary* operator, so the problem's
+        Hamiltonian must itself be unitary (e.g. a Pauli phase gate whose
+        eigenphase is being extracted).  Non-unitary Hamiltonians should be
+        addressed with VQE instead.
+
+        Args:
+            problem: The eigenvalue problem to solve.
+            num_counting_qubits: Size of the counting register.
+            runtime: Optional execution runtime.
+            shots: Shots per runtime evaluation.
+            seed: Optional RNG seed for runtime evaluations.
+
+        Raises:
+            TypeError: If ``problem`` is not an eigenvalue problem.
+            ValueError: If the problem Hamiltonian is missing or not unitary.
+        """
+        if not isinstance(problem, (EigenvalueProblem, HamiltonianProblem)):
+            raise TypeError(
+                f"PhaseEstimation solves Hamiltonian/Eigenvalue problems, "
+                f"got {type(problem).__name__}"
+            )
+        issues = problem.validate()
+        if issues:
+            raise ValueError("Problem validation failed: " + "; ".join(issues))
+        hamiltonian = problem.hamiltonian
+        if hamiltonian is None:
+            raise ValueError("problem has no Hamiltonian")
+        if not (
+            isinstance(hamiltonian, Operator) and bool(hamiltonian.is_unitary)
+        ):
+            raise ValueError(
+                "PhaseEstimation requires a unitary Operator Hamiltonian "
+                "(e.g. a Pauli phase gate); use VQE for general Hamiltonians"
+            )
+        return cls(
+            hamiltonian,
+            num_counting_qubits,
+            runtime=runtime,
+            shots=shots,
+            seed=seed,
+        )
+
+    def validate(self, problem: Any) -> list[str]:
+        """Check ``problem`` compatibility (empty list => valid)."""
+        if not isinstance(problem, (EigenvalueProblem, HamiltonianProblem)):
+            return [
+                f"PhaseEstimation expects an Eigenvalue/Hamiltonian problem, "
+                f"got {type(problem).__name__}"
+            ]
+        issues = list(problem.validate())
+        hamiltonian = problem.hamiltonian
+        if not isinstance(hamiltonian, Operator) or not bool(hamiltonian.is_unitary):
+            issues.append("Hamiltonian must be a unitary Operator for QPE")
+        return issues
+
+    def solve(
+        self,
+        problem: Union[EigenvalueProblem, HamiltonianProblem],
+        runtime: Any = None,
+        *,
+        shots: Optional[int] = None,
+        seed: Optional[int] = None,
+    ) -> PhaseEstimationResult:
+        """Solve an eigenvalue problem by extracting the unitary's eigenphase.
+
+        Args:
+            problem: The eigenvalue problem whose unitary Hamiltonian is
+                phase-estimated.
+            runtime: Optional execution runtime override.
+            shots: Shots override for runtime execution.
+            seed: Seed override for runtime execution.
+
+        Returns:
+            PhaseEstimationResult with the estimated phase.
+        """
+        validation = self.validate(problem)
+        if validation:
+            raise ValueError(
+                "PhaseEstimation problem validation failed:\n  - "
+                + "\n  - ".join(validation)
+            )
+        estimator = PhaseEstimation.from_problem(
+            problem,
+            num_counting_qubits=self._num_counting_qubits,
+            runtime=runtime if runtime is not None else self._runtime,
+            shots=shots if shots is not None else self._shots,
+            seed=seed if seed is not None else self._seed,
+        )
+        return estimator.estimate()
 
     def __repr__(self) -> str:
         return (

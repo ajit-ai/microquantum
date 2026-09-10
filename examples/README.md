@@ -48,3 +48,66 @@ example with `uv run python examples/<file>.py` from the repository root.
   failure reporting.
 - `execution/10_end_to_end.py` — full pipeline with IR, plan, target,
   backend, enriched result and JSON exports.
+
+## Algorithms on problems (MQ-05)
+
+The generic `Algorithm`/`Problem` layer: problems are JSON-safe data,
+algorithms consume them through the uniform `validate` + `solve` lifecycle,
+and the same algorithm can ride the internal engine or the MQ-04 runtime.
+
+- `algorithms/01_problem_hierarchy.py` — the five problem abstractions
+  (Sampling, Optimization, Hamiltonian, Eigenvalue, Search), validation and
+  JSON serialization.
+- `algorithms/02_algorithm_lifecycle.py` — `validate(problem)` /
+  `solve(problem, runtime)` lifecycle, reuse of one configured algorithm
+  across problems, descriptive validation errors.
+- `algorithms/03_algorithm_result_serialization.py` — `AlgorithmResult`
+  `to_dict`/`to_json`, excluding the `native` payload.
+- `algorithms/04_runtime_separation.py` — problem/algorithm separation and
+  runtime-integrated solves.
+
+## Optimization
+
+- `optimization/01_qaoa_maxcut_problem.py` — MaxCut as QUBO ->
+  OptimizationProblem -> QAOA, compared against brute force.
+- `optimization/02_qaoa_ising_cost.py` — QAOA with a direct Ising
+  Hamiltonian cost function.
+- `optimization/03_qubo_workflow.py` — QUBO / OptimizationProblem /
+  Ising energies agree exactly (round-trip).
+- `optimization/04_bfgs_basics.py` — the BFGS quasi-Newton optimizer
+  (gradient and gradient-free modes).
+
+## Variational algorithms
+
+- `variational/01_vqe_ground_state.py` — VQE on a 2-qubit ZZ+X Hamiltonian
+  using the generic `EigenvalueProblem`.
+- `variational/02_vqe_runtime.py` — VQE driving the ExecutionRuntime.
+- `variational/03_optimizer_comparison.py` — GradientDescent, Adam, BFGS,
+  COBYLA and NelderMead as drop-in optimizers.
+
+## Search
+
+- `search/01_grover_target.py` — Grover over a `SearchProblem` marker.
+- `search/02_grover_oracle.py` — a hand-rolled phase-flip oracle circuit.
+- `search/03_grover_predicate.py` — `SearchProblem.is_marked` predicate view.
+- `search/04_grover_runtime.py` — engine vs runtime execution of the same
+  Grover instance.
+
+## Mathematical primitives
+
+- `math/01_qft_circuit.py` — QFT (forward + inverse) fundamentals.
+- `math/02_phase_estimation.py` — QPE on engineered unitaries.
+- `math/03_hamiltonian_expectation.py` — PauliSum expectations and energy
+  landscapes.
+
+## Extending the SDK
+
+- `extension/01_custom_problem.py` — subclassing `Problem` with custom fields
+  and validation.
+- `extension/02_custom_algorithm.py` — a custom `Algorithm` through the
+  generic lifecycle.
+- `extension/03_custom_grover_diffusion.py` — custom Grover oracle +
+  custom diffusion shape.
+- `extension/04_custom_optimizer.py` — a custom `Optimizer` inside VQE.
+- `extension/05_custom_runtime.py` — routing a solve through a custom
+  `ExecutionRuntime` subclass.

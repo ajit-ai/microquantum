@@ -12,6 +12,7 @@ from .algorithms import (
     AdaptResult,
     AdaptVQE,
     Algorithm,
+    AlgorithmResult,
     AmplitudeEstimation,
     AmplitudeEstimationResult,
     BernsteinVazirani,
@@ -157,6 +158,7 @@ from .mitigation import (
 )
 from .optimization import IsingConverter, QUBOBuilder, QUBOProblem
 from .optimizers import (
+    BFGS,
     COBYLA,
     QNSPSA,
     SPSA,
@@ -165,6 +167,14 @@ from .optimizers import (
     NelderMead,
     Optimizer,
     OptimizerResult,
+)
+from .problems import (
+    EigenvalueProblem,
+    HamiltonianProblem,
+    OptimizationProblem,
+    Problem,
+    SamplingProblem,
+    SearchProblem,
 )
 from .providers import (
     CircuitSerializer,
@@ -302,12 +312,21 @@ __all__ = [
     "OptimizerResult",
     "GradientDescent",
     "Adam",
+    "BFGS",
     "COBYLA",
     "NelderMead",
     "SPSA",
     "QNSPSA",
+    # Problems
+    "Problem",
+    "SamplingProblem",
+    "OptimizationProblem",
+    "HamiltonianProblem",
+    "EigenvalueProblem",
+    "SearchProblem",
     # Algorithms
     "Algorithm",
+    "AlgorithmResult",
     "VQE",
     "VQEResult",
     "QAOA",
