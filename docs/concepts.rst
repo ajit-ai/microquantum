@@ -76,3 +76,42 @@ Providers, adapters & hardware
   SDK: ``validate() -> encode() -> backend.run() -> decode()``, returning a
   :class:`~microquantum.adapters.base.QuantumResult`. Industry-specific
   adapters may be published separately on top of this SDK.
+
+Intermediate representation & compilation
+-----------------------------------------
+
+Everyone who needs to introspect, optimize and retarget quantum programs uses
+the internal IR plus the compilation foundation in ``microquantum.ir``:
+
+* :func:`~microquantum.ir.to_ir` converts a
+  :class:`~microquantum.core.circuit.QuantumCircuit` into an
+  :class:`~microquantum.ir.IRCircuit` (an ordered list of IR nodes: ``Gate``,
+  ``Measurement``, ``Reset``, ``Barrier``, ``ConditionalBlock``).
+  :func:`~microquantum.ir.to_ir_dynamic` preserves mid-circuit measurement,
+  reset and classically-conditioned blocks of a
+  :class:`~microquantum.core.dynamic.DynamicCircuit`.
+  :func:`~microquantum.ir.from_ir` rebuilds an executable
+  :class:`~microquantum.core.circuit.QuantumCircuit` from compiled IR.
+* The IR is MicroQuantum-owned plain data: gate names, integer qubit/classical
+  indices and float or symbolic parameters, with no NumPy dependency. Gates,
+  measurements, barriers and classically-controlled blocks also carry their
+  source information (e.g. the originating circuit index).
+* :func:`~microquantum.ir.validate` and
+  :func:`~microquantum.ir.assert_valid` perform structural validation
+  (qubit/classical-bit ranges, gate names, arity, parameters, conditions).
+* :class:`~microquantum.ir.IRPass` is the transformation abstraction;
+  :func:`~microquantum.ir.optimize` runs the standard pipeline (identity
+  removal, adjacent-inverse cancellation, rotation fusion). Passes are pure —
+  they return a new :class:`~microquantum.ir.IRCircuit` and never mutate
+  their input.
+* :class:`~microquantum.ir.Compiler` compiles a circuit or IR toward an
+  MQ-02 :class:`~microquantum.core.device.Target`: it validates, optimizes,
+  decomposes non-native gates into the target basis and reports compatibility
+  problems. The resulting :class:`~microquantum.ir.CompilationResult` bundles
+  source IR, compiled IR, applied passes and diagnostics, and serializes via
+  ``to_dict()`` / ``to_json()`` alongside the other result types.
+
+The IR is intentionally hardware-neutral: OpenQASM is treated as an optional
+interchange format, never as the canonical representation. Routing, hardware
+scheduling and vendor-specific execution plug in downstream of the
+:class:`~microquantum.ir.Compiler` in later phases.
