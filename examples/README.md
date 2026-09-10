@@ -27,3 +27,24 @@ example with `uv run python examples/<file>.py` from the repository root.
   MQ-02 `Target` (decomposition into the native basis, diagnostics).
 - `ir/07_custom_pass.py` — extending the compiler with a user-defined
   `IRPass`.
+
+## Hybrid execution runtime
+
+- `execution/01_basic_execution.py` — one-shot execution with the module
+  helper `microquantum.execute()`.
+- `execution/02_explicit_plan.py` — an explicit serializable `ExecutionPlan`.
+- `execution/03_job_lifecycle.py` — `Job` lifecycle metadata and cancellation.
+- `execution/04_batch_execution.py` — batch execution with per-item results
+  and tolerant `raise_on_error=False` mode.
+- `execution/05_parameter_sweep.py` — sweeping a circuit over parameter
+  bindings (raw floats and explicit binding dicts).
+- `execution/06_hybrid_loop.py` — a generic classical -> quantum ->
+  classical loop with `run_hybrid()`.
+- `execution/07_custom_backend.py` — plugging a user backend into the
+  runtime.
+- `execution/08_target_and_backend.py` — target-aware compilation plus
+  backend capability checks.
+- `execution/09_failure_handling.py` — deterministic plan/backend/batch
+  failure reporting.
+- `execution/10_end_to_end.py` — full pipeline with IR, plan, target,
+  backend, enriched result and JSON exports.

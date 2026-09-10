@@ -189,6 +189,22 @@ from .qml import (
     VariationalClassifier,
     ZFeatureMap,
 )
+from .runtime import (
+    STRATEGY_HANDLERS,
+    ExecutionPlan,
+    ExecutionRuntime,
+    ExecutionStrategy,
+    ExecutionTrace,
+    TraceEvent,
+    default_runtime,
+    execute,
+    execute_batch,
+    register_custom_strategy,
+    run_hybrid,
+    run_parameter_sweep,
+    submit,
+    submit_batch,
+)
 
 __all__ = [
     # Core
@@ -389,4 +405,19 @@ __all__ = [
     "IonQProvider",
     "CircuitSerializer",
     "UnsupportedGateError",
+    # Execution runtime
+    "ExecutionPlan",
+    "ExecutionRuntime",
+    "ExecutionStrategy",
+    "ExecutionTrace",
+    "TraceEvent",
+    "STRATEGY_HANDLERS",
+    "register_custom_strategy",
+    "default_runtime",
+    "execute",
+    "submit",
+    "execute_batch",
+    "submit_batch",
+    "run_parameter_sweep",
+    "run_hybrid",
 ]

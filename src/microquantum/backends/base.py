@@ -5,6 +5,7 @@ from __future__ import annotations
 import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Optional
 
@@ -19,14 +20,35 @@ if TYPE_CHECKING:
     from ..core.circuit import QuantumCircuit
 
 
-class JobStatus(Enum):
-    """Status of a quantum job."""
+def _now_iso() -> str:
+    """Return the current UTC time as an ISO-8601 string."""
+    return datetime.now(timezone.utc).isoformat()
 
+
+class JobStatus(Enum):
+    """Status of a quantum job.
+
+    The lifecycle flows ``CREATED -> QUEUED -> RUNNING -> COMPLETED`` and
+    may terminate early as ``FAILED`` or ``CANCELLED``.  Local backends
+    move through the non-terminal states synchronously.
+    """
+
+    CREATED = "created"
+    QUEUED = "queued"
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
+
+    @property
+    def final(self) -> bool:
+        """Whether this status is a terminal lifecycle state."""
+        return self in (
+            JobStatus.COMPLETED,
+            JobStatus.FAILED,
+            JobStatus.CANCELLED,
+        )
 
 
 @dataclass
@@ -106,9 +128,9 @@ class Job:
     """A single circuit-execution job.
 
     Local (simulator) backends return jobs that are already completed: the
-    lifecycle moves ``PENDING -> RUNNING -> COMPLETED`` (or ``FAILED`` / and
-    ``CANCELLED`` via :meth:`cancel`).  Hardware backends return jobs that
-    finish asynchronously once the provider responds (see
+    lifecycle moves ``CREATED -> QUEUED -> RUNNING -> COMPLETED`` (or
+    ``FAILED`` / and ``CANCELLED`` via :meth:`cancel`).  Hardware backends
+    return jobs that finish asynchronously once the provider responds (see
     :class:`~microquantum.providers.HardwareJob`).
 
     Attributes:
@@ -116,30 +138,54 @@ class Job:
         status: Current :class:`JobStatus`.
         result: Execution result (if completed).
         error: Error message (if failed).
+        backend_name: Backend that accepted the job (if set).
+        target_name: Target the job runs on (if set).
+        created_at: ISO-8601 timestamp when the job was created.
+        started_at: ISO-8601 timestamp when execution started.
+        finished_at: ISO-8601 timestamp when execution finished.
+        info: Arbitrary job lifecycle metadata (plan details, trace hints).
     """
 
     job_id: str = field(default_factory=lambda: str(uuid.uuid4())[:8])
     status: JobStatus = JobStatus.PENDING
     result: Optional[BackendResult] = None
     error: Optional[str] = None
+    backend_name: Optional[str] = None
+    target_name: Optional[str] = None
+    created_at: Optional[str] = None
+    started_at: Optional[str] = None
+    finished_at: Optional[str] = None
+    info: dict[str, Any] = field(default_factory=dict)
 
     def cancel(self) -> None:
         """Mark the job as cancelled.
 
         A no-op once the job already completed, failed or was cancelled.
         """
-        if self.status in (JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELLED):
+        if self.status.final:
             return
         self.status = JobStatus.CANCELLED
 
-    def metadata(self) -> dict[str, str]:
+    def metadata(self) -> dict[str, Any]:
         """Expose JSON-safe job lifecycle metadata."""
-        data: dict[str, str] = {
+        data: dict[str, Any] = {
             "job_id": self.job_id,
             "status": self.status.value,
         }
+        if self.backend_name is not None:
+            data["backend_name"] = self.backend_name
+        if self.target_name is not None:
+            data["target_name"] = self.target_name
+        if self.created_at is not None:
+            data["created_at"] = self.created_at
+        if self.started_at is not None:
+            data["started_at"] = self.started_at
+        if self.finished_at is not None:
+            data["finished_at"] = self.finished_at
         if self.error is not None:
             data["error"] = self.error
+        if self.info:
+            data["info"] = self.info
         return data
 
     def __repr__(self) -> str:
@@ -249,8 +295,14 @@ class Backend(ABC):
         Returns:
             Completed Job with result.
         """
-        job = Job()
+        job = Job(
+            backend_name=self.name,
+            target_name=self.target.name,
+            created_at=_now_iso(),
+        )
+        job.status = JobStatus.QUEUED
         job.status = JobStatus.RUNNING
+        job.started_at = _now_iso()
         try:
             result = self.run_circuit(
                 num_qubits,
@@ -264,6 +316,7 @@ class Backend(ABC):
         except Exception as e:
             job.error = str(e)
             job.status = JobStatus.FAILED
+        job.finished_at = _now_iso()
         return job
 
     def run(
@@ -321,8 +374,14 @@ class Backend(ABC):
         Returns:
             A :class:`Job` holding the execution result on completion.
         """
-        job = Job()
+        job = Job(
+            backend_name=self.name,
+            target_name=self.target.name,
+            created_at=_now_iso(),
+        )
+        job.status = JobStatus.QUEUED
         job.status = JobStatus.RUNNING
+        job.started_at = _now_iso()
         try:
             result = self.run(
                 circuit,
@@ -335,6 +394,7 @@ class Backend(ABC):
         except Exception as exc:
             job.error = str(exc)
             job.status = JobStatus.FAILED
+        job.finished_at = _now_iso()
         return job
 
     def __repr__(self) -> str:
