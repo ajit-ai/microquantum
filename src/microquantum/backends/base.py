@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -24,6 +25,11 @@ class JobStatus(Enum):
     RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
+
+
+def _complex_array_to_dict(array: NDArray[np.complex128]) -> dict[str, Any]:
+    """JSON-safe encoding of a complex array as real/imag parts."""
+    return {"real": array.real.tolist(), "imag": array.imag.tolist()}
 
 
 @dataclass
@@ -61,20 +67,32 @@ class BackendResult:
         return max(self.counts, key=lambda k: self.counts[k])
 
     def to_dict(self) -> dict[str, Any]:
-        """Serialize to a JSON-safe dictionary."""
+        """Serialize to a JSON-safe dictionary.
+
+        Complex-valued arrays (``statevector`` / ``density_matrix``) are
+        encoded as ``{"real": [...], "imag": [...]}`` element pairs.
+        """
         return {
             "num_qubits": self.num_qubits,
             "backend_name": self.backend_name,
             "statevector": (
-                self.statevector.tolist() if self.statevector is not None else None
+                _complex_array_to_dict(self.statevector)
+                if self.statevector is not None
+                else None
             ),
             "density_matrix": (
-                self.density_matrix.tolist() if self.density_matrix is not None else None
+                _complex_array_to_dict(self.density_matrix)
+                if self.density_matrix is not None
+                else None
             ),
             "counts": dict(self.counts),
             "probabilities": dict(self.probabilities),
             "metadata": dict(self.metadata),
         }
+
+    def to_json(self) -> str:
+        """Serialize to a JSON string."""
+        return json.dumps(self.to_dict(), indent=2, default=str)
 
     def __repr__(self) -> str:
         return (

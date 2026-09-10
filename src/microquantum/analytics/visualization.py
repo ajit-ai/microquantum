@@ -1,9 +1,10 @@
 """Visualization module for quantum analytics results.
 
-Generates charts and plots for business presentations.
+Generates chart data for quantum/classical analysis reports.
 """
 from __future__ import annotations
 
+import warnings
 from typing import Any, Optional
 
 import numpy as np
@@ -60,60 +61,64 @@ def plot_optimization_history(
     }
 
 
-def plot_portfolio_allocation(
+def plot_allocation(
     weights: list[float],
-    assets: Optional[list[str]] = None,
-    title: str = "Portfolio Allocation",
-) -> dict[str, Any]:
-    """Generate portfolio allocation pie chart data.
-
-    Args:
-        weights: Asset weights.
-        assets: Asset names.
-        title: Plot title.
-
-    Returns:
-        Dictionary with plot data for rendering.
-    """
-    if assets is None:
-        assets = [f"Asset {i}" for i in range(len(weights))]
-
-    return {
-        "type": "pie",
-        "title": title,
-        "labels": assets,
-        "values": weights,
-    }
-
-
-def plot_risk_return_scatter(
-    risks: list[float],
-    returns: list[float],
     labels: Optional[list[str]] = None,
-    title: str = "Risk-Return Profile",
+    title: str = "Allocation",
 ) -> dict[str, Any]:
-    """Generate risk-return scatter plot data.
+    """Generate allocation pie chart data.
 
     Args:
-        risks: Risk values (volatility).
-        returns: Return values.
-        labels: Point labels.
+        weights: Weight of each category (should sum to 1 for a share).
+        labels: Category names.
         title: Plot title.
 
     Returns:
         Dictionary with plot data for rendering.
     """
     if labels is None:
-        labels = [f"Portfolio {i}" for i in range(len(risks))]
+        labels = [f"Category {i}" for i in range(len(weights))]
+
+    return {
+        "type": "pie",
+        "title": title,
+        "labels": labels,
+        "values": weights,
+    }
+
+
+def plot_scatter(
+    x_values: list[float],
+    y_values: list[float],
+    labels: Optional[list[str]] = None,
+    title: str = "Scatter Plot",
+    xlabel: str = "Metric X",
+    ylabel: str = "Metric Y",
+) -> dict[str, Any]:
+    """Generate scatter plot data.
+
+    Args:
+        x_values: Values for the horizontal axis.
+        y_values: Values for the vertical axis.
+        labels: Point labels.
+        title: Plot title.
+        xlabel: X-axis label.
+        ylabel: Y-axis label.
+
+    Returns:
+        Dictionary with plot data for rendering.
+    """
+    if labels is None:
+        labels = [f"Point {i}" for i in range(len(x_values))]
 
     return {
         "type": "scatter",
         "title": title,
-        "x": risks,
-        "y": returns,
+        "x": x_values,
+        "y": y_values,
         "labels": labels,
-        "xlabel": "Risk (Volatility)",
-        "ylabel": "Return",
+        "xlabel": xlabel,
+        "ylabel": ylabel,
     }
 
 
@@ -155,8 +160,8 @@ def plot_route_map(
     """Generate route visualization data.
 
     Args:
-        cities: List of (x, y) city coordinates.
-        tour: Ordered city indices.
+        cities: List of (x, y) coordinates.
+        tour: Ordered point indices.
         title: Plot title.
 
     Returns:
@@ -175,44 +180,43 @@ def plot_route_map(
         "markers": {
             "x": [c[0] for c in cities],
             "y": [c[1] for c in cities],
-            "labels": [f"City {i}" for i in range(len(cities))],
+            "labels": [f"Point {i}" for i in range(len(cities))],
         },
         "xlabel": "X",
         "ylabel": "Y",
     }
 
 
-def plot_var_distribution(
-    returns: np.ndarray,
-    var_value: float,
-    cvar_value: float,
+def plot_distribution(
+    values: np.ndarray,
+    thresholds: Optional[list[tuple[float, str, str]]] = None,
     confidence_level: float = 0.95,
-    title: str = "Return Distribution with VaR",
+    title: str = "Distribution",
 ) -> dict[str, Any]:
-    """Generate VaR distribution plot data.
+    """Generate distribution histogram data with optional threshold lines.
 
     Args:
-        returns: Historical returns.
-        var_value: Value at Risk.
-        cvar_value: Conditional VaR.
-        confidence_level: Confidence level.
+        values: The values to histogram.
+        thresholds: Optional list of (value, label, color) threshold markers.
+        confidence_level: Confidence level shown in threshold labels.
         title: Plot title.
 
     Returns:
         Dictionary with plot data for rendering.
     """
-    hist, bin_edges = np.histogram(returns, bins=50)
+    hist, bin_edges = np.histogram(values, bins=50)
+    annotations = [
+        {"x": value, "label": label, "color": color}
+        for value, label, color in (thresholds or [])
+    ]
 
     return {
         "type": "histogram",
         "title": title,
         "x": bin_edges[:-1].tolist(),
         "y": hist.tolist(),
-        "annotations": [
-            {"x": var_value, "label": f"VaR ({confidence_level:.0%})", "color": "red"},
-            {"x": cvar_value, "label": "CVaR", "color": "darkred"},
-        ],
-        "xlabel": "Return",
+        "annotations": annotations,
+        "xlabel": "Value",
         "ylabel": "Frequency",
     }
 
@@ -221,7 +225,7 @@ def format_analysis_report(result: dict[str, Any]) -> str:
     """Format analysis result as a readable text report.
 
     Args:
-        result: AnalysisResult.to_json() output.
+        result: ``AnalysisResult.to_dict()`` output.
 
     Returns:
         Formatted text report.
@@ -257,3 +261,56 @@ def format_analysis_report(result: dict[str, Any]) -> str:
 
     lines.append("\n" + "=" * 60)
     return "\n".join(lines)
+
+
+# ------------------------------------------------------------------
+# Deprecated aliases (pre-MQ-01 names, kept for backward compatibility)
+# ------------------------------------------------------------------
+
+def plot_portfolio_allocation(
+    weights: list[float],
+    assets: Optional[list[str]] = None,
+    title: str = "Allocation",
+) -> dict[str, Any]:
+    """Deprecated alias for :func:`plot_allocation`."""
+    warnings.warn(
+        "plot_portfolio_allocation is deprecated; use plot_allocation instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return plot_allocation(weights, labels=assets, title=title)
+
+
+def plot_risk_return_scatter(
+    risks: list[float],
+    returns: list[float],
+    labels: Optional[list[str]] = None,
+    title: str = "Scatter Plot",
+) -> dict[str, Any]:
+    """Deprecated alias for :func:`plot_scatter`."""
+    warnings.warn(
+        "plot_risk_return_scatter is deprecated; use plot_scatter instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return plot_scatter(risks, returns, labels=labels, title=title)
+
+
+def plot_var_distribution(
+    returns: np.ndarray,
+    var_value: float,
+    cvar_value: float,
+    confidence_level: float = 0.95,
+    title: str = "Distribution",
+) -> dict[str, Any]:
+    """Deprecated alias for :func:`plot_distribution`."""
+    warnings.warn(
+        "plot_var_distribution is deprecated; use plot_distribution instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    thresholds = [
+        (var_value, f"Threshold ({confidence_level:.0%})", "red"),
+        (cvar_value, "Threshold (extreme)", "darkred"),
+    ]
+    return plot_distribution(returns, thresholds=thresholds, title=title)

@@ -45,15 +45,15 @@ Create your first quantum circuit:
 Using the Result Contract
 -------------------------
 
-Every solver run can produce a standardized decision result:
+Every solver run can produce a standardized solution result:
 
 .. code-block:: python
 
    from microquantum.analytics.result import Result
 
    result = Result(
-       problem="scheduling_optimization",
-       decision={"selected_route": "A->C->B", "cost": 42.0},
+       problem="optimization",
+       solution={"route": "A->C->B", "cost": 42.0},
        confidence=0.91,
        qubit_count=8,
        runtime_ms=48.3,

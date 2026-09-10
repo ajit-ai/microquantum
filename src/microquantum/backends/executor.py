@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
@@ -14,6 +15,11 @@ from ..core.operators import Operator
 from ..core.state import StateVector
 from .base import Backend
 from .noise import NoiseModel
+
+
+def _complex_array_to_dict(array: NDArray[np.complex128]) -> dict[str, Any]:
+    """JSON-safe encoding of a complex array as real/imag parts."""
+    return {"real": array.real.tolist(), "imag": array.imag.tolist()}
 
 
 @dataclass
@@ -41,6 +47,29 @@ class ExecutorResult:
         if not self.counts:
             return ""
         return max(self.counts, key=lambda k: self.counts[k])
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to a JSON-safe dictionary.
+
+        Complex-valued ``statevector`` entries are encoded as
+        ``{"real": [...], "imag": [...]}`` element pairs.
+        """
+        return {
+            "counts": dict(self.counts),
+            "probabilities": dict(self.probabilities),
+            "shots": int(self.shots),
+            "num_qubits": int(self.num_qubits),
+            "statevector": (
+                _complex_array_to_dict(self.statevector)
+                if self.statevector is not None
+                else None
+            ),
+            "metadata": dict(self.metadata),
+        }
+
+    def to_json(self) -> str:
+        """Serialize to a JSON string."""
+        return json.dumps(self.to_dict(), indent=2, default=str)
 
     def expectation(self, observable: Operator) -> float:
         """Compute the expectation value of an observable from probabilities.
@@ -115,19 +144,6 @@ class ExecutorResult:
         for bitstring in sorted(self.counts):
             lines.append(f"  |{bitstring}>: {self.counts[bitstring]}")
         return "\n".join(lines)
-
-    def to_dict(self) -> dict[str, Any]:
-        """Serialize to a JSON-safe dictionary."""
-        return {
-            "counts": dict(self.counts),
-            "probabilities": dict(self.probabilities),
-            "shots": self.shots,
-            "num_qubits": self.num_qubits,
-            "statevector": (
-                self.statevector.tolist() if self.statevector is not None else None
-            ),
-            "metadata": dict(self.metadata),
-        }
 
 
 class Executor:

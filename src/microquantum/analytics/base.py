@@ -1,9 +1,11 @@
-"""Base analytics class for business solutions.
+"""Base analytics interface for generic quantum analysis.
 
-Provides common interface for all industry-specific analytics modules.
+Provides a common interface for data ingestion, quantum algorithm
+execution, and analysis result production.
 """
 from __future__ import annotations
 
+import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any
@@ -15,7 +17,8 @@ import numpy as np
 class AnalysisResult:
     """Result from an analytics analysis.
 
-    Contains quantum results, classical comparison, and business metrics.
+    Contains the computed solution, quantum metrics, a classical
+    reference comparison, and associated metadata.
     """
     solution: dict[str, Any] = field(default_factory=dict)
     quantum_metrics: dict[str, Any] = field(default_factory=dict)
@@ -39,8 +42,8 @@ class AnalysisResult:
             return [AnalysisResult._json_safe(v) for v in value]
         return value
 
-    def to_json(self) -> dict[str, Any]:
-        """Convert to JSON-serializable dictionary."""
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to a JSON-safe dictionary."""
         return {
             "solution": self._json_safe(self.solution),
             "quantum_metrics": self._json_safe(self.quantum_metrics),
@@ -51,12 +54,16 @@ class AnalysisResult:
             "error_message": self.error_message,
         }
 
+    def to_json(self) -> str:
+        """Serialize to a JSON string."""
+        return json.dumps(self.to_dict(), indent=2, default=str)
+
 
 class BaseAnalytics(ABC):
-    """Base class for all analytics modules.
+    """Base class for analytics modules.
 
-    Provides common interface for CSV/DataFrame ingestion,
-    quantum algorithm execution, and business-readable output.
+    Provides a common interface for data ingestion, quantum algorithm
+    execution, and analysis output.
     """
 
     @property
