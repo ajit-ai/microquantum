@@ -10,7 +10,6 @@ from microquantum.core import (
     Parameter,
     ParameterExpression,
     QuantumCircuit,
-    StateVector,
 )
 
 

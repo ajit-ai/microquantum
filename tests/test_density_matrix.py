@@ -144,16 +144,15 @@ class TestDensityMatrixPartialTrace:
 class TestDensityMatrixKraus:
     def test_identity_kraus(self) -> None:
         rho = DensityMatrix.from_label("0")
-        I = np.eye(2, dtype=np.complex128)
-        rho2 = rho.apply_kraus([I])
+        ident = np.eye(2, dtype=np.complex128)
+        rho2 = rho.apply_kraus([ident])
         np.testing.assert_allclose(rho2.matrix, rho.matrix, atol=1e-12)
 
     def test_bit_flip_channel(self) -> None:
         rho = DensityMatrix.from_label("0")
-        X = np.array([[0, 1], [1, 0]], dtype=np.complex128)
-        I = np.eye(2, dtype=np.complex128)
+        ident = np.eye(2, dtype=np.complex128)
         # p=0: no flip
-        e0 = I
+        e0 = ident
         e1 = np.zeros((2, 2), dtype=np.complex128)
         rho2 = rho.apply_kraus([e0, e1])
         assert rho2.matrix[0, 0] == pytest.approx(1.0)

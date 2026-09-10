@@ -18,7 +18,6 @@ from ..core.circuit import QuantumCircuit
 from ..core.pauli import PauliSum
 from ..core.state import StateVector
 
-
 # ------------------------------------------------------------------ #
 #  Result dataclass                                                    #
 # ------------------------------------------------------------------ #

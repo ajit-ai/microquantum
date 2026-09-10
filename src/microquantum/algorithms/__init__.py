@@ -4,7 +4,7 @@ from .adapt_vqe import AdaptResult, AdaptVQE
 from .amplitude_estimation import AmplitudeEstimation, AmplitudeEstimationResult
 from .bernstein_vazirani import BernsteinVazirani, BVResult
 from .deutsch_jozsa import DeutschJozsa, DJResult
-from .grover import GroverSearch, GroverResult
+from .grover import GroverResult, GroverSearch
 from .hamiltonian_simulation import HamiltonianSimulation, TrotterResult
 from .hhl import HHL, HHLResult
 from .phase_estimation import PhaseEstimation, PhaseEstimationResult
@@ -15,13 +15,13 @@ from .quantum_walk import (
     DiscreteQuantumWalk,
     QuantumWalkResult,
 )
-from .shor import ShorsAlgorithm, ShorResult
+from .shor import ShorResult, ShorsAlgorithm
 from .simulation_enhanced import (
     fourth_order_simulation,
     qdrift_simulation,
 )
-from .vqe import VQE, VQEResult
 from .vqd import VQD, VQDResult
+from .vqe import VQE, VQEResult
 
 __all__ = [
     "VQE",

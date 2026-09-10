@@ -12,11 +12,9 @@ from typing import Callable
 import numpy as np
 
 from ..core.circuit import QuantumCircuit
-from ..core.measurement import expectation_value
 from ..core.parameter import Parameter
-from ..core.pauli import PauliString, PauliSum
-from ..core.state import StateVector
-from ..optimizers.base import Optimizer, OptimizerResult
+from ..core.pauli import PauliSum
+from ..optimizers.base import Optimizer
 
 
 @dataclass

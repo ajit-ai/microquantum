@@ -1,12 +1,10 @@
 """Unit tests for microquantum.core.operators.Operator."""
 
-import math
 
 import numpy as np
 import pytest
 
 from microquantum.core import Operator, StateVector
-
 
 # ---------------------------------------------------------------------------
 # Unitarity tests for all standard gates

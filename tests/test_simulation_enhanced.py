@@ -2,20 +2,15 @@
 
 from __future__ import annotations
 
-import numpy as np
-import pytest
-
-from microquantum.core import PauliString
-from microquantum.core.pauli import PauliSum
+from microquantum.algorithms.hamiltonian_simulation import TrotterResult
 from microquantum.algorithms.simulation_enhanced import (
+    _commutes,
+    _commuting_groups,
     fourth_order_simulation,
     qdrift_simulation,
-    _commuting_groups,
-    _commutes,
-    _fourth_order_suzuki,
-    _qdrift_circuit,
 )
-from microquantum.algorithms.hamiltonian_simulation import TrotterResult
+from microquantum.core import PauliString
+from microquantum.core.pauli import PauliSum
 
 
 class TestCommutingGroups:

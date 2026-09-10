@@ -1,6 +1,5 @@
 """Tests for Backend ABC, Job, and BackendResult."""
 
-import numpy as np
 import pytest
 
 from microquantum.backends.base import Backend, BackendResult, Job, JobStatus

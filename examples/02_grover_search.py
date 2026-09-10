@@ -10,10 +10,11 @@ of N items using O(sqrt(N)) queries.
 """
 
 import math
+
 import numpy as np
+
 from microquantum.core import QuantumCircuit
 from microquantum.core.operators import Operator
-from microquantum.core.tensor import tensor
 
 
 def oracle(num_qubits: int, target: int) -> QuantumCircuit:
@@ -66,13 +67,12 @@ def search(num_qubits: int, target: int) -> tuple[QuantumCircuit, int]:
 
 
 def main():
-    import numpy as np
 
     num_qubits = 3
     N = 2**num_qubits
     target = 5  # |101>
 
-    print(f"=== Grover's Search ===")
+    print("=== Grover's Search ===")
     print(f"Database size: {N} items")
     print(f"Target state: |{target:0{num_qubits}b}>")
 

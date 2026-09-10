@@ -465,7 +465,7 @@ class QuantumCircuit:
         for instr in self._gate_instructions:
             if self._is_parameterized_gate(instr):
                 raise ValueError(
-                    f"Circuit has unbound parameters. Call bind_parameters() first."
+                    "Circuit has unbound parameters. Call bind_parameters() first."
                 )
             result.append((instr[0], instr[1]))  # type: ignore[misc]
         return result
@@ -487,7 +487,7 @@ class QuantumCircuit:
         for instr in self._gate_instructions:
             if self._is_parameterized_gate(instr):
                 raise ValueError(
-                    f"Circuit has unbound parameters. Call bind_parameters() first."
+                    "Circuit has unbound parameters. Call bind_parameters() first."
                 )
             op = instr[0]
             targets = instr[1]
@@ -529,7 +529,7 @@ class QuantumCircuit:
         for instr in self._gate_instructions:
             if self._is_parameterized_gate(instr):
                 raise ValueError(
-                    f"Circuit has unbound parameters. Call bind_parameters() first."
+                    "Circuit has unbound parameters. Call bind_parameters() first."
                 )
             op = instr[0]
             targets = instr[1]

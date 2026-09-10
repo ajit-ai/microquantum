@@ -14,10 +14,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-import numpy as np
-
 from ..core.circuit import QuantumCircuit
-from ..core.operators import Operator
 
 
 class RepetitionCode:

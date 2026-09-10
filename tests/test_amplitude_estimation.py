@@ -1,6 +1,5 @@
 """Tests for amplitude estimation algorithm."""
 
-import math
 
 import pytest
 
@@ -10,7 +9,6 @@ from microquantum.algorithms.amplitude_estimation import (
 )
 from microquantum.core.circuit import QuantumCircuit
 from microquantum.core.operators import Operator
-from microquantum.core.tensor import tensor
 
 
 class TestAmplitudeEstimationResult:

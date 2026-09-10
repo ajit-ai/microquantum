@@ -1,11 +1,11 @@
 """Tests for benchmarks module."""
 import pytest
 
-from microquantum.benchmarks.quantum_volume import (
-    QuantumVolumeBenchmark,
-    BenchmarkResult,
-)
 from microquantum.benchmarks.clops import CLOPSBenchmark
+from microquantum.benchmarks.quantum_volume import (
+    BenchmarkResult,
+    QuantumVolumeBenchmark,
+)
 
 
 class TestQuantumVolumeBenchmark:

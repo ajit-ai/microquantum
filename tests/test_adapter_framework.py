@@ -1,6 +1,5 @@
 """Tests for the domain adapter framework."""
 
-import numpy as np
 import pytest
 
 from microquantum.adapters.base import (
@@ -11,7 +10,6 @@ from microquantum.adapters.base import (
 )
 from microquantum.adapters.caching import CacheEntry, ResultCache
 from microquantum.backends.base import Backend, BackendResult
-
 
 # ── Helpers ──────────────────────────────────────────────────────────
 

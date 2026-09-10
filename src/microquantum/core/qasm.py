@@ -11,7 +11,6 @@ of circuits using the QASM 2.0 text format.
 from __future__ import annotations
 
 import math
-from typing import Optional
 
 import numpy as np
 
@@ -240,10 +239,7 @@ def _extract_rotation_angle(op: Operator, gate_type: str) -> float:
     """
     m = op.matrix
 
-    if gate_type == "rx":
-        c = float(np.real(m[0, 0]))
-        return 2.0 * math.acos(max(-1.0, min(1.0, c)))
-    elif gate_type == "ry":
+    if gate_type == "rx" or gate_type == "ry":
         c = float(np.real(m[0, 0]))
         return 2.0 * math.acos(max(-1.0, min(1.0, c)))
     elif gate_type == "rz":

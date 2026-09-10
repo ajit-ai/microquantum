@@ -4,29 +4,55 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "microquantum"
-version = "0.3.0"
+dynamic = ["version"]
 description = "A lightweight, NumPy-only quantum computing SDK with a standardized solver-result contract."
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
 requires-python = ">=3.10"
 authors = [
-    {name = "Ajit", email = "ajit@example.com"},
+    {name = "Ajit Kumar"},
+]
+keywords = [
+    "quantum",
+    "quantum-computing",
+    "quantum-circuit",
+    "simulator",
+    "qiskit-alternative",
+    "vqe",
+    "qaoa",
+    "grover",
+    "shor",
+    "qml",
+    "qec",
+    "qubo",
+    "optimization",
+    "sdk",
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
-    "Topic :: Scientific/Engineering :: Physics",
     "Topic :: Scientific/Engineering :: Chemistry",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
     "numpy>=1.20.0",
+]
+
+[project.optional-dependencies]
+gpu = [
+    "cupy-cuda12x>=12.0",
+]
+all = [
+    "cupy-cuda12x>=12.0",
 ]
 
 [project.urls]
@@ -37,8 +63,24 @@ Issues = "https://github.com/ajit-ai/microquantum/issues"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.dynamic]
+version = {attr = "microquantum.__version__"}
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "--cov=microquantum --cov-report=term-missing"
+
+[tool.coverage.run]
+source = ["microquantum"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]
 
 [tool.mypy]
 python_version = "3.12"
@@ -55,10 +97,24 @@ ignore_missing_imports = true
 module = ["microquantum.core.circuit", "microquantum.core.gradient"]
 disable_error_code = ["assignment", "arg-type", "misc", "union-attr", "index"]
 
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
 [dependency-groups]
 dev = [
     "pytest>=8.3.5",
+    "pytest-cov>=6.0",
     "mypy>=1.0",
+    "ruff>=0.9",
     "sphinx>=8.1.3",
     "sphinx-autoapi>=3.8.0",
     "sphinx-rtd-theme>=3.1.0",

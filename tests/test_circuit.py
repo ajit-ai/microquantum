@@ -5,7 +5,6 @@ import pytest
 
 from microquantum.core import Operator, QuantumCircuit, StateVector
 
-
 # ---------------------------------------------------------------------------
 # Bell State Generation
 # ---------------------------------------------------------------------------

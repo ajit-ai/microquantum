@@ -1,8 +1,6 @@
 """Tests for Quantum Walk algorithms."""
 
-import math
 
-import numpy as np
 import pytest
 
 from microquantum.algorithms.quantum_walk import (

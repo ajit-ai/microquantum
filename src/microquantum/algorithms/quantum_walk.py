@@ -16,15 +16,13 @@ and simulates e^{-iHt} via first-order Trotter-Suzuki decomposition.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
-from typing import Any
+from dataclasses import dataclass
 
 import numpy as np
 from numpy.typing import NDArray
 
 from ..core.circuit import QuantumCircuit
 from ..core.operators import Operator
-from ..core.state import StateVector
 
 
 @dataclass
@@ -323,11 +321,11 @@ class ContinuousQuantumWalk:
         on all other qubits. Qubit ordering is MSB-first.
         """
         k = min(qubit_i, qubit_j)
-        l = max(qubit_i, qubit_j)
+        hi = max(qubit_i, qubit_j)
 
         n_before = k
-        n_between = l - k - 1
-        n_after = num_qubits - l - 1
+        n_between = hi - k - 1
+        n_after = num_qubits - hi - 1
 
         parts: list[NDArray[np.complex128]] = []
         if n_before > 0:

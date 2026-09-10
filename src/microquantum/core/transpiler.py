@@ -22,7 +22,6 @@ from .optimization import (
     remove_identity_gates,
 )
 
-
 # ------------------------------------------------------------------
 # Target gate set
 # ------------------------------------------------------------------
@@ -552,7 +551,7 @@ def _kak_decompose(
     # W U W† = U_svd · diag(e^{-i*d0}, ..., e^{-i*d3}) · Vh_svd
     # where the diagonal is the interaction part
 
-    phases = np.angle(np.diag(M)) if num_cx > 0 else np.zeros(4)
+    np.angle(np.diag(M)) if num_cx > 0 else np.zeros(4)
 
     # Convert back to standard basis for local unitaries
     # A = W · U_svd (left local), B = Vh_svd · W† (right local)
@@ -622,7 +621,7 @@ def _extract_kron_pair(
         Tuple of (A, B) 2×2 complex matrices.
     """
     # Reshape into (2,2,2,2) tensor
-    T = mat.reshape(2, 2, 2, 2)
+    mat.reshape(2, 2, 2, 2)
 
     # Flatten to (4, 4) for SVD: rows = first qubit, cols = second qubit
     T_flat = mat.reshape(4, 4)
@@ -704,7 +703,7 @@ class LayoutMappingPass(Pass):
             )
 
         # Build inverse layout for remapping targets
-        inv_layout = {v: k for k, v in layout.items()}
+        {v: k for k, v in layout.items()}
 
         new_gates: list[tuple[Operator, list[int]]] = []
         for op, targets in circuit.gates:

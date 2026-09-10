@@ -29,7 +29,6 @@ def fuse_single_qubit_gates(circuit: QuantumCircuit) -> QuantumCircuit:
         return circuit
 
     resolved = _resolve_circuit(circuit)
-    n = circuit.num_qubits
     fused: list[tuple[Operator, list[int]]] = []
 
     i = 0

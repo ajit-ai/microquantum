@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import math
 
-import numpy as np
 import pytest
 
-from microquantum.core import Parameter, QuantumCircuit, Operator
-from microquantum.optimizers import SPSA, QNSPSA
+from microquantum.core import Parameter
+from microquantum.optimizers import QNSPSA, SPSA
 
 
 class TestSPSA:

@@ -57,3 +57,6 @@ jobs:
 
       - name: Check imports
         run: uv run python -c "import microquantum; print(microquantum.__version__)"
+
+      - name: Lint with ruff
+        run: uv run ruff check src tests examples

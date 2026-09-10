@@ -15,9 +15,8 @@ from typing import Optional
 import numpy as np
 
 from ..core.circuit import QuantumCircuit
-from ..core.operators import Operator
-from ..core.tensor import expand_operator, tensor
-from .encoding import BaseEncoder, AngleEncoding, ZFeatureMap
+from ..core.tensor import expand_operator
+from .encoding import BaseEncoder, ZFeatureMap
 
 
 class QuantumKernel:

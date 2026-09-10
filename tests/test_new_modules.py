@@ -1,16 +1,14 @@
 """Tests for executor, QFT, phase estimation, dynamic circuits, and resources."""
 
-import math
 import numpy as np
 import pytest
 
-from microquantum.core import QuantumCircuit, Operator, StateVector, Parameter
-from microquantum.core.resources import ResourceEstimator, ResourceEstimate
-from microquantum.core.dynamic import DynamicCircuit, ClassicalRegister, DynamicCircuitResult
-from microquantum.algorithms.qft import QFT, qft_circuit, inverse_qft_circuit
 from microquantum.algorithms.phase_estimation import PhaseEstimation, PhaseEstimationResult
+from microquantum.algorithms.qft import QFT, inverse_qft_circuit, qft_circuit
 from microquantum.backends.executor import Executor, ExecutorResult
-
+from microquantum.core import Operator, QuantumCircuit, StateVector
+from microquantum.core.dynamic import ClassicalRegister, DynamicCircuit, DynamicCircuitResult
+from microquantum.core.resources import ResourceEstimator
 
 # ── Executor ──────────────────────────────────────────────────────────
 

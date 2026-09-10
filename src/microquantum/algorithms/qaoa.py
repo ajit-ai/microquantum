@@ -4,12 +4,9 @@ from __future__ import annotations
 
 from typing import Optional, Union
 
-import numpy as np
-
 from ..core.circuit import QuantumCircuit
 from ..core.operators import Operator
 from ..core.parameter import Parameter
-from ..core.tensor import tensor
 from ..optimizers.base import Optimizer
 from .vqe import VQE, VQEResult
 
@@ -95,10 +92,10 @@ class QAOA:
 
         # Create symbolic parameters
         self._gamma_params = [
-            Parameter(f"gamma_{l}") for l in range(num_layers)
+            Parameter(f"gamma_{layer}") for layer in range(num_layers)
         ]
         self._beta_params = [
-            Parameter(f"beta_{l}") for l in range(num_layers)
+            Parameter(f"beta_{layer}") for layer in range(num_layers)
         ]
 
     @property
@@ -155,8 +152,8 @@ class QAOA:
         if initial_beta is None:
             initial_beta = [0.0] * self._num_layers
 
-        for l in range(self._num_layers):
-            init_params[self._gamma_params[l]] = initial_gamma[l]
-            init_params[self._beta_params[l]] = initial_beta[l]
+        for layer in range(self._num_layers):
+            init_params[self._gamma_params[layer]] = initial_gamma[layer]
+            init_params[self._beta_params[layer]] = initial_beta[layer]
 
         return vqe.compute_minimum_eigenvalue(initial_params=init_params)

@@ -8,14 +8,10 @@ Extends the base HamiltonianSimulation with:
 
 from __future__ import annotations
 
-import math
 import random
-from dataclasses import dataclass, field
-
-import numpy as np
 
 from ..core.circuit import QuantumCircuit
-from ..core.pauli import PauliSum, PauliString
+from ..core.pauli import PauliString, PauliSum
 from .hamiltonian_simulation import TrotterResult, _pauli_evolution_circuit
 
 
@@ -55,14 +51,14 @@ def _fourth_order_suzuki(
         for p in coeffs:
             step_time = p * dt
             # Forward sweep
-            for label, coeff, nq in terms:
+            for label, coeff, _nq in terms:
                 sub = _pauli_evolution_circuit(
                     label, coeff, step_time, num_qubits
                 )
                 for op, targets in sub.gates:
                     qc.append(op, targets)
             # Reverse sweep
-            for label, coeff, nq in reversed(terms):
+            for label, coeff, _nq in reversed(terms):
                 sub = _pauli_evolution_circuit(
                     label, coeff, step_time, num_qubits
                 )
@@ -171,7 +167,7 @@ def _commutes(a: PauliString, b: PauliString) -> bool:
     label_b = label_b.rjust(max_len, "I")
 
     diff_count = 0
-    for ca, cb in zip(label_a, label_b):
+    for ca, cb in zip(label_a, label_b, strict=False):
         if ca != "I" and cb != "I" and ca != cb:
             diff_count += 1
 

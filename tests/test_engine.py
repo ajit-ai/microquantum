@@ -5,7 +5,6 @@ import pytest
 
 from microquantum.core import StateVector, apply_gate
 
-
 # ---------------------------------------------------------------------------
 # Standard gate matrices
 # ---------------------------------------------------------------------------

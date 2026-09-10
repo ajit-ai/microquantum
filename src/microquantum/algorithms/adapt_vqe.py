@@ -7,7 +7,6 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from ..core.circuit import QuantumCircuit
-from ..core.operators import Operator
 from ..core.parameter import Parameter
 from ..core.pauli import PauliString, PauliSum
 from ..core.state import StateVector
@@ -209,7 +208,7 @@ class AdaptVQE:
         else:
             qc = QuantumCircuit(n)
 
-        for idx, param in zip(operator_indices, params):
+        for idx, param in zip(operator_indices, params, strict=False):
             label = self._pool[idx].label
             self._apply_exp_operator(qc, label, param, n)
 
@@ -351,9 +350,7 @@ class AdaptVQE:
         converged = False
 
         # Evaluate initial energy
-        if self._initial_circuit is not None and not self._initial_circuit.is_parameterized:
-            state = self._initial_circuit.run()
-        elif self._initial_circuit is not None and self._initial_circuit.is_parameterized:
+        if self._initial_circuit is not None and not self._initial_circuit.is_parameterized or self._initial_circuit is not None and self._initial_circuit.is_parameterized:
             state = self._initial_circuit.run()
         else:
             state = StateVector(self._num_qubits)

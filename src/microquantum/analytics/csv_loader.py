@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import csv
 import os
-from typing import Any, Optional, Union
 
 import numpy as np
 
@@ -49,7 +48,7 @@ def load_csv(
     try:
         data = np.array(data_rows, dtype=float)
     except ValueError as e:
-        raise ValueError(f"Cannot convert CSV data to numeric array: {e}")
+        raise ValueError(f"Cannot convert CSV data to numeric array: {e}") from e
 
     return headers, data
 

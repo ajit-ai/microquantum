@@ -104,7 +104,7 @@ def _render(
         parts.append("")
 
     # Qubit labels
-    label_width = max(len(f"    q[{i}]: ") for i in range(n))
+    max(len(f"    q[{i}]: ") for i in range(n))
 
     wire_lines: list[list[str]] = [[] for _ in range(n)]
 
@@ -112,7 +112,7 @@ def _render(
         prefix = f"    q[{i}]: |0> "
         wire_lines[i].append(prefix)
 
-    for col_idx, column in enumerate(columns):
+    for _col_idx, column in enumerate(columns):
         # Determine which qubits are involved in this step
         involved: set[int] = set()
         gate_at: dict[int, tuple[Operator, list[int]]] = {}
@@ -167,7 +167,7 @@ def _render(
             elif is_swap:
                 for i in range(n):
                     if i in involved:
-                        wire_lines[i].append(f" x ")
+                        wire_lines[i].append(" x ")
                     elif min_q < i < max_q:
                         wire_lines[i].append(f" {_WIRE}  ")
                     else:
@@ -211,16 +211,14 @@ def _gate_label(op: Operator) -> str:
 
 def _quick_angle(op: Operator) -> float:
     """Quick angle extraction for display purposes."""
-    import numpy as np
     import math
+
+    import numpy as np
 
     name = op.name.lower()
     m = op.matrix
 
-    if name == "rx":
-        c = float(np.real(m[0, 0]))
-        return 2.0 * math.acos(max(-1.0, min(1.0, c)))
-    elif name == "ry":
+    if name == "rx" or name == "ry":
         c = float(np.real(m[0, 0]))
         return 2.0 * math.acos(max(-1.0, min(1.0, c)))
     elif name == "rz":

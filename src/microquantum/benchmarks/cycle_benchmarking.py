@@ -8,14 +8,12 @@ and randomized compiling via Pauli twirling.
 from __future__ import annotations
 
 import random
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import numpy as np
 
 from ..core.circuit import QuantumCircuit
 from ..core.operators import Operator
-from ..core.state import StateVector
-
 
 PAULIS = [Operator.I(), Operator.X(), Operator.Y(), Operator.Z()]
 
@@ -148,7 +146,7 @@ class CycleBenchmarking:
 
         valid = [
             (m, f)
-            for m, f in zip(self._cycle_lengths, fidelities)
+            for m, f in zip(self._cycle_lengths, fidelities, strict=False)
             if f > 0
         ]
         if len(valid) >= 2:

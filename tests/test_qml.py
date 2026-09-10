@@ -3,15 +3,14 @@ import numpy as np
 import pytest
 
 from microquantum.core.circuit import QuantumCircuit
-from microquantum.core.parameter import Parameter
+from microquantum.qml.classifier import ClassifierResult, VariationalClassifier
 from microquantum.qml.encoding import (
-    AngleEncoding,
     AmplitudeEncoding,
+    AngleEncoding,
     IQPEncoding,
     ZFeatureMap,
 )
 from microquantum.qml.kernels import QuantumKernel
-from microquantum.qml.classifier import VariationalClassifier, ClassifierResult
 
 
 class TestAngleEncoding:

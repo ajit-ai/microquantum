@@ -9,14 +9,14 @@ Encoding types:
 - IQPEncoding: Interleaved data encoding with entangling layers
 - ZFeatureMap: Single-qubit Z-rotations with CNOT entangler
 """
+from .classifier import ClassifierResult, VariationalClassifier
 from .encoding import (
-    AngleEncoding,
     AmplitudeEncoding,
+    AngleEncoding,
     IQPEncoding,
     ZFeatureMap,
 )
 from .kernels import QuantumKernel
-from .classifier import VariationalClassifier, ClassifierResult
 
 __all__ = [
     "AngleEncoding",

@@ -2,11 +2,11 @@
 import numpy as np
 import pytest
 
-from microquantum.core.circuit import QuantumCircuit
-from microquantum.mitigation.zne import ZeroNoiseExtrapolation, ExtrapolationResult
-from microquantum.mitigation.pec import ProbabilisticErrorCancellation
-from microquantum.mitigation.mem import MeasurementErrorMitigation
 from microquantum.backends.noise import NoiseModel
+from microquantum.core.circuit import QuantumCircuit
+from microquantum.mitigation.mem import MeasurementErrorMitigation
+from microquantum.mitigation.pec import ProbabilisticErrorCancellation
+from microquantum.mitigation.zne import ExtrapolationResult, ZeroNoiseExtrapolation
 
 
 class TestZeroNoiseExtrapolation:

@@ -6,7 +6,6 @@ import tempfile
 from pathlib import Path
 
 import numpy as np
-import pytest
 
 from microquantum.core.circuit import QuantumCircuit
 

@@ -8,14 +8,14 @@ from .base import AnalysisResult, BaseAnalytics
 from .csv_loader import load_csv, load_csv_column, load_distance_matrix
 from .result import Result
 from .visualization import (
+    format_analysis_report,
+    plot_comparison_bar,
     plot_kernel_matrix,
     plot_optimization_history,
     plot_portfolio_allocation,
     plot_risk_return_scatter,
-    plot_comparison_bar,
     plot_route_map,
     plot_var_distribution,
-    format_analysis_report,
 )
 
 __all__ = [

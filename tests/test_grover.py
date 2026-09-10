@@ -1,10 +1,11 @@
 """Tests for Grover's search algorithm."""
 
 import math
-import pytest
-import numpy as np
 
-from microquantum.algorithms.grover import GroverSearch, GroverResult
+import numpy as np
+import pytest
+
+from microquantum.algorithms.grover import GroverResult, GroverSearch
 
 
 class TestGroverSearchCreation:

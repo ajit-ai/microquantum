@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Any, Optional
 
 import numpy as np
 from numpy.typing import NDArray
 
 from ..core.circuit import QuantumCircuit
-from ..core.measurement import MeasurementResult, sample_state
+from ..core.measurement import sample_state
 from ..core.operators import Operator
 from ..core.state import StateVector
 from .base import Backend
@@ -115,6 +115,19 @@ class ExecutorResult:
         for bitstring in sorted(self.counts):
             lines.append(f"  |{bitstring}>: {self.counts[bitstring]}")
         return "\n".join(lines)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to a JSON-safe dictionary."""
+        return {
+            "counts": dict(self.counts),
+            "probabilities": dict(self.probabilities),
+            "shots": self.shots,
+            "num_qubits": self.num_qubits,
+            "statevector": (
+                self.statevector.tolist() if self.statevector is not None else None
+            ),
+            "metadata": dict(self.metadata),
+        }
 
 
 class Executor:
@@ -295,7 +308,6 @@ class Executor:
     ) -> ExecutorResult:
         """Execute via density-matrix simulation with noise after each gate."""
         from ..core.density_matrix import DensityMatrix
-        from ..core.engine import apply_gate
 
         circuit._ensure_bound()
         n = circuit.num_qubits

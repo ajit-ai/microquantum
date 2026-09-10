@@ -15,7 +15,6 @@ from numpy.typing import NDArray
 
 from ..core.circuit import QuantumCircuit
 from ..core.operators import Operator
-from ..core.state import StateVector
 
 
 @dataclass
@@ -122,10 +121,11 @@ class RandomizedBenchmarking:
             for g in group:
                 for gen in generators:
                     candidate = gen @ g
-                    if not self._is_same_gate(candidate, group):
-                        if not self._is_same_gate(candidate, new_elements):
-                            new_elements.append(candidate)
-                            changed = True
+                    if not self._is_same_gate(candidate, group) and not self._is_same_gate(
+                        candidate, new_elements
+                    ):
+                        new_elements.append(candidate)
+                        changed = True
             group.extend(new_elements)
 
         cliffords: list[QuantumCircuit] = []
@@ -281,7 +281,7 @@ class RandomizedBenchmarking:
         B = 1.0 / d
 
         valid: list[tuple[int, float]] = []
-        for m, prob in zip(lengths, probs):
+        for m, prob in zip(lengths, probs, strict=False):
             if prob > B + 1e-12:
                 valid.append((m, prob))
 

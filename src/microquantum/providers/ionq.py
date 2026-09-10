@@ -115,7 +115,6 @@ class IonQProvider(HardwareProvider):
         num_qubits = int(data.get("num_qubits", data.get("qubits", 0)))
         shots = self._shots_by_job.get(job_id, 1024)
         counts: dict[str, int] = {}
-        import numpy as np
 
         probabilities: dict[str, float] = {}
         for index, prob in histogram.items():

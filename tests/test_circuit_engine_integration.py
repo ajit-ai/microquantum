@@ -1,7 +1,6 @@
 """Tests for QuantumCircuit.run() using efficient engine.apply_gate()."""
 
 import numpy as np
-import pytest
 
 from microquantum.core import (
     Operator,
@@ -103,10 +102,9 @@ class TestCircuitEngineIntegration:
         circuit.cnot(0, 1)
 
         final_state = circuit.run()
-        original_state = circuit.inverse().run()
+        circuit.inverse().run()
 
         # Apply final_state to get back to |00>
-        recovered = final_state  # This is the state after circuit
         # Apply inverse to get back to initial
         inverse_circuit = circuit.inverse()
         recovered_state = inverse_circuit.run(final_state)

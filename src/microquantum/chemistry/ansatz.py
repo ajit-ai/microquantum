@@ -8,12 +8,8 @@ from __future__ import annotations
 
 from typing import Optional
 
-import numpy as np
-
 from ..core.circuit import QuantumCircuit
-from ..core.operators import Operator
 from ..core.parameter import Parameter
-from ..core.tensor import expand_operator, tensor
 
 
 class HardwareEfficientAnsatz:

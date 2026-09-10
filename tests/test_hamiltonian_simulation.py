@@ -5,10 +5,9 @@ import pytest
 
 from microquantum.algorithms.hamiltonian_simulation import (
     HamiltonianSimulation,
-    TrotterResult,
     _pauli_evolution_circuit,
 )
-from microquantum.core import Operator, QuantumCircuit, StateVector
+from microquantum.core import StateVector
 from microquantum.core.pauli import PauliString, PauliSum
 
 
@@ -59,7 +58,7 @@ class TestHamiltonianSimulation:
     def test_trotter_result_fields(self):
         H = PauliSum([PauliString("Z")])
         sim = HamiltonianSimulation(H, evolution_time=1.0, num_steps=5, trotter_order=2)
-        result = sim.run()
+        sim.run()
         assert isinstance(sim, HamiltonianSimulation)
         assert sim.num_steps == 5
         assert sim.trotter_order == 2

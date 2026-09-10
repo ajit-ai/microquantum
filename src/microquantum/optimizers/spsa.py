@@ -11,11 +11,8 @@ optimization landscapes.
 
 from __future__ import annotations
 
-import math
 import random
 from typing import Callable, Optional
-
-import numpy as np
 
 from ..core.parameter import Parameter
 from .base import Optimizer

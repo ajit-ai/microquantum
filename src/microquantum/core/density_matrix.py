@@ -188,8 +188,8 @@ class DensityMatrix:
         # Sort indices to trace over in descending order
         sorted_over = sorted(trace_over, reverse=True)
         for q in sorted_over:
-            dim_left = 2 ** q
-            dim_right = 2 ** (n - q - 1)
+            2 ** q
+            2 ** (n - q - 1)
             # Trace over axis q (physical) and axis n+q (bra)
             rho_tensor = np.trace(rho_tensor, axis1=q, axis2=n + q)
 

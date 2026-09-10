@@ -13,7 +13,6 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 from ..core.circuit import QuantumCircuit
-from ..core.operators import Operator
 from ..core.state import StateVector
 
 

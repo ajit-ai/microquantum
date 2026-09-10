@@ -8,9 +8,9 @@ Techniques:
 - ProbabilisticErrorCancellation: Invert noise via quasi-probability
 - MeasurementErrorMitigation: Correct readout errors via calibration
 """
-from .zne import ZeroNoiseExtrapolation, ExtrapolationResult
-from .pec import ProbabilisticErrorCancellation
 from .mem import MeasurementErrorMitigation, MitigationMatrix
+from .pec import ProbabilisticErrorCancellation
+from .zne import ExtrapolationResult, ZeroNoiseExtrapolation
 
 __all__ = [
     "ZeroNoiseExtrapolation",

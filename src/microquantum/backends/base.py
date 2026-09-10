@@ -6,12 +6,15 @@ import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 import numpy as np
 from numpy.typing import NDArray
 
 from ..core.state import StateVector
+
+if TYPE_CHECKING:
+    from ..core.circuit import QuantumCircuit
 
 
 class JobStatus(Enum):
@@ -56,6 +59,22 @@ class BackendResult:
         if not self.counts:
             raise ValueError("No measurement counts available")
         return max(self.counts, key=lambda k: self.counts[k])
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to a JSON-safe dictionary."""
+        return {
+            "num_qubits": self.num_qubits,
+            "backend_name": self.backend_name,
+            "statevector": (
+                self.statevector.tolist() if self.statevector is not None else None
+            ),
+            "density_matrix": (
+                self.density_matrix.tolist() if self.density_matrix is not None else None
+            ),
+            "counts": dict(self.counts),
+            "probabilities": dict(self.probabilities),
+            "metadata": dict(self.metadata),
+        }
 
     def __repr__(self) -> str:
         return (
@@ -171,6 +190,39 @@ class Backend(ABC):
             job.error = str(e)
             job.status = JobStatus.FAILED
         return job
+
+    def run(
+        self,
+        circuit: QuantumCircuit,
+        shots: int = 1024,
+        initial_state: Optional[StateVector] = None,
+        seed: Optional[int] = None,
+    ) -> BackendResult:
+        """Execute a bound circuit via the high-level API.
+
+        The preferred way to run a :class:`QuantumCircuit` on any backend —
+        both simulators and hardware. Translates the circuit's gate
+        instructions into the low-level ``run_circuit`` contract.
+
+        Args:
+            circuit: The quantum circuit to execute. Unbound parameters
+                raise ``ValueError``.
+            shots: Number of measurement shots.
+            initial_state: Optional initial state vector.
+            seed: RNG seed for reproducibility.
+
+        Returns:
+            BackendResult with measurement counts and simulation state.
+        """
+        circuit._ensure_bound()
+        gates = [(op.matrix, targets) for op, targets in circuit.gates]
+        return self.run_circuit(
+            num_qubits=circuit.num_qubits,
+            gates=gates,
+            shots=shots,
+            initial_state=initial_state,
+            seed=seed,
+        )
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(name='{self.name}')"

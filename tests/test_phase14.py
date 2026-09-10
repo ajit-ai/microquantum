@@ -8,15 +8,15 @@ import numpy as np
 import pytest
 
 from microquantum import (
-    QuantumCircuit,
     CircuitSerializer,
-    UnsupportedGateError,
+    Executor,
     HardwareBackend,
     IBMQuantumCredentials,
     IBMQuantumProvider,
     IonQCredentials,
     IonQProvider,
-    Executor,
+    QuantumCircuit,
+    UnsupportedGateError,
 )
 from microquantum.core.operators import Operator
 from microquantum.providers.base import HardwareStatus
@@ -170,18 +170,18 @@ class TestIonQProvider:
 
     def test_http_error_raises(self) -> None:
         """Non-2xx responses raise an error from the transport."""
+        from microquantum.providers.http import HttpError
+
         def failing(  # type: ignore[no-untyped-def]
             method: str, url: str, headers: dict, body
         ) -> tuple[int, dict]:
-            from microquantum.providers.http import HttpError
-
             raise HttpError("Provider API error (401)", 401)
 
         prov = IonQProvider(
             IonQCredentials(api_token="t", base_url="https://mock/v0.3"),
             transport=failing,
         )
-        with pytest.raises(Exception):
+        with pytest.raises(HttpError):
             prov.submit(bell_circuit())
 
 
@@ -225,7 +225,7 @@ class TestIBMQuantumProvider:
         prov, calls = provider
         job = prov.submit(bell_circuit(), shots=1000)
         assert job.job_id == "ibm-job-7"
-        assert any("POST" == m and u.endswith("/jobs") for m, u in calls)
+        assert any(m == "POST" and u.endswith("/jobs") for m, u in calls)
 
     def test_status_maps_to_enum(self, provider) -> None:  # type: ignore[no-untyped-def]
         """Uppercase vendor status maps to HardwareStatus.completed."""

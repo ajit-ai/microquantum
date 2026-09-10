@@ -7,7 +7,6 @@ repeated execution of randomized circuits.
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass
 from typing import Optional
 
 import numpy as np

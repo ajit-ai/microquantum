@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import copy
-import math
 from typing import Callable, Optional
 
 from ..core.parameter import Parameter

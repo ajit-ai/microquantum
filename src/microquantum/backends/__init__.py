@@ -10,7 +10,7 @@ from .array_backend import (
 from .base import Backend, BackendResult, Job
 from .density_matrix import DensityMatrixBackend
 from .executor import Executor, ExecutorResult
-from .mps import MPSBackend, MatrixProductState
+from .mps import MatrixProductState, MPSBackend
 from .noise import NoiseChannel, NoiseModel
 from .statevector import StatevectorBackend
 from .tensor_network import TreeTensorNetwork, TreeTensorNetworkBackend

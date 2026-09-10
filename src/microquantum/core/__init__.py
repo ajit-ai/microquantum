@@ -23,8 +23,9 @@ from .optimization import (
 )
 from .parameter import Parameter, ParameterExpression
 from .pauli import PauliString, PauliSum
-from .registers import ClassicalRegister as ClassicalRegisterBase, QuantumRegister
-from .resources import ResourceEstimator, ResourceEstimate
+from .registers import ClassicalRegister as ClassicalRegisterBase
+from .registers import QuantumRegister
+from .resources import ResourceEstimate, ResourceEstimator
 from .state import StateVector
 from .tensor import expand_operator, tensor
 from .transpiler import Pass, PassManager, TargetGateSet
