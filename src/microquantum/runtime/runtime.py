@@ -23,6 +23,7 @@ from typing import Any, Optional, Sequence, Union, cast
 import numpy as np
 
 from ..backends.base import Backend, BackendResult, Job, JobStatus
+from ..backends.registry import BackendRegistry, default_registry
 from ..backends.statevector import StatevectorBackend
 from ..core.circuit import QuantumCircuit
 from ..core.device import Target
@@ -35,6 +36,8 @@ from .trace import ExecutionTrace
 Work = Union[ExecutionPlan, QuantumCircuit]
 BatchResult = Union[BackendResult, str]
 SweepValues = Union[Sequence[float], Sequence[ParameterBinding]]
+#: Backend reference accepted by the runtime: an instance or a name.
+BackendRef = Union[Backend, str]
 
 
 def _direct_handler(
@@ -53,7 +56,12 @@ class ExecutionRuntime:
     """Orchestrates plan preparation, compilation, submission and collection.
 
     Args:
-        backend: Default backend when a plan does not name one.
+        backend: Default :class:`Backend` when a plan does not name one
+            (highest-priority explicit default).
+        registry: Optional :class:`BackendRegistry` used to resolve backend
+            *names* given in plans and to pick the fallback default backend.
+            Without a registry, a plan may still name one of the backends
+            registered in the module-level ``default_registry``.
         default_target: Default :class:`Target` applied to plans that do not
             specify a target.  ``None`` disables default target processing.
         history_size: Maximum number of records kept in :attr:`history`.
@@ -63,10 +71,12 @@ class ExecutionRuntime:
         self,
         backend: Optional[Backend] = None,
         *,
+        registry: Optional[BackendRegistry] = None,
         default_target: Optional[Target] = None,
         history_size: int = 200,
     ) -> None:
         self._backend = backend
+        self._registry = registry
         self._default_target = default_target
         self._history_size = max(0, int(history_size))
         self._history: list[dict[str, Any]] = []
@@ -85,13 +95,59 @@ class ExecutionRuntime:
         return [dict(entry) for entry in self._history]
 
     @property
+    def registry(self) -> Optional[BackendRegistry]:
+        """Registry used to resolve backend names (may be ``None``)."""
+        return self._registry
+
+    @property
     def default_backend(self) -> Backend:
-        """Resolve the backend used for plans that name none."""
+        """Resolve the backend used for plans that name none.
+
+        Precedence: explicit ``backend`` argument > registry default >
+        a lazily created :class:`StatevectorBackend` (name ``"statevector"``).
+        """
         if self._backend is not None:
             return self._backend
+        if self._registry is not None:
+            backend = self._registry.default
+            if backend is not None:
+                return backend
         if self._simulator is None:
             self._simulator = StatevectorBackend()
         return self._simulator
+
+    def resolve_backend(self, ref: Optional[BackendRef]) -> Backend:
+        """Resolve a backend reference (instance, name or ``None``).
+
+        Passed a *name*, the runtime first checks the attached registry and
+        then the module-level ``default_registry``.
+
+        Raises:
+            KeyError: If *ref* is a string naming no registered backend.
+            TypeError: If *ref* is neither a Backend nor a string.
+        """
+        if ref is None:
+            return self.default_backend
+        if isinstance(ref, Backend):
+            return ref
+        if isinstance(ref, str):
+            if self._registry is not None and self._registry.has(ref):
+                return self._registry.get(ref)
+            if default_registry.has(ref):
+                return default_registry.get(ref)
+            known = (
+                self._registry.names()
+                if self._registry is not None
+                else default_registry.names()
+            )
+            raise KeyError(
+                f"unknown backend {ref!r}; "
+                f"known backends: {sorted(known)}"
+            )
+        raise TypeError(
+            "backend reference must be a Backend, a name string or None, "
+            f"got {type(ref).__name__}"
+        )
 
     def clear_history(self) -> None:
         """Clear the recorded execution history."""
@@ -122,9 +178,7 @@ class ExecutionRuntime:
         return plan
 
     def _select_backend(self, plan: ExecutionPlan) -> Backend:
-        if plan.backend is not None:
-            return cast(Backend, plan.backend)
-        return self.default_backend
+        return self.resolve_backend(plan.backend)
 
     def _select_target(self, plan: ExecutionPlan) -> Optional[Target]:
         target = plan.target
@@ -176,7 +230,7 @@ class ExecutionRuntime:
     # submission / execution
     # ------------------------------------------------------------------
 
-    def submit(self, work: Work, *, backend: Optional[Backend] = None) -> Job:
+    def submit(self, work: Work, *, backend: Optional[BackendRef] = None) -> Job:
         """Submit a plan or circuit to a backend and return its Job.
 
         Simulator backends return an already-completed job synchronously;
@@ -200,7 +254,7 @@ class ExecutionRuntime:
         *,
         shots: int = 1024,
         seed: Optional[int] = None,
-        backend: Optional[Backend] = None,
+        backend: Optional[BackendRef] = None,
     ) -> list[Job]:
         """Submit a sequence of plans/circuits, returning one Job each.
 
@@ -227,7 +281,7 @@ class ExecutionRuntime:
         self,
         work: Work,
         *,
-        backend: Optional[Backend] = None,
+        backend: Optional[BackendRef] = None,
         shots: Optional[int] = None,
         seed: Optional[int] = None,
         metadata: Optional[dict[str, Any]] = None,
@@ -281,7 +335,7 @@ class ExecutionRuntime:
         *,
         shots: int = 1024,
         seed: Optional[int] = None,
-        backend: Optional[Backend] = None,
+        backend: Optional[BackendRef] = None,
         raise_on_error: bool = True,
     ) -> list[BatchResult]:
         """Execute a sequence of plans/circuits and collect their results.
@@ -320,7 +374,7 @@ class ExecutionRuntime:
         seed: Optional[int] = None,
         target: Optional[Target] = None,
         optimization_level: int = 0,
-        backend: Optional[Backend] = None,
+        backend: Optional[BackendRef] = None,
     ) -> list[BackendResult]:
         """Run the same circuit across a sweep of parameter bindings.
 
@@ -457,7 +511,7 @@ class ExecutionRuntime:
         self,
         work: Work,
         *,
-        backend: Optional[Backend] = None,
+        backend: Optional[BackendRef] = None,
         shots: Optional[int] = None,
         seed: Optional[int] = None,
         metadata: Optional[dict[str, Any]] = None,
@@ -615,18 +669,27 @@ class ExecutionRuntime:
     def _check_capabilities(
         self, backend: Backend, executable: QuantumCircuit, plan: ExecutionPlan
     ) -> None:
-        target = self._select_target(plan) or backend.target
-        if target is None:
-            return
-        if target.num_qubits is not None and executable.num_qubits > target.num_qubits:
+        problems: list[str] = []
+        target = self._select_target(plan)
+        if target is not None:
+            if (
+                target.num_qubits is not None
+                and executable.num_qubits > target.num_qubits
+            ):
+                problems.append(
+                    f"circuit uses {executable.num_qubits} qubits but target "
+                    f"'{target.name}' supports at most {target.num_qubits}"
+                )
+            if target.max_shots is not None and plan.shots > target.max_shots:
+                problems.append(
+                    f"plan requests {plan.shots} shots but target "
+                    f"'{target.name}' supports at most {target.max_shots}"
+                )
+        problems.extend(backend.validate(plan))
+        if problems:
             raise ValueError(
-                f"circuit uses {executable.num_qubits} qubits but target "
-                f"'{target.name}' supports at most {target.num_qubits}"
-            )
-        if target.max_shots is not None and plan.shots > target.max_shots:
-            raise ValueError(
-                f"plan requests {plan.shots} shots but target "
-                f"'{target.name}' supports at most {target.max_shots}"
+                f"plan '{plan.name}' cannot run on backend '{backend.name}': "
+                f"{'; '.join(problems)}"
             )
 
     def _collect(
@@ -693,7 +756,15 @@ class ExecutionRuntime:
         for key, value in (plan.metadata or {}).items():
             if key not in ("trace", "parameter_bindings"):
                 meta[key] = value
-        return replace(job.result, metadata=meta)
+        return replace(
+            job.result,
+            metadata=meta,
+            shots=plan.shots if job.result.shots is None else job.result.shots,
+            seed=plan.seed if job.result.seed is None else job.result.seed,
+            target_name=job.result.target_name
+            if job.result.target_name is not None
+            else (target.name if target is not None else backend.name),
+        )
 
     def _record_history(
         self,

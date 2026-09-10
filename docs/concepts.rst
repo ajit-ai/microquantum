@@ -195,6 +195,72 @@ Variational algorithms (VQE, QAOA, AdaptVQE, VQD) accept any ``Optimizer``,
 so the same problem can be solved with different classical routines without
 changing algorithm code (see the optimizer-comparison example).
 
+Backends, capabilities & providers
+----------------------------------
+
+MQ-06 turns the backend slot into a layered, inspectable contract.  A backend
+answers three questions before any work is dispatched:
+
+.. code-block:: text
+
+                         inspect                     validate                  execute
+    Algorithm -> ExecutionPlan ------> BackendCapabilities -------> Backend.execute(plan)
+                          |                (no work runs)               (binds + runs)
+                          v
+                  BackendRegistry <------ providers discover backends
+                    (register,            (LocalProvider today)
+                     resolve by name)
+
+* :class:`~microquantum.backends.base.Backend` is the execution contract.
+  Subclasses implement ``run_circuit`` (raw gate matrices) or ``run`` (a bound
+  :class:`~microquantum.core.circuit.QuantumCircuit`); the base provides the
+  plan-level surface: ``capabilities``, ``validate(plan) -> list[str]``,
+  ``supports(plan) -> bool`` and ``execute(plan) -> BackendResult``.
+  ``execute`` is the canonical single-call entry point — it validates, binds
+  parameters via ``plan.bound()`` and runs. Every backend exposes a JSON-safe
+  ``metadata()`` including its capabilities.
+* :class:`~microquantum.backends.capabilities.BackendCapabilities` describe
+  *what* a backend can do without running anything: a
+  :class:`~microquantum.backends.capabilities.TargetClass` (simulator, CPU,
+  GPU, quantum hardware, remote, custom), execution-mode tokens
+  (statevector / sampling / shots / expectation values / unitary / density
+  matrix), circuit-feature tokens, qubit capacity, connectivity, native gates
+  and free-form metadata.  They serialize to JSON (``to_dict`` / ``to_json``
+  and ``from_dict``), so a runbook or CI check can reason about a backend
+  before dispatch; ``merge`` derives the capability intersection of two
+  backends.
+* :class:`~microquantum.backends.registry.BackendRegistry` is the discovery
+  point: ``register`` (duplicates rejected unless ``replace=True``),
+  ``get``/``has``/``names``, a settable ``default``, and JSON serialization.
+  Plans may name a backend *by string*; the runtime
+  (:class:`~microquantum.runtime.ExecutionRuntime`) resolves names through its
+  attached registry (falling back to the module-level ``default_registry``).
+  Backend selection precedence: ``plan.backend`` (instance or name) >
+  the runtime's explicit default > the attached registry default > a lazily
+  created ``statevector`` simulator.
+* :class:`~microquantum.backends.provider.Provider` is discovery-only — a
+  named owner of a backend family, never an executor.
+  :class:`~microquantum.backends.provider.LocalProvider` exposes the built-in
+  local simulators (``local_simulator``, ``statevector``,
+  ``density_matrix``, plus the deterministic ``mock`` stub).
+  :class:`~microquantum.backends.local.LocalSimulatorBackend` is the reference
+  backend, reusing the existing state-vector engine.
+* :class:`~microquantum.backends.adapter.BackendAdapter` is the boundary for
+  external/private execution targets: it accepts bound circuits, translates
+  them to the vendor wire format, and maps vendor results back into
+  :class:`~microquantum.backends.base.BackendResult` — vendor types never leak
+  through the SDK surface.  (The existing :mod:`microquantum.providers`
+  hardware layer is the optional vendor-facing side of this boundary.)
+* :class:`~microquantum.backends.base.BackendResult` gained MQ-06 payload
+  fields alongside the classic state vector / density matrix / counts:
+  raw ``samples``, labeled ``expectations``, ``eigenvalues``, a JSON-safe
+  ``native`` payload, plus the ``shots``, ``seed`` and ``target_name`` of the
+  run.  Everything still serializes through ``to_dict()`` / ``to_json()``.
+
+The whole MQ-05 algorithm layer rides this path unchanged: an algorithm builds
+a circuit, a plan pins a backend, and the runtime (or ``Backend.execute``
+directly) validates, binds, runs and returns an enriched result.
+
 Providers, adapters & hardware
 ------------------------------
 

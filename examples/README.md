@@ -111,3 +111,18 @@ and the same algorithm can ride the internal engine or the MQ-04 runtime.
 - `extension/04_custom_optimizer.py` — a custom `Optimizer` inside VQE.
 - `extension/05_custom_runtime.py` — routing a solve through a custom
   `ExecutionRuntime` subclass.
+
+## Backends & providers (MQ-06)
+
+- `backend/01_backend_basic.py` — the canonical plan-level backend contract
+  (`validate` / `supports` / `execute`) and runtime agreement.
+- `backend/02_backend_capabilities.py` — inspecting and merging
+  `BackendCapabilities`, discovering backends through `LocalProvider`.
+- `backend/03_backend_registry.py` — `BackendRegistry` registration,
+  duplicate/unknown-name handling and JSON serialization.
+- `backend/04_backend_selection.py` — backend selection precedence
+  (plan > runtime default > registry default > lazy default).
+- `backend/05_runtime_backend_execution.py` — a name-selected plan through the
+  runtime with the enriched result payload.
+- `backend/06_custom_backend.py` — building a custom `Backend` with
+  capabilities and the full plan contract.

@@ -31,6 +31,9 @@ if TYPE_CHECKING:
     from ..core.circuit import QuantumCircuit
     from ..core.device import Target
 
+#: Explicit backend selection: a Backend instance or a registered name.
+BackendRef = Union["Backend", str]
+
 ParameterBinding = Mapping[Union[str, "Parameter"], float]
 
 
@@ -55,7 +58,9 @@ class ExecutionPlan(JSONSerializable):
         target: Optional :class:`~microquantum.core.device.Target` the work is
             compiled for and validated against.
         backend: Optional :class:`~microquantum.backends.base.Backend` to run
-            on; the runtime falls back to its default backend when omitted.
+            on, or the *name* of a registered backend (resolved through the
+            runtime's :class:`~microquantum.backends.registry.BackendRegistry`).
+            The runtime falls back to its default backend when omitted.
         shots: Number of measurement shots.
         parameter_bindings: Optional mapping of parameter names (or
             :class:`~microquantum.core.parameter.Parameter` objects) to
@@ -103,7 +108,7 @@ class ExecutionPlan(JSONSerializable):
         *,
         name: str = "main",
         target: Optional[Target] = None,
-        backend: Optional[Backend] = None,
+        backend: Optional[BackendRef] = None,
         shots: int = 1024,
         parameter_bindings: Optional[ParameterBinding] = None,
         initial_state: Optional[StateVector] = None,
@@ -222,13 +227,18 @@ class ExecutionPlan(JSONSerializable):
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize the plan to a JSON-safe dictionary."""
+        backend_value: Optional[str] = None
+        if self.backend is not None:
+            backend_value = (
+                self.backend if isinstance(self.backend, str) else self.backend.name
+            )
         return {
             "name": self.name,
             "circuit": json_safe(self.circuit) if self.circuit is not None else None,
             "ir": self.ir.to_dict() if self.ir is not None else None,
             "compiled": json_safe(self.compiled) if self.compiled is not None else None,
             "target": self.target.to_dict() if self.target is not None else None,
-            "backend": self.backend.name if self.backend is not None else None,
+            "backend": backend_value,
             "shots": self.shots,
             "parameter_bindings": json_safe(dict(self.parameter_bindings or {})),
             "initial_state": json_safe(self.initial_state)
