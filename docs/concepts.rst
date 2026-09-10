@@ -3,7 +3,7 @@ Public Programming Model
 
 microquantum exposes a small set of public contracts that compose into a
 single execution model. The same interfaces serve local NumPy simulation
-today and CPU/GPU/NPU accelerators and proprietary quantum hardware in the
+today and CPU/GPU/NPU accelerators and quantum hardware in the
 future.
 
 Execution flow
@@ -92,22 +92,108 @@ The runtime is not a backend: it never re-implements simulation or provider
 logic, and a full user-provided :class:`~microquantum.backends.base.Backend`
 can be dropped in through a plan's ``backend`` field.
 
+Problems
+--------
+
+A *problem* is a plain, JSON-safe description of a computational task —
+never an execution or an algorithm.  The SDK ships five concrete problem
+types (all subclasses of
+:class:`~microquantum.problems.base.Problem`):
+
+* :class:`~microquantum.problems.base.SamplingProblem` — obtain samples
+  ``|bitstring> -> probability`` from a circuit's output distribution.
+* :class:`~microquantum.problems.optimization.OptimizationProblem` — minimize
+  a binary-objective function.  It is created from a
+  :class:`~microquantum.optimization.qubo.QUBOProblem`
+  (``OptimizationProblem.from_qubo``) or directly from a spin-Ising
+  :class:`~microquantum.core.pauli.PauliSum` (``from_ising``), and keeps both
+  views in sync: ``energy(bits)`` evaluates the bitstring objective,
+  ``cost_hamiltonian()`` exposes the spin Hamiltonian, ``to_qubo()`` recovers
+  the binary form, and ``encode_spins`` / ``sample`` move between the two.
+* :class:`~microquantum.problems.eigenvalue.HamiltonianProblem` — the
+  spectrum of a Hermitian operator
+  (:class:`~microquantum.core.operators.Operator` or
+  :class:`~microquantum.core.pauli.PauliSum`).
+* :class:`~microquantum.problems.eigenvalue.EigenvalueProblem` — like
+  HamiltonianProblem, but additionally requests the lowest ``k`` eigenvalues.
+* :class:`~microquantum.problems.search.SearchProblem` — find marked items in
+  a ``2**num_qubits``-item database, either from an explicit target list or
+  from a boolean ``predicate(index: int) -> bool``.
+
+Every problem implements :meth:`Problem.validate`, which *returns a list of
+human-readable strings* (empty = valid) instead of raising, so callers can
+aggregate diagnostics.  ``to_dict()`` / ``to_json()`` are JSON-safe for every
+problem — including Hamiltonian-backed ones, which serialize via
+``hamiltonian_to_dict`` into labeled Pauli terms with complex coefficients
+or an explicit matrix.  Problems are positional-first where it matters:
+``HamiltonianProblem(H)``, ``EigenvalueProblem(H, k=2)`` and
+``SamplingProblem(circuit)`` keep their payload first.
+
 Algorithms
 ----------
 
-All public algorithms in :mod:`microquantum.algorithms` share the same
-convention: instantiate with the problem definition, execute via
-``run()`` (a few older algorithms expose ``solve()`` / ``estimate()`` /
-``compute_minimum_eigenvalue()``) and receive a typed ``*Result`` dataclass
-supporting ``to_dict()`` / ``to_json()``. :class:`~microquantum.algorithms.base.Algorithm`
-documents this contract; subclassing it is optional.
+:class:`~microquantum.algorithms.base.Algorithm` is the generic algorithm
+contract.  Subclassing is optional for new algorithms but recommended:
+the base establishes the uniform ``validate(problem) -> solve(problem,
+runtime)`` lifecycle and a consistent
+:class:`~microquantum.algorithms.base.AlgorithmResult` container.
+
+``Algorithm.validate(problem)`` returns descriptive problems (an empty list
+when valid).  ``Algorithm.solve(problem, runtime=None)`` executes the
+algorithm for the given problem against the internal state-vector engine or,
+when a :class:`~microquantum.runtime.ExecutionRuntime` is passed, through
+the MQ-04 runtime pipeline.  Results are typed ``*Result`` dataclasses that
+serialize via ``to_dict()`` / ``to_json()``; ``AlgorithmResult`` additionally
+carries the algorithm name, the solved problem, the outcome, optimizer info
+and free-form ``config`` / ``execution_metadata`` / ``native`` payloads
+(the last is excluded from serialization).
+
+Built-in algorithms that follow the problem-driven lifecycle:
+
+* :class:`~microquantum.algorithms.vqe.VQE` — solve an
+  :class:`~microquantum.problems.eigenvalue.EigenvalueProblem` with a
+  user-provided ansatz + classical optimizer, using the parameter-shift rule
+  or operator gradients depending on the Hamiltonian type.
+* :class:`~microquantum.algorithms.qaoa.QAOA` — solve an
+  :class:`~microquantum.problems.optimization.OptimizationProblem` by
+  building a QAOA ansatz from the problem's Ising cost (CNOT parity chains
+  for the ZZ terms) and a standard mixer.
+* :class:`~microquantum.algorithms.grover.GroverSearch` — amplify the
+  marked states of a :class:`~microquantum.problems.search.SearchProblem`,
+  with an optional user-supplied oracle callable.
+* :class:`~microquantum.algorithms.phase_estimation.PhaseEstimation` —
+  estimate the eigenphase of a *unitary* :class:`~microquantum.core.operators.Operator`
+  (``from_problem`` / ``solve`` require a unitary Hamiltonian; non-unitary
+  cases should use VQE instead).
+
+Each also exposes ``from_problem(problem, ...)`` to configure the algorithm
+directly from a problem instance.  A handful of older algorithms
+(``AdaptVQE``, ``VQD``, Deutsch-Jozsa, Bernstein-Vazirani, ...) still follow
+the classic conventions (``compute_minimum_eigenvalue()`` / ``run()``) but
+return the same serializable result shapes.
 
 Optimizers
 ----------
 
-Classical optimizers in :mod:`microquantum.optimizers` share one interface:
-``minimize(func, initial_params, ...) -> OptimizerResult``. Variational
-algorithms (VQE, QAOA, AdaptVQE, VQD) accept any of these optimizers.
+Classical optimizers in :mod:`microquantum.optimizers` share one abstract
+interface (:class:`~microquantum.optimizers.Optimizer`): subclasses implement
+``_step``, ``_converged`` and ``max_iter``, and the base provides
+``minimize(cost_fn, gradient_fn, initial_params) -> OptimizerResult``.
+Gradients are optional — optimizers that can operate finite-differentially
+fall back when ``gradient_fn`` is omitted.
+
+* Known-good gradient-free families:
+  :class:`~microquantum.optimizers.COBYLA`, :class:`~microquantum.optimizers.NelderMead`.
+* Gradient-based: :class:`~microquantum.optimizers.GradientDescent`,
+  :class:`~microquantum.optimizers.Adam`, plus the stochastic variants
+  :class:`~microquantum.optimizers.SPSA` / :class:`~microquantum.optimizers.QNSPSA`.
+* Quasi-Newton: :class:`~microquantum.optimizers.BFGS` (pure NumPy — no SciPy
+  dependency); :class:`~microquantum.optimizers.L_BFGS_B` is exposed the same
+  way and raises ``ImportError`` on instantiation when SciPy is unavailable.
+
+Variational algorithms (VQE, QAOA, AdaptVQE, VQD) accept any ``Optimizer``,
+so the same problem can be solved with different classical routines without
+changing algorithm code (see the optimizer-comparison example).
 
 Providers, adapters & hardware
 ------------------------------

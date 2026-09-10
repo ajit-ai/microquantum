@@ -276,12 +276,12 @@ class QuantumCircuit:
         return self.append_parameterized("ry", theta, q)
 
     def rz(
-        self, theta: Union[float, int, complex, Parameter], q: int
+        self, theta: Union[float, int, complex, Parameter, ParameterExpression], q: int
     ) -> QuantumCircuit:
         """Apply Rz(theta) rotation to qubit q.
 
         Args:
-            theta: Rotation angle in radians, or a Parameter.
+            theta: Rotation angle in radians, or a (expression of a) Parameter.
             q: Target qubit index.
         """
         return self.append_parameterized("rz", theta, q)

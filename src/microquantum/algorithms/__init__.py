@@ -2,7 +2,7 @@
 
 from .adapt_vqe import AdaptResult, AdaptVQE
 from .amplitude_estimation import AmplitudeEstimation, AmplitudeEstimationResult
-from .base import Algorithm
+from .base import Algorithm, AlgorithmResult
 from .bernstein_vazirani import BernsteinVazirani, BVResult
 from .deutsch_jozsa import DeutschJozsa, DJResult
 from .grover import GroverResult, GroverSearch
@@ -26,6 +26,7 @@ from .vqe import VQE, VQEResult
 
 __all__ = [
     "Algorithm",
+    "AlgorithmResult",
     "VQE",
     "VQEResult",
     "VQD",

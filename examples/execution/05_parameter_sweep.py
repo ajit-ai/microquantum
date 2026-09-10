@@ -21,7 +21,7 @@ def main():
     results = run_parameter_sweep(qc, angles, shots=2048, seed=21)
     print(" theta | P(|1>)")
     print(" ------|------")
-    for angle, result in zip(angles, results):
+    for angle, result in zip(angles, results, strict=False):
         prob = result.probabilities.get("1", 0.0)
         print(f" {angle:5.2f} |  {prob:.3f}")
 

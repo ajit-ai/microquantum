@@ -9,11 +9,10 @@ see the failure inside the lifecycle envelope, and use
 from microquantum import (
     ExecutionPlan,
     Parameter,
-    JobStatus,
     QuantumCircuit,
     StateVector,
-    submit,
     execute_batch,
+    submit,
 )
 
 
