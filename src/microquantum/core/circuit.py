@@ -586,6 +586,33 @@ class QuantumCircuit:
     # I/O & display
     # ------------------------------------------------------------------
 
+    def to_ir(self, include_terminal_measurements: bool = False) -> "object":
+        """Convert this circuit into MicroQuantum IR.
+
+        Args:
+            include_terminal_measurements: If True, append a Measurement
+                node per qubit so the IR describes a complete sampling
+                program.
+
+        Returns:
+            An :class:`~microquantum.ir.IRCircuit` representing the gates.
+        """
+        from ..ir import to_ir as _ir_to_ir
+        return _ir_to_ir(self, include_terminal_measurements=include_terminal_measurements)
+
+    @staticmethod
+    def from_ir(ir: "object") -> "QuantumCircuit":
+        """Rebuild a QuantumCircuit from gate-level MicroQuantum IR.
+
+        Args:
+            ir: An IRCircuit produced by :meth:`to_ir` or a compiler.
+
+        Returns:
+            A QuantumCircuit executing the IR's gates.
+        """
+        from ..ir import from_ir as _ir_from_ir
+        return _ir_from_ir(ir)
+
     def qasm(self, header: bool = True) -> str:
         """Export circuit to OpenQASM 2.0 format.
 

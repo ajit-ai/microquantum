@@ -147,6 +147,51 @@ def _measure_single_qubit(
     return outcome, StateVector(num_qubits=n, amplitudes=new_amps.astype(np.complex128))
 
 
+def _reset_single_qubit(state: StateVector, qubit: int) -> StateVector:
+    """Re-prepare a qubit in |0>, discarding its previous state.
+
+    The simulator removes the qubit's degree of freedom (a deterministic
+    trace over the qubit) and tensors the remainder with |0>.  For pure
+    states separable in that qubit this amounts to merging the |0> and |1>
+    amplitudes of each "rest" basis state into a single |0> amplitude and
+    renormalizing.
+
+    Args:
+        state: The current quantum state.
+        qubit: Qubit index to reset.
+
+    Returns:
+        New state with the qubit prepared in |0>.
+
+    Raises:
+        ValueError: If qubit index is out of range.
+    """
+    n = state.num_qubits
+    if qubit < 0 or qubit >= n:
+        raise ValueError(
+            f"Qubit index {qubit} out of range for "
+            f"{n}-qubit state (valid: 0..{n - 1})"
+        )
+
+    amps = state.amplitudes
+    dim = 2**n
+    mask = 1 << (n - 1 - qubit)
+
+    indices = np.arange(dim)
+    is_one = (indices & mask) != 0
+    zero_into = indices & ~mask
+
+    new_amps = np.zeros(dim, dtype=np.complex128)
+    new_amps[zero_into[is_one]] += amps[is_one]
+    new_amps[zero_into[~is_one]] += amps[~is_one]
+
+    norm = np.linalg.norm(new_amps)
+    if norm > 0:
+        new_amps = new_amps / norm
+
+    return StateVector(num_qubits=n, amplitudes=new_amps.astype(np.complex128))
+
+
 class DynamicCircuit:
     """A quantum circuit with mid-circuit measurements and classical control.
 
@@ -384,6 +429,27 @@ class DynamicCircuit:
             self._ops.append(("measure", q, cb))
         return self
 
+    def reset(self, qubit: int) -> DynamicCircuit:
+        """Reset a qubit to the |0> computational basis state.
+
+        Args:
+            qubit: Qubit index to reset.
+
+        Returns:
+            self, for method chaining.
+
+        Raises:
+            ValueError: If qubit index is out of range.
+        """
+        if qubit < 0 or qubit >= self._num_qubits:
+            raise ValueError(
+                f"Qubit index {qubit} out of range for "
+                f"{self._num_qubits}-qubit circuit "
+                f"(valid: 0..{self._num_qubits - 1})"
+            )
+        self._ops.append(("reset", qubit))
+        return self
+
     # ------------------------------------------------------------------
     # Classical control
     # ------------------------------------------------------------------
@@ -448,7 +514,8 @@ class DynamicCircuit:
 
         Processes instructions sequentially. Mid-circuit measurements
         collapse the state via projective measurement. Classically conditioned
-        gates are applied only when their controlling classical bit is 1.
+        gates are applied only when their controlling classical bit is 1,
+        and resets collapse the target qubit to the |0> basis state.
 
         Args:
             initial_state: Starting state. Defaults to |0...0>.
@@ -513,6 +580,11 @@ class DynamicCircuit:
                             )
                 step += 1
 
+            elif op[0] == "reset":
+                _, qubit = op
+                state = _reset_single_qubit(state, qubit)
+                step += 1
+
         classical_memory = {
             i: classical_reg.read(i) for i in range(self._num_classical_bits)
         }
@@ -523,6 +595,20 @@ class DynamicCircuit:
             measurement_results=measurement_results,
             intermediate_measurements=intermediate_measurements,
         )
+
+    def to_ir(self) -> "object":
+        """Convert this dynamic circuit into MicroQuantum IR.
+
+        Mid-circuit measurements, resets and classically-conditioned blocks
+        become first-class IR nodes (Measurement / Reset / ConditionalBlock),
+        keeping the representation ready for future QEC and adaptive
+        workflows.
+
+        Returns:
+            An :class:`~microquantum.ir.IRCircuit`.
+        """
+        from ..ir import to_ir_dynamic as _ir_to_ir_dynamic
+        return _ir_to_ir_dynamic(self)
 
     # ------------------------------------------------------------------
     # Dunder methods
@@ -556,6 +642,9 @@ class DynamicCircuit:
             elif op[0] == "measure":
                 _, qubit, cb = op
                 lines.append(f"  M(q{qubit}->c{cb})")
+            elif op[0] == "reset":
+                _, qubit = op
+                lines.append(f"  RESET(q{qubit})")
             elif op[0] == "classical_if":
                 _, cb, _ = op
                 lines.append(f"  IF(c{cb}) {{ ... }}")
