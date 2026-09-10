@@ -11,9 +11,11 @@ client works with an already-issued access token and exposes a clean
 submit/status/result contract that is fully testable with a mocked
 HTTP transport.
 """
+
 from __future__ import annotations
 
 import os
+from dataclasses import dataclass
 from typing import Any, Optional
 
 from ..core.circuit import QuantumCircuit
@@ -24,8 +26,15 @@ from .serializer import CircuitSerializer
 _DEFAULT_BASE_URL = "https://api.quantum-computing.ibm.com/api"
 
 
+@dataclass
 class IBMQuantumCredentials(ProviderCredentials):
-    """IBM Quantum credentials from the ``IBM_QUANTUM_TOKEN`` env var."""
+    """IBM Quantum credentials from the ``IBM_QUANTUM_TOKEN`` env var.
+
+    Attributes:
+        channel: IBM-specific channel ("ibm_quantum" or "ibm_cloud").
+    """
+
+    channel: str = "ibm_quantum"
 
     @classmethod
     def from_env(cls) -> "IBMQuantumCredentials":
@@ -159,9 +168,11 @@ class IBMQuantumProvider(HardwareProvider):
         out: list[dict[str, Any]] = []
         for backend_name in backends:
             info = backends[backend_name]
-            out.append({
-                "name": backend_name,
-                "status": str(info.get("status", info.get("state", "unknown"))),
-                "num_qubits": int(info.get("n_qubits", info.get("num_qubits", 0))),
-            })
+            out.append(
+                {
+                    "name": backend_name,
+                    "status": str(info.get("status", info.get("state", "unknown"))),
+                    "num_qubits": int(info.get("n_qubits", info.get("num_qubits", 0))),
+                }
+            )
         return out

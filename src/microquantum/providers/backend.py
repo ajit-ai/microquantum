@@ -4,6 +4,7 @@ Bridges :class:`~microquantum.backends.base.Backend` so the existing
 :class:`~microquantum.backends.executor.Executor` and platform layers can
 target real hardware through any :class:`HardwareProvider`.
 """
+
 from __future__ import annotations
 
 from typing import Optional
@@ -68,12 +69,20 @@ class HardwareBackend(Backend):
             circuit.append(Operator(np.asarray(matrix, dtype=np.complex128)), targets)
         return self.submit_circuit(circuit, shots=shots)
 
-    def submit_circuit(self, circuit: QuantumCircuit, shots: int = 1024) -> Job:
+    def submit_circuit(
+        self,
+        circuit: QuantumCircuit,
+        shots: int = 1024,
+        initial_state: Optional[StateVector] = None,
+        seed: Optional[int] = None,
+    ) -> Job:
         """Submit a real circuit to hardware and return an async job.
 
         Args:
             circuit: Fully-bound circuit to execute.
             shots: Number of measurement shots.
+            initial_state: Not applicable on raw hardware; ignored.
+            seed: Not applicable on real hardware; ignored.
 
         Returns:
             A :class:`Job` that will be completed once the provider returns.
@@ -86,7 +95,11 @@ class HardwareBackend(Backend):
         def _collect() -> None:
             try:
                 hw_job.wait_for_result()
-                data = hw_job._result if hw_job._result is not None else self._provider.result(hw_job.job_id)
+                data = (
+                    hw_job._result
+                    if hw_job._result is not None
+                    else self._provider.result(hw_job.job_id)
+                )
                 counts = data.get("counts") or {}
                 backend_result = BackendResult(
                     num_qubits=circuit.num_qubits,

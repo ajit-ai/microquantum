@@ -2,6 +2,7 @@
 
 from .circuit import QuantumCircuit
 from .coupling import CouplingMap
+from .device import Device, DeviceType, Target
 from .dynamic import ClassicalRegister, DynamicCircuit, DynamicCircuitResult
 from .engine import apply_gate
 from .gradient import gradient, parameter_shift_gradient
@@ -68,4 +69,8 @@ __all__ = [
     # Resources
     "ResourceEstimator",
     "ResourceEstimate",
+    # Device & target contracts
+    "Device",
+    "DeviceType",
+    "Target",
 ]

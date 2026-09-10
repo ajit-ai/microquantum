@@ -7,7 +7,7 @@ from .array_backend import (
     is_gpu,
     set_array_backend,
 )
-from .base import Backend, BackendResult, Job
+from .base import Backend, BackendResult, Job, JobStatus
 from .density_matrix import DensityMatrixBackend
 from .executor import Executor, ExecutorResult
 from .mps import MatrixProductState, MPSBackend
@@ -19,6 +19,7 @@ __all__ = [
     "Backend",
     "BackendResult",
     "Job",
+    "JobStatus",
     "StatevectorBackend",
     "DensityMatrixBackend",
     "MatrixProductState",

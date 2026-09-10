@@ -11,6 +11,7 @@ published separately on top of this SDK.
    :caption: Contents:
 
    getting_started
+   concepts
    api/index
    api/core
    api/benchmarks

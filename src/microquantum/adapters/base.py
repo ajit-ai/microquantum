@@ -161,10 +161,7 @@ class QuantumResult:
         return json_string(self.to_dict())
 
     def __repr__(self) -> str:
-        return (
-            f"QuantumResult(problem='{self.problem.name}', "
-            f"fidelity={self.fidelity:.4f})"
-        )
+        return f"QuantumResult(problem='{self.problem.name}', fidelity={self.fidelity:.4f})"
 
     def __str__(self) -> str:
         lines = [
@@ -266,21 +263,17 @@ class DomainAdapter(ABC):
         errors = self.validate(problem)
         if errors:
             problem.status = ProblemStatus.FAILED
-            raise ValueError(
-                "Problem validation failed:\n" + "\n".join(f"  - {e}" for e in errors)
-            )
+            raise ValueError("Problem validation failed:\n" + "\n".join(f"  - {e}" for e in errors))
         problem.status = ProblemStatus.VALIDATED
 
         # Encode
         circuit = self.encode(problem)
         problem.status = ProblemStatus.ENCODED
 
-        # Execute
-        gates = [(op.matrix, targets) for op, targets in circuit.gates]
+        # Execute via the canonical high-level Backend.run contract
         start = _time.time()
-        backend_result = backend.run_circuit(
-            num_qubits=circuit.num_qubits,
-            gates=gates,
+        backend_result = backend.run(
+            circuit,
             shots=shots,
             seed=seed,
         )
@@ -309,10 +302,7 @@ class DomainAdapter(ABC):
 
     def can_handle(self, problem: QuantumProblem) -> bool:
         """Check if this adapter can handle a given problem."""
-        return (
-            problem.domain == self.domain_name
-            and problem.name in self.supported_problems
-        )
+        return problem.domain == self.domain_name and problem.name in self.supported_problems
 
     def __repr__(self) -> str:
         return (
