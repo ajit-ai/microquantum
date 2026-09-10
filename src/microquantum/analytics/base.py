@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 
@@ -28,7 +28,6 @@ class AnalysisResult:
     @staticmethod
     def _json_safe(value: Any) -> Any:
         """Recursively convert numpy types to JSON-safe Python types."""
-        import numpy as np
 
         if isinstance(value, np.ndarray):
             return value.tolist()

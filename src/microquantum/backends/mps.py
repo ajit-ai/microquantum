@@ -29,16 +29,24 @@ import numpy as np
 from ..core.state import StateVector
 from .array_backend import (
     abs as ab_abs,
+)
+from .array_backend import (
     asarray,
     get_array_backend,
-    maximum as ab_maximum,
-    sqrt as ab_sqrt,
-    sum as ab_sum,
     svd,
     tensordot,
     to_numpy,
     transpose,
     zeros,
+)
+from .array_backend import (
+    maximum as ab_maximum,
+)
+from .array_backend import (
+    sqrt as ab_sqrt,
+)
+from .array_backend import (
+    sum as ab_sum,
 )
 from .base import Backend, BackendResult
 
@@ -116,7 +124,7 @@ class MatrixProductState:
         cur: Any = vec.reshape([2] * num_qubits)
         tensors: list[Any] = []
         chi_l = 1
-        for i in range(num_qubits - 1):
+        for _i in range(num_qubits - 1):
             mat = cur.reshape(chi_l * 2, -1)
             u, s, vh = svd(mat, full_matrices=False)
             k = max(1, int(s.shape[0]))
@@ -264,7 +272,6 @@ class MatrixProductState:
         truncation_threshold: float,
     ) -> None:
         """Apply a two-qubit gate on adjacent sites ``pos, pos+1``."""
-        n = self.num_qubits
         a = self.tensors[pos]
         b = self.tensors[pos + 1]
         chi_l = a.shape[0]

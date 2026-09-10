@@ -3,7 +3,6 @@
 Provides standardized benchmarks for evaluating quantum hardware
 and software performance.
 """
-from .quantum_volume import QuantumVolumeBenchmark, BenchmarkResult
 from .clops import CLOPSBenchmark
 from .cycle_benchmarking import (
     CycleBenchmarking,
@@ -14,6 +13,7 @@ from .cycle_benchmarking import (
     TwirlingResult,
 )
 from .gate_set_tomography import GateSetTomography, GSTResult
+from .quantum_volume import BenchmarkResult, QuantumVolumeBenchmark
 from .randomized_benchmarking import (
     RandomizedBenchmarking,
     RandomizedBenchmarkingResult,

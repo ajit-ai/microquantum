@@ -5,22 +5,21 @@ Tests QUBO/Ising converter and visualization helpers.
 import numpy as np
 import pytest
 
-from microquantum.optimization.qubo import (
-    QUBOBuilder,
-    QUBOProblem,
-    IsingConverter,
-)
 from microquantum.analytics.visualization import (
+    format_analysis_report,
+    plot_comparison_bar,
     plot_kernel_matrix,
     plot_optimization_history,
     plot_portfolio_allocation,
     plot_risk_return_scatter,
-    plot_comparison_bar,
     plot_route_map,
     plot_var_distribution,
-    format_analysis_report,
 )
-from microquantum.core.pauli import PauliString, PauliSum
+from microquantum.core.pauli import PauliSum
+from microquantum.optimization.qubo import (
+    IsingConverter,
+    QUBOBuilder,
+)
 
 
 # =============================================================================
@@ -118,8 +117,8 @@ class TestIsingConverter:
         # x=0: energy 0, x=1: energy 1
         # Ising: x=(1-Z)/2, so H = (1-Z)/2
         # Verify via state evaluation
-        from microquantum.core.state import StateVector
         from microquantum.core.measurement import expectation_value
+        from microquantum.core.state import StateVector
 
         s0 = StateVector(1, np.array([1.0, 0.0], dtype=complex))
         s1 = StateVector(1, np.array([0.0, 1.0], dtype=complex))
@@ -295,8 +294,8 @@ class TestPhase13Integration:
         assert best_energy == pytest.approx(-0.18, abs=1e-6)
 
         # Ising energies must agree with QUBO energies on all solutions
-        from microquantum.core.state import StateVector
         from microquantum.core.measurement import expectation_value
+        from microquantum.core.state import StateVector
 
         ising_op = ising.to_operator()
         for x_bits in range(8):

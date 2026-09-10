@@ -5,12 +5,12 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from microquantum.core import Operator, QuantumCircuit
 from microquantum.algorithms.hhl import (
     HHL,
     HHLResult,
     controlled_U,
 )
+from microquantum.core import Operator, QuantumCircuit
 
 
 class TestControlledU:

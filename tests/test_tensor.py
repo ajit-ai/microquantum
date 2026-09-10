@@ -5,7 +5,6 @@ import pytest
 
 from microquantum.core import Operator, StateVector, expand_operator, tensor
 
-
 # ---------------------------------------------------------------------------
 # tensor() with StateVector
 # ---------------------------------------------------------------------------

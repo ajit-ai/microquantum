@@ -17,11 +17,7 @@ import math
 import random
 from dataclasses import dataclass, field
 
-import numpy as np
-
 from ..core.circuit import QuantumCircuit
-from ..core.operators import Operator
-from ..core.state import StateVector
 
 
 @dataclass
@@ -214,7 +210,7 @@ class ShorsAlgorithm:
         n = self._n
         k = math.ceil(math.log2(n))
         num_target = math.ceil(math.log2(n)) + 1
-        total = 2 * k + num_target
+        2 * k + num_target
 
         # Build and run the circuit
         qc = _build_order_finding_circuit(a, n)

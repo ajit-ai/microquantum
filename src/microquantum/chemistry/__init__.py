@@ -3,8 +3,8 @@
 Provides molecular Hamiltonians, ansatz circuits, and chemistry-specific
 functionality for variational quantum eigensolver (VQE) calculations.
 """
-from .hamiltonians import MolecularHamiltonian, H2Hamiltonian, LiHHamiltonian
 from .ansatz import HardwareEfficientAnsatz, UCCSDAnsatz
+from .hamiltonians import H2Hamiltonian, LiHHamiltonian, MolecularHamiltonian
 
 __all__ = [
     "MolecularHamiltonian",

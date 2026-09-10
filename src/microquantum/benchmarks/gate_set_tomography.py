@@ -14,7 +14,6 @@ from numpy.typing import NDArray
 
 from ..core.circuit import QuantumCircuit
 from ..core.operators import Operator
-from ..core.state import StateVector
 
 # Pauli basis matrices (normalized)
 _PAULIS = [

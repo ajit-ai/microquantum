@@ -2,7 +2,13 @@
 
 __version__ = "0.3.0"
 
+from .adapters import DomainAdapter, QuantumProblem, QuantumResult, ResultCache
 from .algorithms import (
+    HHL,
+    QAOA,
+    QFT,
+    VQD,
+    VQE,
     AdaptResult,
     AdaptVQE,
     AmplitudeEstimation,
@@ -11,31 +17,26 @@ from .algorithms import (
     BVResult,
     ContinuousQuantumWalk,
     DeutschJozsa,
-    DJResult,
     DiscreteQuantumWalk,
-    GroverSearch,
+    DJResult,
     GroverResult,
+    GroverSearch,
     HamiltonianSimulation,
-    HHL,
     HHLResult,
     PhaseEstimation,
     PhaseEstimationResult,
-    QAOA,
-    QFT,
     QuantumWalkResult,
-    ShorsAlgorithm,
     ShorResult,
+    ShorsAlgorithm,
     TrotterResult,
-    VQE,
-    VQEResult,
-    VQD,
     VQDResult,
+    VQEResult,
     fourth_order_simulation,
     inverse_qft_circuit,
     qdrift_simulation,
     qft_circuit,
 )
-from .adapters import DomainAdapter, QuantumProblem, QuantumResult, ResultCache
+from .analytics import AnalysisResult, BaseAnalytics, Result
 from .backends import (
     Backend,
     BackendResult,
@@ -91,15 +92,15 @@ from .core import (
     PauliString,
     PauliSum,
     QuantumCircuit,
-    ResourceEstimator,
     ResourceEstimate,
+    ResourceEstimator,
     StateVector,
     TargetGateSet,
     apply_gate,
     cancel_inverse_pairs,
     circuit_stats,
-    expectation_value,
     expand_operator,
+    expectation_value,
     fuse_single_qubit_gates,
     gradient,
     measure_and_collapse,
@@ -113,7 +114,8 @@ from .core import (
 )
 from .core.density_matrix import DensityMatrix
 from .core.dynamic import ClassicalRegister, DynamicCircuit, DynamicCircuitResult
-from .core.registers import ClassicalRegister as ClassicalRegisterBase, QuantumRegister
+from .core.registers import ClassicalRegister as ClassicalRegisterBase
+from .core.registers import QuantumRegister
 from .mitigation import (
     ExtrapolationResult,
     MeasurementErrorMitigation,
@@ -121,19 +123,17 @@ from .mitigation import (
     ProbabilisticErrorCancellation,
     ZeroNoiseExtrapolation,
 )
-from .optimizers import Adam, COBYLA, GradientDescent, NelderMead, Optimizer, OptimizerResult, QNSPSA, SPSA
-from .qec import BitFlipCode, PhaseFlipCode, RepetitionCode, ShorCode
-from .qml import (
-    AngleEncoding,
-    AmplitudeEncoding,
-    ClassifierResult,
-    IQPEncoding,
-    QuantumKernel,
-    VariationalClassifier,
-    ZFeatureMap,
-)
-from .analytics import AnalysisResult, BaseAnalytics, Result
 from .optimization import IsingConverter, QUBOBuilder, QUBOProblem
+from .optimizers import (
+    COBYLA,
+    QNSPSA,
+    SPSA,
+    Adam,
+    GradientDescent,
+    NelderMead,
+    Optimizer,
+    OptimizerResult,
+)
 from .providers import (
     CircuitSerializer,
     HardwareBackend,
@@ -146,6 +146,16 @@ from .providers import (
     IonQProvider,
     ProviderCredentials,
     UnsupportedGateError,
+)
+from .qec import BitFlipCode, PhaseFlipCode, RepetitionCode, ShorCode
+from .qml import (
+    AmplitudeEncoding,
+    AngleEncoding,
+    ClassifierResult,
+    IQPEncoding,
+    QuantumKernel,
+    VariationalClassifier,
+    ZFeatureMap,
 )
 
 __all__ = [
@@ -232,6 +242,10 @@ __all__ = [
     "PhaseEstimationResult",
     "HamiltonianSimulation",
     "TrotterResult",
+    "HHL",
+    "HHLResult",
+    "VQD",
+    "VQDResult",
     "AdaptVQE",
     "AdaptResult",
     "DiscreteQuantumWalk",
@@ -243,6 +257,8 @@ __all__ = [
     "BVResult",
     "DeutschJozsa",
     "DJResult",
+    "fourth_order_simulation",
+    "qdrift_simulation",
     # QEC
     "RepetitionCode",
     "BitFlipCode",

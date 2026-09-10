@@ -10,7 +10,6 @@ Demonstrates:
 
 from microquantum.core import QuantumCircuit
 from microquantum.core.operators import Operator
-from microquantum.core.tensor import tensor
 
 
 def bell_state():

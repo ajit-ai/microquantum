@@ -1,7 +1,6 @@
 """Tests for Randomized Benchmarking."""
 
 import numpy as np
-import pytest
 
 from microquantum.benchmarks.randomized_benchmarking import (
     RandomizedBenchmarking,

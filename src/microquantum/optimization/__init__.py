@@ -2,6 +2,6 @@
 
 from __future__ import annotations
 
-from .qubo import QUBOBuilder, QUBOProblem, IsingConverter
+from .qubo import IsingConverter, QUBOBuilder, QUBOProblem
 
 __all__ = ["QUBOBuilder", "QUBOProblem", "IsingConverter"]

@@ -1,13 +1,11 @@
 """Tests for quantum chemistry module."""
-import numpy as np
 import pytest
 
+from microquantum.chemistry.ansatz import HardwareEfficientAnsatz, UCCSDAnsatz
 from microquantum.chemistry.hamiltonians import (
     H2Hamiltonian,
     LiHHamiltonian,
-    MolecularHamiltonian,
 )
-from microquantum.chemistry.ansatz import HardwareEfficientAnsatz, UCCSDAnsatz
 from microquantum.core.parameter import Parameter
 
 

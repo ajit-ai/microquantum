@@ -75,10 +75,7 @@ def _instruction_to_dict(instr: Any) -> dict[str, Any]:
             raise UnsupportedGateError(
                 f"Parameterized gate '{gate_type}' is not natively supported"
             )
-        if isinstance(param, complex):
-            theta = float(param.real)
-        else:
-            theta = float(param)
+        theta = float(param.real) if isinstance(param, complex) else float(param)
         gate = gate_type
         targets = [target]
         params = [theta]

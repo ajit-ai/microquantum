@@ -4,7 +4,6 @@ import numpy as np
 import pytest
 
 from microquantum.backends.noise import NoiseModel
-from microquantum.core import Operator
 from microquantum.core.density_matrix import DensityMatrix
 
 
@@ -136,4 +135,4 @@ class TestNoiseModelStr:
 
 
 # Need to import StateVector here
-from microquantum.core.state import StateVector
+from microquantum.core.state import StateVector  # noqa: E402

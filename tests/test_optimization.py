@@ -1,7 +1,6 @@
 """Tests for circuit optimization: gate fusion, simplification, and transpilation."""
 
 import numpy as np
-import pytest
 
 from microquantum.core.circuit import QuantumCircuit
 from microquantum.core.operators import Operator

@@ -210,7 +210,7 @@ def plot_var_distribution(
         "y": hist.tolist(),
         "annotations": [
             {"x": var_value, "label": f"VaR ({confidence_level:.0%})", "color": "red"},
-            {"x": cvar_value, "label": f"CVaR", "color": "darkred"},
+            {"x": cvar_value, "label": "CVaR", "color": "darkred"},
         ],
         "xlabel": "Return",
         "ylabel": "Frequency",

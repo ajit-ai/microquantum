@@ -58,7 +58,7 @@ class TestDensityMatrixBackend:
         result = self.backend.run_circuit(
             num_qubits=1, gates=[], shots=100, seed=42
         )
-        assert result.metadata["purity"] == True
+        assert result.metadata["purity"]
 
     def test_density_matrix_trace(self) -> None:
         result = self.backend.run_circuit(
@@ -83,7 +83,7 @@ class TestDensityMatrixBackend:
         # With noise, superposition is partially depolarized
         assert "0" in result.counts
         assert "1" in result.counts
-        assert result.metadata["purity"] == False
+        assert not result.metadata["purity"]
 
 
 class TestDensityMatrixBackendExpandGate:

@@ -187,7 +187,7 @@ class Operator:
     # ------------------------------------------------------------------
 
     @staticmethod
-    def I() -> Operator:
+    def I() -> Operator:  # noqa: E743  (Pauli-I is a conventional quantum gate name)
         """Pauli-I (identity) gate."""
         return Operator(np.eye(2, dtype=np.complex128), name="i")
 

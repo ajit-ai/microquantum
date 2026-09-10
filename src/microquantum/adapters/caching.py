@@ -7,13 +7,9 @@ re-executing. Supports TTL-based invalidation.
 
 from __future__ import annotations
 
-import hashlib
-import json
 import time
 from dataclasses import dataclass, field
 from typing import Any, Optional
-
-import numpy as np
 
 from .base import QuantumProblem, QuantumResult
 

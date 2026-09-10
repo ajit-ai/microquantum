@@ -181,7 +181,7 @@ class MeasurementErrorMitigation:
             Mitigated expectation value.
         """
         mitigated = self.mitigate_counts(raw_counts)
-        dim = 2**self._num_qubits
+        2**self._num_qubits
 
         expectation = 0.0
         for bitstring, prob in mitigated.items():

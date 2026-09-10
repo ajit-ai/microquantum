@@ -6,9 +6,8 @@ import numpy as np
 import pytest
 
 from microquantum.algorithms import QAOA, VQEResult
-from microquantum.core import Operator, Parameter, QuantumCircuit, tensor
-from microquantum.core.measurement import expectation_value
-from microquantum.optimizers import Adam, GradientDescent
+from microquantum.core import Operator, tensor
+from microquantum.optimizers import Adam
 
 
 class TestQAOA:

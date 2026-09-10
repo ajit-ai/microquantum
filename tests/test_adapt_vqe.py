@@ -1,6 +1,5 @@
 """Tests for ADAPT-VQE."""
 
-import numpy as np
 import pytest
 
 from microquantum.algorithms.adapt_vqe import AdaptResult, AdaptVQE

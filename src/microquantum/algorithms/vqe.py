@@ -5,8 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional, Union
 
-import numpy as np
-
 from ..core.circuit import QuantumCircuit
 from ..core.gradient import gradient as compute_gradient
 from ..core.measurement import expectation_value

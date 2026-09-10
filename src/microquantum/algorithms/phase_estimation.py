@@ -129,7 +129,7 @@ class PhaseEstimation:
         n_u = self._unitary.num_qubits
         eigenstate = StateVector(n_u)
         eigenstate._amplitudes = np.zeros(2**n_u, dtype=np.complex128)
-        if 1 < 2**n_u:
+        if 2**n_u > 1:
             eigenstate._amplitudes[1] = 1.0
         else:
             eigenstate._amplitudes[0] = 1.0

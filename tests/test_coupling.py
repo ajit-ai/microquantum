@@ -2,13 +2,13 @@
 
 import pytest
 
+from microquantum.core import QuantumCircuit
 from microquantum.core.coupling import CouplingMap
 from microquantum.core.transpiler import (
     NoiseAwarePlacementPass,
     PassManager,
     RoutingPass,
 )
-from microquantum.core import QuantumCircuit, Operator
 
 
 class TestCouplingMap:

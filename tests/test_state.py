@@ -1,6 +1,5 @@
 """Unit tests for microquantum.core.state.StateVector."""
 
-import copy
 
 import numpy as np
 import pytest

@@ -239,7 +239,7 @@ class DomainAdapter(ABC):
         if errors:
             problem.status = ProblemStatus.FAILED
             raise ValueError(
-                f"Problem validation failed:\n" + "\n".join(f"  - {e}" for e in errors)
+                "Problem validation failed:\n" + "\n".join(f"  - {e}" for e in errors)
             )
         problem.status = ProblemStatus.VALIDATED
 

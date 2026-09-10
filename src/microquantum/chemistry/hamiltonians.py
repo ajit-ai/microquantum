@@ -7,13 +7,11 @@ custom molecular Hamiltonians.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional
 
-import numpy as np
-
-from ..core.state import StateVector
 from ..core.pauli import PauliString, PauliSum
+from ..core.state import StateVector
 
 
 @dataclass

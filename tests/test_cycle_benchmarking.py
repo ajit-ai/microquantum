@@ -5,7 +5,6 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from microquantum.core import Operator, QuantumCircuit
 from microquantum.benchmarks.cycle_benchmarking import (
     CycleBenchmarking,
     CycleBenchmarkingResult,
@@ -14,6 +13,7 @@ from microquantum.benchmarks.cycle_benchmarking import (
     PauliTwirling,
     TwirlingResult,
 )
+from microquantum.core import Operator, QuantumCircuit
 
 
 class TestCycleBenchmarking:

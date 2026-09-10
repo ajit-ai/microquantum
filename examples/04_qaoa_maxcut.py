@@ -10,11 +10,10 @@ MaxCut: partition graph vertices into two sets to maximize
 the number of edges between the sets.
 """
 
-from microquantum.core import QuantumCircuit, Parameter
+from microquantum.core import Parameter, QuantumCircuit
 from microquantum.core.operators import Operator
 from microquantum.core.tensor import tensor
 from microquantum.optimizers import COBYLA
-from microquantum.algorithms import QAOA
 
 
 def build_maxcut_hamiltonian(
@@ -120,19 +119,19 @@ def main():
     vqe = VQE(ansatz=qc, hamiltonian=H, optimizer=COBYLA(max_iter=200))
     result = vqe.compute_minimum_eigenvalue()
 
-    print(f"\n--- Results ---")
+    print("\n--- Results ---")
     print(f"Ground state energy: {result.eigenvalue:.4f}")
-    print(f"(Negative energy = high cut value)")
+    print("(Negative energy = high cut value)")
 
     # Show the optimal state
     bound = qc.bind_parameters(result.eigenstate)
     state = bound.run()
     probs = abs(state.amplitudes) ** 2
 
-    print(f"\nMeasurement probabilities (top 5):")
+    print("\nMeasurement probabilities (top 5):")
     prob_list = list(enumerate(probs))
     prob_list.sort(key=lambda x: -x[1])
-    for idx, (i, p) in enumerate(prob_list[:5]):
+    for _idx, (i, p) in enumerate(prob_list[:5]):
         bitstring = [(i >> q) & 1 for q in range(num_qubits)]
         cut_val = evaluate_cut(bitstring, edges)
         print(f"  |{i:0{num_qubits}b}>: {p:.4f} (cut={cut_val})")

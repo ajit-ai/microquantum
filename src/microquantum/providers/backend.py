@@ -122,12 +122,20 @@ class HardwareBackend(Backend):
             "instead (e.g. via quantumcircuit.run())."
         )
 
-    def run(self, circuit: QuantumCircuit, shots: int = 1024) -> BackendResult:
+    def run(
+        self,
+        circuit: QuantumCircuit,
+        shots: int = 1024,
+        initial_state: Optional[StateVector] = None,
+        seed: Optional[int] = None,
+    ) -> BackendResult:
         """Execute a bound circuit on hardware and block for the result.
 
         Args:
             circuit: Fully-bound quantum circuit.
             shots: Number of measurement shots.
+            initial_state: Not applicable on hardware hardware; ignored.
+            seed: Not applicable on real hardware; ignored.
 
         Returns:
             BackendResult with hardware measurement counts.

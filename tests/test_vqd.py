@@ -5,14 +5,13 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from microquantum.algorithms.vqd import VQD
 from microquantum.core import (
-    Operator,
     Parameter,
     PauliString,
     QuantumCircuit,
 )
 from microquantum.core.pauli import PauliSum
-from microquantum.algorithms.vqd import VQD, VQDResult
 from microquantum.optimizers import Adam, GradientDescent
 
 

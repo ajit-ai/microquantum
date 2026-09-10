@@ -10,11 +10,11 @@ VQE finds the minimum eigenvalue of a Hamiltonian by optimizing
 a quantum circuit to minimize <psi(theta)|H|psi(theta)>.
 """
 
-from microquantum.core import QuantumCircuit, Parameter
+from microquantum.algorithms import VQE
+from microquantum.core import Parameter, QuantumCircuit
 from microquantum.core.operators import Operator
 from microquantum.core.tensor import tensor
-from microquantum.optimizers import COBYLA, GradientDescent
-from microquantum.algorithms import VQE
+from microquantum.optimizers import COBYLA
 
 
 def build_ansatz(num_qubits: int, depth: int = 1) -> QuantumCircuit:
@@ -80,12 +80,12 @@ def main():
 
     result = vqe.compute_minimum_eigenvalue()
 
-    print(f"\n--- Results ---")
+    print("\n--- Results ---")
     print(f"Ground state energy: {result.eigenvalue:.6f} Ha")
-    print(f"Exact value:         -1.857275 Ha")
+    print("Exact value:         -1.857275 Ha")
     print(f"Error:               {abs(result.eigenvalue - (-1.857275)):.6f} Ha")
 
-    print(f"\nOptimal parameters:")
+    print("\nOptimal parameters:")
     for p, v in sorted(result.eigenstate.items(), key=lambda x: x[0].name):
         print(f"  {p.name}: {v:.6f}")
 

@@ -1,9 +1,8 @@
 """Tests for Shor's Algorithm."""
 
-import math
 import pytest
 
-from microquantum.algorithms.shor import ShorsAlgorithm, ShorResult
+from microquantum.algorithms.shor import ShorResult, ShorsAlgorithm
 
 
 class TestShorsAlgorithm:

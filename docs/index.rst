@@ -1,8 +1,10 @@
 microquantum Documentation
-==========================
+=========================
 
-A lightweight Python quantum computing SDK with domain-specific adapters for
-aerospace, finance, biotech, chemistry, materials science, and optimization.
+A lightweight, NumPy-only Python quantum computing SDK. It ships a generic
+:class:`~microquantum.adapters.base.DomainAdapter` framework for encoding
+domain problems into quantum circuits; industry-specific adapters may be
+published separately on top of this SDK.
 
 .. toctree::
    :maxdepth: 2
@@ -50,8 +52,8 @@ Result Contract
 ---------------
 
 The SDK ships a standardized decision-result schema
-(:mod:`microquantum.analytics.result`) that proprietary vertical solvers
-published separately consume.
+(:mod:`microquantum.analytics.result`) that vertical solvers built on
+microquantum can consume and extend.
 
 Indices and tables
 ==================

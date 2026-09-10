@@ -11,7 +11,6 @@ from dataclasses import dataclass
 import numpy as np
 
 from ..core.circuit import QuantumCircuit
-from ..core.state import StateVector
 
 
 @dataclass

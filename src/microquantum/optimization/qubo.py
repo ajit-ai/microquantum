@@ -14,11 +14,10 @@ This module provides:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Optional, Union
+from typing import Any
 
 import numpy as np
 
-from ..core.operators import Operator
 from ..core.pauli import PauliString, PauliSum
 
 
@@ -140,7 +139,6 @@ class QUBOBuilder:
         Uses slack variable approach: introduce slack s >= 0 such that
         sum(x_i) + s = max_sum, then penalize s^2.
         """
-        n_slack = max_sum
         # Simple approach: penalize all pairs that violate the constraint
         for a in range(len(indices)):
             for b in range(a + 1, len(indices)):

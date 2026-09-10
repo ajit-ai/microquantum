@@ -13,12 +13,11 @@ from typing import Optional
 import numpy as np
 
 from ..core.circuit import QuantumCircuit
-from ..core.operators import Operator
 from ..core.parameter import Parameter
 from ..core.tensor import expand_operator
 from ..optimizers.base import Optimizer, OptimizerResult
 from ..optimizers.gradient_descent import GradientDescent
-from .encoding import BaseEncoder, AngleEncoding, ZFeatureMap
+from .encoding import AngleEncoding, BaseEncoder
 
 
 @dataclass
@@ -269,7 +268,7 @@ class VariationalClassifier:
             Accuracy between 0 and 1.
         """
         result = self.predict(X, params)
-        correct = sum(1 for pred, true in zip(result.predictions, y) if pred == true)
+        correct = sum(1 for pred, true in zip(result.predictions, y, strict=False) if pred == true)
         return correct / len(y) if y else 0.0
 
     def __repr__(self) -> str:

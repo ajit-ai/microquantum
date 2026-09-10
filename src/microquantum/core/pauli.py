@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Iterator
 
 import numpy as np
-from numpy.typing import NDArray
 
 from .state import StateVector
 
@@ -155,7 +154,7 @@ class PauliString:
 
             new_label = []
             total_phase: complex = 1.0
-            for p1, p2 in zip(self._label, other._label):
+            for p1, p2 in zip(self._label, other._label, strict=False):
                 result_pauli, phase = product_map[(p1, p2)]
                 new_label.append(result_pauli)
                 total_phase *= phase

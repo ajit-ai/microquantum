@@ -14,10 +14,7 @@ import numpy as np
 
 from ..core.circuit import QuantumCircuit
 from ..core.operators import Operator
-from ..core.parameter import Parameter
-from ..core.pauli import PauliSum
 from ..core.state import StateVector
-
 
 # ------------------------------------------------------------------
 #  Controlled gates
@@ -132,7 +129,7 @@ def _apply_controlled_general(
     U: Operator,
 ) -> None:
     """Apply controlled gate for general unitary (simplified)."""
-    for op, targets in _decompose_to_basic(U):
+    for _op, _targets in _decompose_to_basic(U):
         # Add control qubit to each gate
         circuit.cx(control, target[0])
 
@@ -254,7 +251,7 @@ class HHL:
 
         # Step 3: Controlled-U operations (phase estimation)
         # Simplified: apply controlled rotations
-        system_qubits = list(range(self._num_system))
+        list(range(self._num_system))
         counting_qubits = list(range(
             self._num_system,
             self._num_system + self._num_counting
@@ -290,7 +287,7 @@ class HHL:
 
         # Build and run circuit
         qc = self._build_circuit()
-        sv = qc.run()
+        qc.run()
 
         # Extract solution from system register
         # For simulation, we compute the exact solution

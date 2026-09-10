@@ -11,7 +11,7 @@ noise by a factor of 1, 3, 5, ... while preserving the ideal result.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Callable, Optional
+from typing import Optional
 
 import numpy as np
 
@@ -106,8 +106,8 @@ class ZeroNoiseExtrapolation:
         n = circuit.num_qubits
         folded = QuantumCircuit(n)
 
-        num_layers = len(circuit._gate_instructions)
-        for fold in range((fold_level - 1) // 2):
+        len(circuit._gate_instructions)
+        for _fold in range((fold_level - 1) // 2):
             # Forward pass: add original gates
             for gate_instr in circuit._gate_instructions:
                 if QuantumCircuit._is_parameterized_gate(gate_instr):

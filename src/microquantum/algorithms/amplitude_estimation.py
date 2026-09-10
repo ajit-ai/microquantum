@@ -21,7 +21,6 @@ import numpy as np
 
 from ..core.circuit import QuantumCircuit
 from ..core.operators import Operator
-from ..core.state import StateVector
 from ..core.tensor import expand_operator
 
 
@@ -250,10 +249,10 @@ class AmplitudeEstimation:
         Applies unitary to target_qubits when control_qubit is |1>.
         """
         dim = 2**total_qubits
-        controlled = np.eye(dim, dtype=np.complex128)
+        np.eye(dim, dtype=np.complex128)
 
         # Extract the sub-matrix for the control=|1> block
-        ctrl_dim = 2**total_qubits
+        2**total_qubits
         n_targets = len(target_qubits)
 
         for i in range(dim):
@@ -312,10 +311,10 @@ class AmplitudeEstimation:
                 if row_other != col_other:
                     continue
 
-                # Compute unitary matrix element
+# Compute unitary matrix element
                 row_t_idx = 0
                 col_t_idx = 0
-                for j, t in enumerate(target_qubits):
+                for j, _t in enumerate(target_qubits):
                     row_t_idx |= row_targets[j] << (n_targets - 1 - j)
                     col_t_idx |= col_targets[j] << (n_targets - 1 - j)
 

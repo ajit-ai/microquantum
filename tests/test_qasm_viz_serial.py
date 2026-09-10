@@ -9,8 +9,6 @@ import numpy as np
 import pytest
 
 from microquantum.core.circuit import QuantumCircuit
-from microquantum.core.operators import Operator
-
 
 # ======================================================================
 # QASM Tests
@@ -253,7 +251,7 @@ class TestVisualization:
 
 class TestSerializationDict:
     def test_empty_circuit(self):
-        from microquantum.core.serialization import to_dict, from_dict
+        from microquantum.core.serialization import to_dict
 
         qc = QuantumCircuit(2)
         data = to_dict(qc)
@@ -262,7 +260,7 @@ class TestSerializationDict:
         assert data["gates"] == []
 
     def test_single_gate(self):
-        from microquantum.core.serialization import to_dict, from_dict
+        from microquantum.core.serialization import to_dict
 
         qc = QuantumCircuit(1)
         qc.h(0)
@@ -271,7 +269,7 @@ class TestSerializationDict:
         assert data["gates"][0]["name"] == "h"
 
     def test_roundtrip(self):
-        from microquantum.core.serialization import to_dict, from_dict
+        from microquantum.core.serialization import from_dict, to_dict
 
         original = QuantumCircuit(2)
         original.h(0)
@@ -289,7 +287,7 @@ class TestSerializationDict:
         assert np.allclose(state_orig.amplitudes, state_recon.amplitudes, atol=1e-10)
 
     def test_format_version(self):
-        from microquantum.core.serialization import to_dict, FORMAT_VERSION
+        from microquantum.core.serialization import FORMAT_VERSION, to_dict
 
         qc = QuantumCircuit(1)
         data = to_dict(qc)
@@ -298,7 +296,7 @@ class TestSerializationDict:
 
 class TestSerializationJSON:
     def test_json_roundtrip(self):
-        from microquantum.core.serialization import to_json, from_json
+        from microquantum.core.serialization import from_json, to_json
 
         original = QuantumCircuit(2)
         original.h(0)
@@ -328,7 +326,7 @@ class TestSerializationJSON:
 
 class TestSerializationFile:
     def test_save_load(self):
-        from microquantum.core.serialization import save, load
+        from microquantum.core.serialization import load, save
 
         original = QuantumCircuit(2)
         original.h(0)
@@ -344,7 +342,7 @@ class TestSerializationFile:
             assert loaded.num_gates == 2
 
     def test_save_creates_directories(self):
-        from microquantum.core.serialization import save, load
+        from microquantum.core.serialization import save
 
         qc = QuantumCircuit(1)
         qc.h(0)
@@ -363,7 +361,7 @@ class TestSerializationFile:
 
 class TestSerializationGates:
     def test_rotation_gates_preserve_angle(self):
-        from microquantum.core.serialization import to_dict, from_dict
+        from microquantum.core.serialization import from_dict, to_dict
 
         qc = QuantumCircuit(1)
         qc.ry(math.pi / 3, 0)
@@ -378,7 +376,7 @@ class TestSerializationGates:
         assert np.allclose(state_orig.amplitudes, state_recon.amplitudes, atol=1e-10)
 
     def test_swap_gate(self):
-        from microquantum.core.serialization import to_dict, from_dict
+        from microquantum.core.serialization import from_dict, to_dict
 
         qc = QuantumCircuit(2)
         qc.swap(0, 1)
@@ -388,7 +386,7 @@ class TestSerializationGates:
         assert reconstructed.num_gates == 1
 
     def test_all_standard_gates(self):
-        from microquantum.core.serialization import to_dict, from_dict
+        from microquantum.core.serialization import from_dict, to_dict
 
         qc = QuantumCircuit(3)
         qc.h(0)

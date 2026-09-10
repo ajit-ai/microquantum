@@ -2,7 +2,7 @@
 
 import pytest
 
-from microquantum.algorithms.deutsch_jozsa import DJResult, DeutschJozsa
+from microquantum.algorithms.deutsch_jozsa import DeutschJozsa, DJResult
 
 
 class TestDeutschJozsa:

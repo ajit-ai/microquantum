@@ -10,8 +10,8 @@ import pytest
 
 from microquantum import (
     Executor,
-    MPSBackend,
     MatrixProductState,
+    MPSBackend,
     QuantumCircuit,
     StateVector,
     StatevectorBackend,

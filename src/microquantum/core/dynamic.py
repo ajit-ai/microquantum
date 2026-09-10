@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Callable, Optional, Union
 
 import numpy as np
-from numpy.typing import NDArray
 
-from .circuit import QuantumCircuit
 from .engine import apply_gate
 from .operators import Operator
 from .parameter import Parameter

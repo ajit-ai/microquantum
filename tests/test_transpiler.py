@@ -1,16 +1,14 @@
 """Tests for the transpiler pipeline."""
 
 import numpy as np
-import pytest
 
-from microquantum.core import QuantumCircuit, Operator, PassManager, Pass, TargetGateSet
+from microquantum.core import Operator, PassManager, QuantumCircuit, TargetGateSet
 from microquantum.core.transpiler import (
-    GateDecompositionPass,
-    LayoutMappingPass,
     CancellationPass,
     FusionPass,
+    GateDecompositionPass,
     IdentityRemovalPass,
-    DepthReductionPass,
+    LayoutMappingPass,
 )
 
 

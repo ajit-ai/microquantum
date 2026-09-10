@@ -66,7 +66,7 @@ class ProbabilisticErrorCancellation:
         """
         # For depolarizing noise with parameter p:
         # Ideal = (1/(1-p)) * rho - (p/(3(1-p))) * (X rho X + Y rho Y + Z rho Z)
-        dim = channel_matrix.shape[0]
+        channel_matrix.shape[0]
 
         # Simple inversion using the process matrix
         # For a depolarizing channel: rho -> (1-p) rho + p I/d

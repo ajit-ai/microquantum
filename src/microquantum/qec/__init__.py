@@ -10,7 +10,7 @@ Supported codes:
 - ShorCode: 9-qubit code (concatenated bit+phase flip)
 """
 
-from .repetition import RepetitionCode, BitFlipCode, PhaseFlipCode
+from .repetition import BitFlipCode, PhaseFlipCode, RepetitionCode
 from .shor import ShorCode
 
 __all__ = [

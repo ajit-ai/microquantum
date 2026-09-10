@@ -5,18 +5,14 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from microquantum.algorithms import VQE, VQEResult
 from microquantum.core import (
     Operator,
     Parameter,
     QuantumCircuit,
-    StateVector,
     tensor,
 )
-from microquantum.core.gradient import gradient as compute_gradient
-from microquantum.core.measurement import expectation_value
 from microquantum.optimizers import Adam, GradientDescent, OptimizerResult
-from microquantum.algorithms import VQE, VQEResult
-
 
 # ------------------------------------------------------------------
 # Optimizer tests

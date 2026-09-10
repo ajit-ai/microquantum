@@ -62,14 +62,14 @@ class NoiseModel:
         if not 0 <= probability <= 1:
             raise ValueError(f"probability must be in [0,1], got {probability}")
 
-        I = np.eye(2, dtype=np.complex128)
+        identity = np.eye(2, dtype=np.complex128)
         X = np.array([[0, 1], [1, 0]], dtype=np.complex128)
         Y = np.array([[0, -1j], [1j, 0]], dtype=np.complex128)
         Z = np.array([[1, 0], [0, -1]], dtype=np.complex128)
 
         p = probability
         kraus = [
-            np.sqrt(1 - p) * I,
+            np.sqrt(1 - p) * identity,
             np.sqrt(p / 3) * X,
             np.sqrt(p / 3) * Y,
             np.sqrt(p / 3) * Z,
@@ -158,7 +158,7 @@ class NoiseModel:
         if not 0 <= probability <= 1:
             raise ValueError(f"probability must be in [0,1], got {probability}")
 
-        I = np.eye(2, dtype=np.complex128)
+        identity = np.eye(2, dtype=np.complex128)
         X = np.array([[0, 1], [1, 0]], dtype=np.complex128)
 
         p = probability
@@ -166,7 +166,7 @@ class NoiseModel:
             name="bit_flip",
             qubits=qubits or [],
             probability=probability,
-            kraus_ops=[np.sqrt(1 - p) * I, np.sqrt(p) * X],
+            kraus_ops=[np.sqrt(1 - p) * identity, np.sqrt(p) * X],
         ))
         return self
 
@@ -217,7 +217,6 @@ class NoiseModel:
     ) -> DensityMatrix:
         """Apply a single-qubit Kraus channel to a specific qubit."""
         n = rho.num_qubits
-        dim = rho.dim
 
         # Build full-space Kraus operators
         full_kraus = []
@@ -264,7 +263,7 @@ class NoiseModel:
         if not 0 <= probability <= 1:
             raise ValueError(f"probability must be in [0,1], got {probability}")
 
-        I = np.eye(2, dtype=np.complex128)
+        identity = np.eye(2, dtype=np.complex128)
         Z = np.array([[1, 0], [0, -1]], dtype=np.complex128)
 
         p = probability
@@ -272,7 +271,7 @@ class NoiseModel:
             name="phase_flip",
             qubits=qubits or [],
             probability=probability,
-            kraus_ops=[np.sqrt(1 - p) * I, np.sqrt(p) * Z],
+            kraus_ops=[np.sqrt(1 - p) * identity, np.sqrt(p) * Z],
         ))
         return self
 
@@ -418,7 +417,7 @@ class NoiseModel:
         if px + py + pz > 1:
             raise ValueError(f"Total Pauli probability ({px+py+pz}) must be <= 1")
 
-        I = np.eye(2, dtype=np.complex128)
+        identity = np.eye(2, dtype=np.complex128)
         X = np.array([[0, 1], [1, 0]], dtype=np.complex128)
         Y = np.array([[0, -1j], [1j, 0]], dtype=np.complex128)
         Z = np.array([[1, 0], [0, -1]], dtype=np.complex128)
@@ -429,7 +428,7 @@ class NoiseModel:
             qubits=qubits or [],
             probability=p_total,
             kraus_ops=[
-                np.sqrt(1 - p_total) * I,
+                np.sqrt(1 - p_total) * identity,
                 np.sqrt(px) * X if px > 0 else np.zeros((2, 2), dtype=np.complex128),
                 np.sqrt(py) * Y if py > 0 else np.zeros((2, 2), dtype=np.complex128),
                 np.sqrt(pz) * Z if pz > 0 else np.zeros((2, 2), dtype=np.complex128),

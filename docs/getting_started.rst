@@ -52,13 +52,13 @@ Every solver run can produce a standardized decision result:
    from microquantum.analytics.result import Result
 
    result = Result(
-       problem="fraud_detection",
-       decision={"flagged": True, "score": 0.87},
-       confidence=0.87,
-       qubit_count=4,
-       runtime_ms=12.5,
+       problem="scheduling_optimization",
+       decision={"selected_route": "A->C->B", "cost": 42.0},
+       confidence=0.91,
+       qubit_count=8,
+       runtime_ms=48.3,
    )
    print(result.to_json())
 
-The open SDK ships the contract only; industry-specific solvers built
-on microquantum are published separately (proprietary vertical solutions).
+The SDK ships the contract itself; domain-specific solvers built on
+microquantum may be published separately.

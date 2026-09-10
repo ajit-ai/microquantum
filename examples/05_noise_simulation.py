@@ -11,11 +11,10 @@ perform on real hardware with imperfect gates.
 """
 
 import numpy as np
-from microquantum.core import QuantumCircuit
-from microquantum.core.operators import Operator
-from microquantum.core.tensor import expand_operator
-from microquantum.backends.noise import NoiseModel
+
 from microquantum.backends.density_matrix import DensityMatrixBackend
+from microquantum.backends.noise import NoiseModel
+from microquantum.core import QuantumCircuit
 
 
 def circuit_to_gates(qc: QuantumCircuit) -> list[tuple[np.ndarray, list[int]]]:

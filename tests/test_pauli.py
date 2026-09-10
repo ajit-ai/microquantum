@@ -8,7 +8,6 @@ from microquantum.core import (
     PauliString,
     PauliSum,
     StateVector,
-    QuantumCircuit,
 )
 
 

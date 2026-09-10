@@ -7,7 +7,6 @@ from typing import Optional
 
 from ..core.circuit import QuantumCircuit
 
-
 _DEFAULT_GATE_COSTS: dict[str, float] = {
     "h": 1.0,
     "x": 1.0,
@@ -116,10 +115,11 @@ class ResourceEstimator:
         two_qubit = 0
 
         for instr in circuit._gate_instructions:
-            if QuantumCircuit._is_parameterized_gate(instr):
-                name = str(instr[0])
-            else:
-                name = instr[0].name  # type: ignore[union-attr]
+            name = (
+                str(instr[0])
+                if QuantumCircuit._is_parameterized_gate(instr)
+                else instr[0].name  # type: ignore[union-attr]
+            )
 
             gate_type_counts[name] = gate_type_counts.get(name, 0) + 1
 
