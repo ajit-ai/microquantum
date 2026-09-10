@@ -13,6 +13,7 @@ microquantum is an **independent quantum computing SDK**. It is **not** a port o
 wrapper around Qiskit, Cirq, or OpenQASM — every circuit, operator, simulator and
 algorithm is implemented from scratch with NumPy as the only hard dependency.
 
+
 > **Positioning**: an *SDK* — a complete kit for building quantum applications.
 > The core engine and algorithms form a *library* (you call it); the
 > `DomainAdapter` pipeline and backend/provider abstractions form an embedded
