@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Optional
@@ -18,6 +18,9 @@ from ..core.state import StateVector
 
 if TYPE_CHECKING:
     from ..core.circuit import QuantumCircuit
+    from ..runtime.plan import ExecutionPlan
+
+from .capabilities import BackendCapabilities, simulator_capabilities
 
 
 def _now_iso() -> str:
@@ -59,6 +62,13 @@ class BackendResult:
         statevector: Final state vector (if simulated).
         density_matrix: Final density matrix (if applicable).
         counts: Measurement bitstring counts.
+        samples: Raw per-shot outcome indices (if the backend provides them).
+        expectations: Labeled expectation values (e.g. Hamiltonian terms).
+        eigenvalues: Computed eigenvalues (where applicable).
+        native: Raw/vendor-native result payload (JSON-safe where possible).
+        shots: Number of shots requested for this execution.
+        seed: RNG seed used (if deterministic).
+        target_name: Target the result was produced on (if known).
         num_qubits: Number of qubits in the system.
         backend_name: Name of the backend used.
         metadata: Additional execution metadata.
@@ -69,6 +79,13 @@ class BackendResult:
     statevector: Optional[NDArray[np.complex128]] = None
     density_matrix: Optional[NDArray[np.complex128]] = None
     counts: dict[str, int] = field(default_factory=dict)
+    samples: Optional[list[int]] = None
+    expectations: dict[str, float] = field(default_factory=dict)
+    eigenvalues: Optional[list[float]] = None
+    native: dict[str, Any] = field(default_factory=dict)
+    shots: Optional[int] = None
+    seed: Optional[int] = None
+    target_name: Optional[str] = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
@@ -98,6 +115,15 @@ class BackendResult:
             "density_matrix": json_safe(self.density_matrix),
             "counts": dict(self.counts),
             "probabilities": dict(self.probabilities),
+            "samples": list(self.samples) if self.samples is not None else None,
+            "expectations": dict(self.expectations),
+            "eigenvalues": (
+                list(self.eigenvalues) if self.eigenvalues is not None else None
+            ),
+            "native": json_safe(dict(self.native)),
+            "shots": self.shots,
+            "seed": self.seed,
+            "target_name": self.target_name,
             "metadata": dict(self.metadata),
         }
 
@@ -108,8 +134,8 @@ class BackendResult:
     def __repr__(self) -> str:
         return (
             f"BackendResult(num_qubits={self.num_qubits}, "
-            f"backend='{self.backend_name}', "
-            f"measurements={len(self.counts)})"
+            f"backend='{self.backend_name}', count_distinct={len(self.counts)}, "
+            f"samples={len(self.samples) if self.samples else 0})"
         )
 
     def __str__(self) -> str:
@@ -244,6 +270,30 @@ class Backend(ABC):
         """
         return Target(name=self.name, num_qubits=self.num_qubits)
 
+    @property
+    def capabilities(self) -> BackendCapabilities:
+        """Structured :class:`BackendCapabilities` of this backend.
+
+        The default derives a simulator capability set from :attr:`device`
+        and :attr:`target`.  Override to advertise richer/different modes.
+        """
+        caps = simulator_capabilities(max_qubits=self.num_qubits)
+        target = self.target
+        features = set(caps.circuit_features)
+        if target.supports_dynamic_circuits:
+            features.add("mid_circuit_measurement")
+        return BackendCapabilities(
+            target_class=caps.target_class,
+            execution=caps.execution,
+            circuit_features=frozenset(features),
+            max_qubits=self.num_qubits,
+            connectivity=target.connectivity,
+            native_gates=target.native_gates,
+            metadata={
+                "device_type": self.device.device_type.value,
+            },
+        )
+
     def metadata(self) -> dict[str, Any]:
         """Return JSON-safe backend identity and capability metadata."""
         return {
@@ -251,7 +301,92 @@ class Backend(ABC):
             "num_qubits": self.num_qubits,
             "device": self.device.to_dict(),
             "target": self.target.to_dict(),
+            "capabilities": self.capabilities.to_dict(),
         }
+
+    # ------------------------------------------------------------------
+    # plan-level contract (MQ-06)
+    # ------------------------------------------------------------------
+
+    def validate(self, plan: "ExecutionPlan") -> list[str]:
+        """Validate a plan against this backend, returning descriptive problems.
+
+        An empty list means the plan is executable on this backend.  The
+        default checks qubit capacity, the shot mode and the requested
+        target; subclasses override to enforce richer constraints (native
+        gates, connectivity, dynamic-circuit features, ...).
+        """
+        problems: list[str] = []
+        caps = self.capabilities
+
+        num_qubits = plan.num_qubits
+        if caps.max_qubits is not None and num_qubits > caps.max_qubits:
+            problems.append(
+                f"plan uses {num_qubits} qubits but backend '{self.name}' "
+                f"supports at most {caps.max_qubits}"
+            )
+        if plan.shots is not None and not caps.supports_shots:
+            problems.append(
+                f"plan requests {plan.shots} shots but backend '{self.name}' "
+                f"does not support shot-based execution"
+            )
+        target = plan.target
+        if (
+            target is not None
+            and target.num_qubits is not None
+            and num_qubits > target.num_qubits
+        ):
+            problems.append(
+                f"plan uses {num_qubits} qubits but target '{target.name}' "
+                f"supports at most {target.num_qubits}"
+            )
+        return problems
+
+    def supports(self, plan: "ExecutionPlan") -> bool:
+        """Return True if the plan validates against this backend.
+
+        Shorthand for ``self.validate(plan) == []``.
+        """
+        return not self.validate(plan)
+
+    def execute(self, plan: "ExecutionPlan") -> BackendResult:
+        """Execute a validated plan on this backend and return a result.
+
+        This is the canonical single-call backend entry point: it validates
+        the plan first, binds parameters and runs the described work.  The
+        execution runtime (see :mod:`microquantum.runtime`) orchestrates a
+        richer pipeline (trace, metadata, jobs) on top of this contract.
+
+        Args:
+            plan: Diagnostic :class:`ExecutionPlan` to run.
+
+        Returns:
+            :class:`BackendResult` from executing the plan.
+
+        Raises:
+            ValueError: If the plan does not validate against this backend.
+        """
+        problems = self.validate(plan)
+        if problems:
+            raise ValueError(
+                f"backend '{self.name}' rejected the plan: {'; '.join(problems)}"
+            )
+        circuit = plan.bound()
+        result = self.run(
+            circuit,
+            shots=plan.shots,
+            initial_state=plan.initial_state,
+            seed=plan.seed,
+        )
+        target = plan.target if plan.target is not None else self.target
+        return replace(
+            result,
+            shots=plan.shots if result.shots is None else result.shots,
+            seed=plan.seed if result.seed is None else result.seed,
+            target_name=result.target_name
+            if result.target_name is not None
+            else target.name,
+        )
 
     @abstractmethod
     def run_circuit(
