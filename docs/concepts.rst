@@ -21,10 +21,10 @@ The canonical path from a circuit to a measurement result::
   ``backend.submit_circuit(circuit)`` to receive a :class:`~microquantum.backends.base.Job`
   that wraps execution in a lifecycle envelope.
 * :class:`~microquantum.backends.base.Job` tracks the lifecycle
-  (``pending -> running -> completed``, plus ``failed``/``cancelled``) and
-  exposes :meth:`~microquantum.backends.base.Job.cancel` and
-  :meth:`~microquantum.backends.base.Job.metadata`. Local simulators return
-  already-completed jobs; hardware providers return jobs that finish
+  (``created -> queued -> running -> completed``, plus ``failed`` /
+  ``cancelled``) and exposes :meth:`~microquantum.backends.base.Job.cancel`
+  and :meth:`~microquantum.backends.base.Job.metadata`. Local simulators
+  return already-completed jobs; hardware providers return jobs that finish
   asynchronously.
 * :class:`~microquantum.backends.base.BackendResult` carries state vectors /
   density matrices, measurement counts and probabilities, and execution
@@ -44,6 +44,53 @@ accelerator implementations are not tied to a specific numerical layer.
   measurement/dynamic-circuit capability and shot limits. A simulator
   advertises a universal target via ``Target.universal()``; a hardware
   backend would advertise its native gate set for transpilation.
+
+Hybrid execution runtime
+------------------------
+
+The execution runtime (:mod:`microquantum.runtime`) is the coordinator of
+the canonical pipeline::
+
+    Program -> ExecutionPlan -> Target -> Backend -> Job -> Execution -> Result
+
+* :class:`~microquantum.runtime.ExecutionPlan` is a declarative, JSON-safe
+  description of *what* to run (a circuit, an IR circuit, or an already
+  compiled :class:`~microquantum.ir.CompilationResult`), *where* to run it
+  (a :class:`~microquantum.core.device.Target` / backend), and *how* (shots,
+  parameter bindings, initial state, seed, optimization level, options and
+  user metadata).  Plans are plain data — they never execute anything.
+* :class:`~microquantum.runtime.ExecutionRuntime` prepares a plan
+  (``prepare``), optionally compiles it against a target (``compile``,
+  reusing the MQ-03 :class:`~microquantum.ir.Compiler`), submits it to the
+  selected backend (``submit``) and collects the completed job into an
+  enriched :class:`~microquantum.backends.base.BackendResult` (``execute``).
+  Results carry runtime metadata (``job_id``, strategy, target, shots,
+  bindings, optimization level, elapsed time and a trace).  Every execution
+  is recorded in the runtime's bounded :attr:`history`.
+* :class:`~microquantum.runtime.ExecutionStrategy` decides whether a plan
+  runs directly (``DIRECT``) or after compilation (``COMPILED``), driven by
+  a pluggable handler table so execution modes can be overridden without
+  forking the runtime.
+* :class:`~microquantum.runtime.ExecutionTrace` records the ordered lifecycle
+  of a single execution (``prepared -> bound/compiled -> validated ->
+  submitted -> completed/failed``) with per-step timing — the foundation for
+  observability without a heavy logging dependency.
+
+The runtime also provides higher-level orchestration:
+
+* ``execute_batch`` / ``submit_batch`` run many plans together; with
+  ``raise_on_error=False`` a failing item is reported in place instead of
+  abandoning the batch.
+* ``run_parameter_sweep`` executes one circuit over many parameter bindings
+  (raw floats for single-parameter circuits, or explicit binding dicts).
+* ``run_hybrid`` runs a generic classical-quantum workflow from two callables
+  (``build(state, step) -> work`` and ``update(state, step, result) ->
+  state``).  It implements no algorithm itself — VQE/QAOA-style loops can be
+  expressed on top but are intentionally not built in.
+
+The runtime is not a backend: it never re-implements simulation or provider
+logic, and a full user-provided :class:`~microquantum.backends.base.Backend`
+can be dropped in through a plan's ``backend`` field.
 
 Algorithms
 ----------
