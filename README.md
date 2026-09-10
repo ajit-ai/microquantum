@@ -1,4 +1,4 @@
-# microquantum
+# Microquantum
 
 **A lightweight, NumPy-only quantum computing SDK — MIT licensed and dependency-light.**
 
