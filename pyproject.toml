@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "microquantum"
+version = "0.3.0"
+description = "A lightweight, NumPy-only quantum computing SDK with a standardized solver-result contract."
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Ajit", email = "ajit@example.com"},
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Chemistry",
+]
+dependencies = [
+    "numpy>=1.20.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/ajit-ai/microquantum"
+Repository = "https://github.com/ajit-ai/microquantum"
+Issues = "https://github.com/ajit-ai/microquantum/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+warn_redundant_casts = true
+check_untyped_defs = true
+disallow_incomplete_defs = true
+no_implicit_optional = true
+strict_equality = true
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["microquantum.core.circuit", "microquantum.core.gradient"]
+disable_error_code = ["assignment", "arg-type", "misc", "union-attr", "index"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.5",
+    "mypy>=1.0",
+    "sphinx>=8.1.3",
+    "sphinx-autoapi>=3.8.0",
+    "sphinx-rtd-theme>=3.1.0",
+]
