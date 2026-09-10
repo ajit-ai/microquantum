@@ -38,6 +38,20 @@ from .algorithms import (
     qdrift_simulation,
     qft_circuit,
 )
+from .analysis import (
+    ExpectationAnalysis,
+    ResultAggregator,
+    SamplingAnalysis,
+    StateAnalysis,
+    confidence_interval,
+    count,
+    maximum,
+    mean,
+    minimum,
+    standard_deviation,
+    standard_error,
+    variance,
+)
 from .analytics import AnalysisResult, BaseAnalytics, Result
 from .backends import (
     Backend,
@@ -130,6 +144,16 @@ from .core.density_matrix import DensityMatrix
 from .core.dynamic import ClassicalRegister, DynamicCircuit, DynamicCircuitResult
 from .core.registers import ClassicalRegister as ClassicalRegisterBase
 from .core.registers import QuantumRegister
+from .experiments import (
+    ExecutionFailure,
+    ExecutionRecord,
+    ExecutionStatus,
+    Experiment,
+    ExperimentResult,
+    ParameterSweep,
+    execution_fingerprint,
+    reproducibility_metadata,
+)
 from .ir import (
     Barrier,
     BindParameters,
@@ -217,7 +241,9 @@ from .runtime import (
     default_runtime,
     execute,
     execute_batch,
+    execute_records,
     register_custom_strategy,
+    run_experiment,
     run_hybrid,
     run_parameter_sweep,
     submit,
@@ -424,6 +450,28 @@ __all__ = [
     "AnalysisResult",
     "BaseAnalytics",
     "Result",
+    # Analysis (MQ-07)
+    "SamplingAnalysis",
+    "ExpectationAnalysis",
+    "StateAnalysis",
+    "ResultAggregator",
+    "mean",
+    "variance",
+    "standard_deviation",
+    "standard_error",
+    "confidence_interval",
+    "minimum",
+    "maximum",
+    "count",
+    # Experiments (MQ-07)
+    "ExecutionRecord",
+    "ExecutionFailure",
+    "ExecutionStatus",
+    "ParameterSweep",
+    "Experiment",
+    "ExperimentResult",
+    "execution_fingerprint",
+    "reproducibility_metadata",
     # Optimization
     "QUBOBuilder",
     "QUBOProblem",
@@ -453,6 +501,8 @@ __all__ = [
     "submit",
     "execute_batch",
     "submit_batch",
+    "execute_records",
+    "run_experiment",
     "run_parameter_sweep",
     "run_hybrid",
 ]

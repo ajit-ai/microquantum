@@ -18,7 +18,7 @@ from __future__ import annotations
 import time
 import uuid
 from dataclasses import replace
-from typing import Any, Optional, Sequence, Union, cast
+from typing import TYPE_CHECKING, Any, Optional, Sequence, Union, cast
 
 import numpy as np
 
@@ -32,6 +32,10 @@ from ..ir import CompilationResult, Compiler, from_ir
 from .plan import ExecutionPlan, ParameterBinding
 from .strategy import STRATEGY_HANDLERS, ExecutionStrategy
 from .trace import ExecutionTrace
+
+if TYPE_CHECKING:
+    from ..experiments.experiment import ExperimentResult
+    from ..experiments.record import ExecutionRecord
 
 Work = Union[ExecutionPlan, QuantumCircuit]
 BatchResult = Union[BackendResult, str]
@@ -364,6 +368,135 @@ class ExecutionRuntime:
                 results.append(f"item {index}: {exc}")
         return results
 
+    def execute_record(
+        self,
+        work: Work,
+        *,
+        backend: Optional[BackendRef] = None,
+        shots: Optional[int] = None,
+        seed: Optional[int] = None,
+        metadata: Optional[dict[str, Any]] = None,
+    ) -> "ExecutionRecord":
+        """Execute work and return a structured :class:`ExecutionRecord`.
+
+        Mirrors :meth:`execute` but wraps the *entire* pipeline (including
+        preparation and validation) so that the outcome is always represented
+        by a record — completed with its raw result, or failed with a
+        structured :class:`ExecutionFailure`.  Failures are never silently
+        discarded.
+
+        Args:
+            work: An :class:`ExecutionPlan` or :class:`QuantumCircuit`.
+            backend: Backend override for circuit inputs.
+            shots: Shots override for circuit inputs.
+            seed: Seed override for circuit inputs.
+            metadata: Metadata merged into every result for circuit inputs.
+
+        Returns:
+            An :class:`ExecutionRecord` carrying the result or the failure.
+        """
+        from ..experiments.record import ExecutionRecord
+
+        plan = self._as_plan(
+            work,
+            backend=backend,
+            shots=shots,
+            seed=seed,
+            metadata=metadata,
+        )
+        started = time.monotonic()
+        try:
+            job, trace, elapsed = self._submit_plan(plan)
+            backend_obj = self._select_backend(plan)
+            result = self._collect(job, plan, backend_obj, trace, elapsed)
+        except Exception as exc:
+            return ExecutionRecord.failed(
+                plan,
+                exc,
+                backend_name=self._plan_backend_name(plan),
+                elapsed_seconds=time.monotonic() - started,
+            )
+        return ExecutionRecord.completed(plan, backend_obj, result, elapsed)
+
+    def execute_records(
+        self,
+        work: Sequence[Work],
+        *,
+        backend: Optional[BackendRef] = None,
+        shots: int = 1024,
+        seed: Optional[int] = None,
+        metadata: Optional[dict[str, Any]] = None,
+    ) -> list["ExecutionRecord"]:
+        """Execute a sequence of work items, collecting structured records.
+
+        Unlike :meth:`execute_batch` (raw results or error strings), this
+        returns one :class:`ExecutionRecord` per input, in order.  The batch
+        preserves parameter bindings and backend selection, and *never* drops
+        failures: each failed item yields a record in :class:`failed` state
+        with an inspectable :class:`ExecutionFailure`.
+
+        Args:
+            work: Sequence of plans/circuits to execute.
+            backend: Backend override for circuit inputs.
+            shots: Shots for circuit inputs.
+            seed: Seed for circuit inputs.
+            metadata: Metadata merged into circuit-input results.
+
+        Returns:
+            One :class:`ExecutionRecord` per input, in order.
+        """
+        from ..experiments.record import ExecutionRecord
+
+        batch_id = uuid.uuid4().hex[:8]
+        records: list[ExecutionRecord] = []
+        for index, item in enumerate(work):
+            context: Optional[ExecutionPlan] = None
+            try:
+                plan = self._as_plan(
+                    item,
+                    backend=backend,
+                    shots=shots,
+                    seed=seed,
+                    metadata=metadata,
+                )
+                plan = replace(
+                    plan,
+                    metadata={
+                        **plan.metadata,
+                        "batch_id": batch_id,
+                        "batch_index": index,
+                    },
+                )
+                context = plan
+                records.append(self.execute_record(plan))
+            except Exception as exc:
+                records.append(
+                    ExecutionRecord.failed(
+                        context if context is not None else self._context_plan(item),
+                        exc,
+                        backend_name=(
+                            backend if isinstance(backend, str) else None
+                        ),
+                        elapsed_seconds=0.0,
+                    )
+                )
+        return records
+
+    def run_experiment(self, experiment: Any) -> "ExperimentResult":
+        """Run an :class:`Experiment` through this runtime.
+
+        Convenience delegating to :meth:`Experiment.run`; returns an
+        :class:`ExperimentResult` with its raw execution records preserved.
+        """
+        from ..experiments.experiment import Experiment
+
+        if not isinstance(experiment, Experiment):
+            raise TypeError(
+                f"run_experiment expects an Experiment, "
+                f"got {type(experiment).__name__}"
+            )
+        return experiment.run(self)
+
     def run_parameter_sweep(
         self,
         circuit: QuantumCircuit,
@@ -497,6 +630,32 @@ class ExecutionRuntime:
     # ------------------------------------------------------------------
     # internals
     # ------------------------------------------------------------------
+
+    def _context_plan(self, item: Any) -> Optional[ExecutionPlan]:
+        """Best-effort plan snapshot for a failed planning attempt.
+
+        Returns a minimal plan (or ``None``) so failed records still carry
+        user-facing context (name, shots, bindings) when plan construction
+        itself raised.
+        """
+        if isinstance(item, ExecutionPlan):
+            return item
+        if isinstance(item, QuantumCircuit):
+            try:
+                return ExecutionPlan.from_circuit(item, name="item")
+            except Exception:
+                return None
+        return None
+
+    def _plan_backend_name(self, plan: Any) -> str:
+        """Best-effort backend name for a plan (resilient to failures)."""
+        try:
+            return self._select_backend(cast(ExecutionPlan, plan)).name
+        except Exception:
+            backend = getattr(plan, "backend", None)
+            if isinstance(backend, str):
+                return backend
+            return getattr(backend, "name", "<unknown>")
 
     def _single_param(self, params: tuple[Parameter, ...]) -> str:
         params = tuple(params)

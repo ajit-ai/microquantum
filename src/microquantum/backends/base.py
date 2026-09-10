@@ -28,6 +28,31 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _array_from_dict(mapping: dict[str, Any], key: str) -> Optional[NDArray[np.complex128]]:
+    """Rebuild a complex128 array from its serialized ``to_dict()`` value.
+
+    Complex values were encoded element-wise as ``{"real": .., "imag": ..}``
+    by :func:`~microquantum._json.json_safe`; this reverses that encoding.
+    """
+    value = mapping.get(key)
+    if value is None:
+        return None
+    return np.asarray(_decode_complex(value), dtype=np.complex128)
+
+
+def _decode_complex(value: Any) -> Any:
+    """Recursively restore ``{"real": .., "imag": ..}`` encoded values."""
+    if isinstance(value, dict):
+        if set(value) == {"real", "imag"} and all(
+            isinstance(v, (int, float)) for v in value.values()
+        ):
+            return complex(float(value["real"]), float(value["imag"]))
+        return {k: _decode_complex(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_decode_complex(v) for v in value]
+    return value
+
+
 class JobStatus(Enum):
     """Status of a quantum job.
 
@@ -130,6 +155,33 @@ class BackendResult:
     def to_json(self) -> str:
         """Serialize to a JSON string."""
         return json_string(self.to_dict())
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "BackendResult":
+        """Rebuild a result from its ``to_dict()`` mapping.
+
+        Complex-valued arrays are decoded back to ``complex128`` arrays so
+        statevector / density-matrix data survive a serialization round trip.
+        """
+        statevector = _array_from_dict(data, "statevector")
+        density_matrix = _array_from_dict(data, "density_matrix")
+        samples = data.get("samples")
+        eigenvalues = data.get("eigenvalues")
+        return cls(
+            num_qubits=int(data["num_qubits"]),
+            backend_name=str(data["backend_name"]),
+            statevector=statevector,
+            density_matrix=density_matrix,
+            counts=dict(data.get("counts") or {}),
+            samples=list(samples) if samples is not None else None,
+            expectations=dict(data.get("expectations") or {}),
+            eigenvalues=list(eigenvalues) if eigenvalues is not None else None,
+            native=dict(data.get("native") or {}),
+            shots=data.get("shots"),
+            seed=data.get("seed"),
+            target_name=data.get("target_name"),
+            metadata=dict(data.get("metadata") or {}),
+        )
 
     def __repr__(self) -> str:
         return (
