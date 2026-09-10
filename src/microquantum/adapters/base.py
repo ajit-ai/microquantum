@@ -38,16 +38,16 @@ class ProblemStatus(Enum):
 
 @dataclass
 class QuantumProblem:
-    """A domain-specific problem formulated for quantum execution.
+    """A problem formulated for quantum execution.
 
-    Encapsulates the physical parameters, constraints, and metadata
-    needed to encode a domain problem into a quantum circuit.
+    Encapsulates the parameters, constraints, and metadata needed to
+    encode a problem into a quantum circuit.
 
     Attributes:
-        name: Problem identifier (e.g., "hohmann_transfer").
-        domain: Domain name (e.g., "aerospace").
-        parameters: Problem-specific physical parameters.
-        constraints: Physics constraints for validation.
+        name: Problem identifier (e.g., "binary_optimization").
+        domain: Problem domain (e.g., "optimization").
+        parameters: Problem-specific parameters.
+        constraints: Constraints for validation.
         num_qubits: Requested number of qubits (may be adjusted).
         metadata: Additional problem metadata.
     """
@@ -99,13 +99,13 @@ class QuantumProblem:
 class QuantumResult:
     """Result from executing a quantum problem through an adapter.
 
-    Contains both the raw quantum execution output and the
-    domain-decoded interpretation.
+    Contains both the raw quantum execution output and the decoded
+    interpretation.
 
     Attributes:
         problem: The original problem.
         backend_result: Raw result from the quantum backend.
-        decoded: Domain-decoded result dictionary.
+        decoded: Decoded result dictionary.
         fidelity: Solution fidelity (0-1).
         execution_time: Time spent in quantum execution (seconds).
         metadata: Additional result metadata.
@@ -131,6 +131,46 @@ class QuantumResult:
         if self.backend_result:
             return self.backend_result.probabilities
         return {}
+
+    @staticmethod
+    def _json_safe(value: Any) -> Any:
+        """Recursively convert numpy types to JSON-safe Python types."""
+        if isinstance(value, np.ndarray):
+            return value.tolist()
+        if isinstance(value, np.generic):
+            return value.item()
+        if isinstance(value, dict):
+            return {str(k): QuantumResult._json_safe(v) for k, v in value.items()}
+        if isinstance(value, (list, tuple)):
+            return [QuantumResult._json_safe(v) for v in value]
+        return value
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to a JSON-safe dictionary."""
+        return {
+            "problem": {
+                "name": self.problem.name,
+                "domain": self.problem.domain,
+                "num_qubits": self.problem.num_qubits,
+                "parameters": self._json_safe(self.problem.parameters),
+                "constraints": self._json_safe(self.problem.constraints),
+                "metadata": self._json_safe(self.problem.metadata),
+                "status": self.problem.status.value,
+            },
+            "backend_result": (
+                self.backend_result.to_dict() if self.backend_result is not None else None
+            ),
+            "decoded": self._json_safe(self.decoded),
+            "fidelity": float(self.fidelity),
+            "execution_time": float(self.execution_time),
+            "metadata": self._json_safe(self.metadata),
+            "most_frequent_state": self.most_frequent_state,
+            "probabilities": dict(self.probabilities),
+        }
+
+    def to_json(self) -> str:
+        """Serialize to a JSON string."""
+        return json.dumps(self.to_dict(), indent=2, default=str)
 
     def __repr__(self) -> str:
         return (
@@ -166,7 +206,7 @@ class DomainAdapter(ABC):
     @property
     @abstractmethod
     def domain_name(self) -> str:
-        """Domain identifier (e.g., 'aerospace', 'finance')."""
+        """Domain identifier (e.g., 'optimization', 'signal_processing')."""
 
     @property
     @abstractmethod

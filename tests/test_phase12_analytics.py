@@ -72,14 +72,15 @@ class TestCSVLoader:
 # Result Contract Tests
 # =============================================================================
 class TestResultContract:
-    """Test the standardized Result decision schema."""
+    """Test the standardized generic Result schema."""
 
     def test_result_defaults(self) -> None:
         """Test Result default construction."""
         from microquantum.analytics.result import Result
 
-        result = Result(problem="fraud_detection", decision={"flagged": True})
-        assert result.problem == "fraud_detection"
+        result = Result(problem="optimization", solution={"value": 0.9})
+        assert result.problem == "optimization"
+        assert result.solution == {"value": 0.9}
         assert result.confidence == 1.0
         assert result.qubit_count == 0
         assert result.runtime_ms == 0.0
@@ -90,31 +91,74 @@ class TestResultContract:
 
         result = Result(
             problem="routing",
-            decision={"tour": np.array([0, 2, 1])},
+            solution={"tour": np.array([0, 2, 1])},
             confidence=0.93,
             fidelity=0.99,
             qubit_count=4,
             runtime_ms=12.5,
             quantum_trace={"metric": {"quantum_value": 10.0, "classical_value": 12.0}},
         )
-        data = result.to_json()
-        assert data["decision"]["tour"] == [0, 2, 1]
+        data = result.to_dict()
+        assert data["solution"]["tour"] == [0, 2, 1]
         assert data["fidelity"] == 0.99
         assert data["quantum_trace"]["metric"]["quantum_value"] == 10.0
         json.dumps(data)  # must be JSON-safe
 
-    def test_result_improved_over_classical(self) -> None:
-        """Test improved-over-classical property."""
+    def test_result_to_json(self) -> None:
+        """Test Result JSON string serialization."""
         from microquantum.analytics.result import Result
 
-        r1 = Result(problem="t", decision=0.9, classical_baseline=0.7)
-        assert r1.improved_over_classical is True
+        result = Result(problem="t", solution=0.9)
+        payload = result.to_json()
+        assert isinstance(payload, str)
+        assert json.loads(payload)["solution"] == 0.9
 
-        r2 = Result(problem="t", decision=0.5, classical_baseline=0.7)
-        assert r2.improved_over_classical is False
+    def test_result_improved_over_baseline(self) -> None:
+        """Test improved-over-baseline property."""
+        from microquantum.analytics.result import Result
 
-        r3 = Result(problem="t", decision="pass")
-        assert r3.improved_over_classical is None
+        r1 = Result(problem="t", solution=0.9, baseline=0.7)
+        assert r1.improved_over_baseline is True
+
+        r2 = Result(problem="t", solution=0.5, baseline=0.7)
+        assert r2.improved_over_baseline is False
+
+        r3 = Result(problem="t", solution="pass")
+        assert r3.improved_over_baseline is None
+
+    def test_legacy_kwargs_deprecated(self) -> None:
+        """Test deprecated decision/classical_baseline kwargs still work."""
+        import warnings
+
+        from microquantum.analytics.result import Result
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            result = Result(
+                problem="t",
+                decision=0.9,
+                classical_baseline=0.7,
+            )
+
+        assert result.solution == 0.9
+        assert result.baseline == 0.7
+        assert any(issubclass(w.category, DeprecationWarning) for w in caught)
+
+    def test_legacy_property_aliases(self) -> None:
+        """Test deprecated decision/classical_baseline properties."""
+        import warnings
+
+        from microquantum.analytics.result import Result
+
+        result = Result(problem="t", solution=0.9, baseline=0.7)
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            assert result.decision == 0.9
+            assert result.classical_baseline == 0.7
+            assert result.improved_over_classical is True
+
+        assert len(caught) >= 3
+        assert all(issubclass(w.category, DeprecationWarning) for w in caught)
 
 
 # =============================================================================
@@ -143,7 +187,9 @@ class TestBaseAnalytics:
             solution={"energy": -1.857},
             success=True,
         )
-        json_data = result.to_json()
+        payload = result.to_json()
+        assert isinstance(payload, str)
+        json_data = json.loads(payload)
         assert "solution" in json_data
         assert json_data["solution"]["energy"] == -1.857
         assert json_data["success"] is True

@@ -5,7 +5,7 @@ using quantum phase estimation on Grover's operator.
 
 Applications:
 - Quantum Monte Carlo integration
-- Risk analysis in quantum finance
+- Estimation of expectation values / probabilities
 - Machine learning kernel methods
 
 Reference: Brassard et al., "Quantum Amplitude Amplification and Estimation" (2000)

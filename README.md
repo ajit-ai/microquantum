@@ -102,15 +102,15 @@ high-level `backend.run(circuit, shots=1024, seed=None)` call.
 from microquantum.analytics.result import Result
 
 result = Result(
-    problem="scheduling_optimization",
-    decision={"selected_route": "A->C->B", "cost": 42.0},
+    problem="optimization",
+    solution={"route": "A->C->B", "cost": 42.0},
     confidence=0.91,
     qubit_count=8,
     runtime_ms=48.3,
-    classical_baseline={"selected_route": "A->B->C", "cost": 51.7},
+    baseline={"route": "A->B->C", "cost": 51.7},
 )
 print(result.to_json())
-print(result.improved_over_classical)  # True
+print(result.improved_over_baseline)  # True
 ```
 
 ### 3. Running on real hardware

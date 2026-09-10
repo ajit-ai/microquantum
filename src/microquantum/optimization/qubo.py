@@ -1,13 +1,13 @@
 """QUBO (Quadratic Unconstrained Binary Optimization) Toolchain.
 
-Converts business optimization problems into quantum-ready Ising Hamiltonians.
+Converts binary optimization problems into quantum-ready Ising Hamiltonians.
 
 QUBO is the standard formulation for combinatorial optimization:
     minimize  x^T Q x
     where x in {0, 1}^n
 
 This module provides:
-- QUBOBuilder: Build QUBO matrices from business variables
+- QUBOBuilder: Build QUBO matrices from binary variables
 - ConstraintPenalty: Encode constraints as penalty terms
 - IsingConverter: Convert QUBO to Ising Hamiltonian for quantum solvers
 """
@@ -69,7 +69,7 @@ class QUBOProblem:
 
 
 class QUBOBuilder:
-    """Build QUBO problems from business variables and objectives.
+    """Build QUBO problems from binary variables and objectives.
 
     Example::
 
@@ -77,7 +77,7 @@ class QUBOBuilder:
         builder.add_quadratic(0, 1, 2.0)  # x0 * x1 coefficient
         builder.add_linear(2, -1.5)       # x2 coefficient
         builder.add_penalty_equality(0, 1, target=1)  # x0 + x1 == 1
-        qubo = builder.build("portfolio_selection")
+        qubo = builder.build("selection_example")
     """
 
     def __init__(self, num_variables: int) -> None:
