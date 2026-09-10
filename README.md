@@ -3,6 +3,7 @@
 **A lightweight, NumPy-only quantum computing SDK — MIT licensed and dependency-light.**
 
 [![CI](https://img.shields.io/github/actions/workflow/status/ajit-ai/microquantum/ci.yml?branch=main&label=CI)](https://github.com/ajit-ai/microquantum/actions)
+[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://ajit-ai.github.io/microquantum/)
 [![PyPI - Version](https://img.shields.io/pypi/v/microquantum)](https://pypi.org/project/microquantum/)
 [![PyPI - Python Versions](https://img.shields.io/pypi/pyversions/microquantum)](https://pypi.org/project/microquantum/)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/microquantum)](https://pypi.org/project/microquantum/)
@@ -59,8 +60,12 @@ Or from source:
 ```bash
 git clone https://github.com/ajit-ai/microquantum.git
 cd microquantum
-pip install -e .
+uv sync --group dev
 ```
+
+Documentation for the Developer Preview is published at
+<https://ajit-ai.github.io/microquantum/> (auto-deployed from the `main`
+branch); the Sphinx sources live in `docs/`.
 
 Optional GPU acceleration (NumPy stays the default; the CuPy backend is opt-in):
 
@@ -200,12 +205,14 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution workflow and
 
 ## Roadmap
 
-- **v0.3.0** (current) — public open-source release: unified `Backend.run()`,
+- **v0.4.0** (current) — Developer Preview (see `docs/releases/developer-preview.rst`):
+  complete warning-free documentation with auto-generated API reference,
+  GitHub Pages deployment, and a consolidated CI/packaging pipeline.
+- **v0.3.0** — public open-source release: unified `Backend.run()`,
   serializable results (`to_dict()`), SPDX/legacy metadata cleanup, coverage +
   ruff gates, SDK-only docs.
-- **Next** — hosted docs (GitHub Pages / Read the Docs), automated PyPI release
-  workflow on version tags, stricter mypy coverage, more hardware providers and
-  tutorials.
+- **Next** — automated PyPI release workflow on version tags, stricter mypy
+  coverage, more hardware providers and tutorials.
 
 ---
 

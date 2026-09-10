@@ -77,6 +77,8 @@ uv.lock
 # Sphinx docs
 docs/_build/
 docs/autoapi/
+# autoapi-generated reference pages (source is autoapi_dirs)
+docs/api/microquantum/
 
 # OS
 .DS_Store

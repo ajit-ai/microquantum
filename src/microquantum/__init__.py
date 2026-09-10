@@ -1,6 +1,6 @@
 """microquantum: A lightweight Python quantum computing SDK."""
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 from .adapters import DomainAdapter, QuantumProblem, QuantumResult, ResultCache
 from .algorithms import (

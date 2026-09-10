@@ -1,37 +1,27 @@
 Benchmarks
 ==========
 
-Quantum Volume
---------------
+Standard quantum benchmarking routines.  Full API details live in the
+generated reference; the links below jump straight to the relevant module.
 
-.. automodule:: microquantum.benchmarks.quantum_volume
-   :members:
-   :undoc-members:
+* :mod:`microquantum.benchmarks.quantum_volume` — Quantum Volume (QV) circuits.
+* :mod:`microquantum.benchmarks.randomized_benchmarking` — randomized
+  benchmarking (RB) sequences.
+* :mod:`microquantum.benchmarks.xeb` — cross-entropy benchmarking.
+* :class:`~microquantum.benchmarks.clops.ClopsBenchmark` — circuit layer
+  operations per second.
+* :mod:`microquantum.benchmarks.gate_set_tomography` — gate set tomography.
+* :mod:`microquantum.benchmarks.cycle_benchmarking` — cycle benchmarking.
 
-Randomized Benchmarking
------------------------
+Generated reference (by module)
+-------------------------------
 
-.. automodule:: microquantum.benchmarks.randomized_benchmarking
-   :members:
-   :undoc-members:
+.. toctree::
+   :hidden:
 
-Cross-Entropy Benchmarking (XEB)
----------------------------------
-
-.. automodule:: microquantum.benchmarks.xeb
-   :members:
-   :undoc-members:
-
-CLOPS
------
-
-.. automodule:: microquantum.benchmarks.clops
-   :members:
-   :undoc-members:
-
-Gate Set Tomography
--------------------
-
-.. automodule:: microquantum.benchmarks.gate_set_tomography
-   :members:
-   :undoc-members:
+   /api/microquantum/benchmarks/quantum_volume/index
+   /api/microquantum/benchmarks/randomized_benchmarking/index
+   /api/microquantum/benchmarks/xeb/index
+   /api/microquantum/benchmarks/clops/index
+   /api/microquantum/benchmarks/gate_set_tomography/index
+   /api/microquantum/benchmarks/cycle_benchmarking/index

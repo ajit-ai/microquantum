@@ -1,104 +1,48 @@
 Core Module
 ===========
 
-Circuit Construction
---------------------
+The core engine: everything you need to build and inspect circuits, operators
+and states.  Full API details live in the generated reference; the links below
+jump straight to the relevant module.
 
-.. automodule:: microquantum.core.circuit
-   :members:
-   :undoc-members:
-
-Operators and Gates
--------------------
-
-.. automodule:: microquantum.core.operators
-   :members:
-   :undoc-members:
-
-State Vectors
--------------
-
-.. automodule:: microquantum.core.state
-   :members:
-   :undoc-members:
-
-Density Matrices
+Key entry points
 ----------------
 
-.. automodule:: microquantum.core.density_matrix
-   :members:
-   :undoc-members:
+* :class:`~microquantum.core.circuit.QuantumCircuit` — build circuits with
+  gates, parameters, measurement and more.
+* :func:`~microquantum.core.circuit.QuantumCircuit.run` — execute locally.
+* :class:`~microquantum.core.state.StateVector` — complex amplitude vector.
+* :class:`~microquantum.core.density_matrix.DensityMatrix` — mixed states.
+* :class:`~microquantum.core.operators.Operator` — unitary / operator algebra.
+* :class:`~microquantum.core.parameter.Parameter` — symbolic parameters.
+* :func:`~microquantum.core.measurement.sample_state` — sample a state.
+* :mod:`microquantum.core.pauli` — Pauli strings and sums.
+* :mod:`microquantum.core.transpiler` — circuit transformations.
+* :mod:`microquantum.core.qasm` — OpenQASM import / export.
 
-Pauli Algebra
--------------
+Generated reference (by module)
+-------------------------------
 
-.. automodule:: microquantum.core.pauli
-   :members:
-   :undoc-members:
+.. toctree::
+   :hidden:
 
-Parameters
-----------
-
-.. automodule:: microquantum.core.parameter
-   :members:
-   :undoc-members:
-
-Measurement
------------
-
-.. automodule:: microquantum.core.measurement
-   :members:
-   :undoc-members:
-
-Coupling Maps
--------------
-
-.. automodule:: microquantum.core.coupling
-   :members:
-   :undoc-members:
-
-Transpiler
-----------
-
-.. automodule:: microquantum.core.transpiler
-   :members:
-   :undoc-members:
-
-Circuit Optimization
---------------------
-
-.. automodule:: microquantum.core.optimization
-   :members:
-   :undoc-members:
-
-Resource Estimation
--------------------
-
-.. automodule:: microquantum.core.resources
-   :members:
-   :undoc-members:
-
-Dynamic Circuits
-----------------
-
-.. automodule:: microquantum.core.dynamic
-   :members:
-   :undoc-members:
-
-Circuit I/O
------------
-
-.. automodule:: microquantum.core.qasm
-   :members:
-   :undoc-members:
-
-.. automodule:: microquantum.core.serialization
-   :members:
-   :undoc-members:
-
-Tensor Operations
------------------
-
-.. automodule:: microquantum.core.tensor
-   :members:
-   :undoc-members:
+   /api/microquantum/core/engine/index
+   /api/microquantum/core/circuit/index
+   /api/microquantum/core/operators/index
+   /api/microquantum/core/pauli/index
+   /api/microquantum/core/parameter/index
+   /api/microquantum/core/state/index
+   /api/microquantum/core/density_matrix/index
+   /api/microquantum/core/measurement/index
+   /api/microquantum/core/gradient/index
+   /api/microquantum/core/registers/index
+   /api/microquantum/core/coupling/index
+   /api/microquantum/core/device/index
+   /api/microquantum/core/resources/index
+   /api/microquantum/core/transpiler/index
+   /api/microquantum/core/optimization/index
+   /api/microquantum/core/dynamic/index
+   /api/microquantum/core/qasm/index
+   /api/microquantum/core/serialization/index
+   /api/microquantum/core/tensor/index
+   /api/microquantum/core/visualization/index
