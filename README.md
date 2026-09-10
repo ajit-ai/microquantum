@@ -27,6 +27,7 @@ algorithm is implemented from scratch with NumPy as the only hard dependency.
 | **Core engine** | `QuantumCircuit`, operators, Pauli algebra, `StateVector` / `DensityMatrix`, measurement, gradients, registers, serialization, transpiler + `PassManager` |
 | **Algorithms** | VQE, ADAPT-VQE, VQD, QAOA, Grover, Shor, QFT, phase/amplitude estimation, HHL, Hamiltonian simulation (+ qDRIFT, 4th-order Trotter), quantum walks, BV, DJ |
 | **Backends** | Statevector, noisy DensityMatrix, MPS and tree tensor networks, pluggable NumPy/CuPy array backend, high-level `Executor`, async `Job` |
+| **Execution results & analytics** | structured `ExecutionRecord`s, `ParameterSweep`, `Experiment` / `ExperimentResult`, sampling / expectation / state analysis and `ResultAggregator` (MQ-07) |
 | **Providers** | Raw REST clients for IBM Quantum and IonQ (no Qiskit/Cirq/OpenQASM), `CircuitSerializer`, `HardwareBackend` adapter |
 | **QML / QEC** | Encodings, quantum kernels, variational classifier; repetition/Shor/bit-flip/phase-flip codes |
 | **Chemistry** | H₂/LiH Hamiltonians, UCCSD and hardware-efficient ansätze |
@@ -154,6 +155,8 @@ microquantum/
 ├── src/microquantum/
 │   ├── core/          # Quantum engine, circuits, operators, transpiler
 │   ├── algorithms/    # 23+ quantum algorithms
+│   ├── experiments/   # Execution records, sweeps, experiments (MQ-07)
+│   ├── analysis/      # Sampling / expectation / state analysis (MQ-07)
 │   ├── backends/      # Simulators, noise, tensor networks, Executor
 │   ├── providers/     # IBM Quantum & IonQ hardware clients (REST)
 │   ├── analytics/     # CSV loading, result contract, analytics base

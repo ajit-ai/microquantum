@@ -22,6 +22,8 @@ from typing import Any, Optional, Sequence, Union
 from ..backends.base import Backend, BackendResult, Job
 from ..core.circuit import QuantumCircuit
 from ..core.device import Target
+from ..experiments.experiment import ExperimentResult
+from ..experiments.record import ExecutionRecord
 from .plan import ExecutionPlan, ParameterBinding
 from .runtime import BatchResult, ExecutionRuntime, SweepValues
 from .strategy import (
@@ -171,6 +173,33 @@ def run_hybrid(
     )
 
 
+def execute_records(
+    work: Sequence[Work],
+    *,
+    backend: Optional[Backend] = None,
+    shots: int = 1024,
+    seed: Optional[int] = None,
+    metadata: Optional[dict[str, Any]] = None,
+) -> list[ExecutionRecord]:
+    """Execute a sequence of plans/circuits, returning structured records.
+
+    One :class:`ExecutionRecord` per input, in order; failures are recorded,
+    never silently dropped.  See :meth:`ExecutionRuntime.execute_records`.
+    """
+    return _DEFAULT_RUNTIME.execute_records(
+        work,
+        backend=backend,
+        shots=shots,
+        seed=seed,
+        metadata=metadata,
+    )
+
+
+def run_experiment(experiment: Any) -> ExperimentResult:
+    """Run an :class:`Experiment` through the shared default runtime."""
+    return _DEFAULT_RUNTIME.run_experiment(experiment)
+
+
 default_runtime = _DEFAULT_RUNTIME
 
 __all__ = [
@@ -195,4 +224,6 @@ __all__ = [
     "submit_batch",
     "run_parameter_sweep",
     "run_hybrid",
+    "execute_records",
+    "run_experiment",
 ]

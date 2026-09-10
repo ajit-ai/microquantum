@@ -314,3 +314,85 @@ The IR is intentionally hardware-neutral: OpenQASM is treated as an optional
 interchange format, never as the canonical representation. Routing, hardware
 scheduling and vendor-specific execution plug in downstream of the
 :class:`~microquantum.ir.Compiler` in later phases.
+
+Execution results & analytics
+-----------------------------
+
+MQ-07 makes each execution inspectable, reproducible-by-configuration and
+analysable without inventing new backend output formats.  The canonical flow
+(MQ-04/MQ-06 pipeline + MQ-07 record/analysis layer) is:
+
+.. code-block:: text
+
+   ExecutionPlan / Circuit --[ExecutionRuntime]-> Backend -> BackendResult
+                              |                       (binds, validates, runs)  |
+                              v                                                 |
+                      ExecutionRecord  <------------ raw result preserved ------+
+                     (id, status, backend, shots, seed,
+                      bindings, plan, timing, reproducibility, error)
+                              |
+              ExperimentalResult (raw records verbatim) -> Analysis
+                                    |                  SamplingAnalysis
+                                    |                  StateAnalysis
+                                    +-- ResultAggregator -- ExpectationAnalysis
+
+* :class:`~microquantum.experiments.record.ExecutionRecord` is the portable
+  description of *one actual execution*: plan, backend/target, shots/seed,
+  parameter bindings, timing (``total_seconds`` and backend-provided
+  ``queue_seconds`` / ``execution_seconds``, ``None`` when unknown), status,
+  an :class:`~microquantum.experiments.record.ExecutionFailure` on failure and
+  the raw :class:`~microquantum.backends.base.BackendResult`.  The record
+  deliberately separates runtime objects from portable metadata:
+  ``to_dict()`` stores only JSON-safe data and ``from_dict()`` restores a
+  :class:`~microquantum.backends.base.BackendResult` (complex arrays decoded
+  back to ``complex128``), so records round-trip without losing analysability.
+* :meth:`ExecutionRuntime.execute_records
+  <microquantum.runtime.ExecutionRuntime.execute_records>` runs a sequence of
+  plans/circuits and returns **one record per input, in order** — batches
+  preserve parameter bindings, backend selection and per-item ``batch_id`` /
+  ``batch_index`` metadata, and *never drop failures*.  Every exception is
+  recorded as a structured :class:`~microquantum.experiments.record.ExecutionFailure`
+  (error type, message, execution id, plan name, bindings).
+* :class:`~microquantum.experiments.sweep.ParameterSweep` builds deterministic
+  grids per parameter (explicit values, ``range``-style steps or
+  ``linspace``-style point counts) and expands them as an ordered Cartesian
+  product; ``verify``/``validate`` tie a sweep to the base work's parameters
+  before any execution.
+* :class:`~microquantum.experiments.experiment.Experiment` groups fixed plans
+  and sweeps; running it through an
+  :class:`~microquantum.runtime.ExecutionRuntime` yields an
+  :class:`~microquantum.experiments.experiment.ExperimentResult` whose raw
+  records are **preserved verbatim** — aggregation/analysis never destroys
+  them.  Records carry a reproducibility fingerprint: a SHA-256 over the
+  stable, sorted, JSON-serialized execution configuration (never object memory
+  addresses), plus the ``configured_reproducibility`` vs
+  ``deterministic_execution`` distinction — hardware / nondeterministic
+  backends are never claimed bit-for-bit reproducible.
+* Analysis is backend-independent and consensus-based, consuming existing
+  result contracts rather than introducing new formats:
+
+  * :class:`~microquantum.analysis.sampling.SamplingAnalysis` — measurement
+    counts: total shots, outcome probabilities, most likely outcome, Shannon
+    entropy, marginals, and observable mean/variance/std with a documented
+    default (unsigned-binary integer, MSB first) or a caller-supplied
+    ``value_of``.
+  * :class:`~microquantum.analysis.expectation.ExpectationAnalysis` — the
+    existing ``BackendResult.expectations`` ``{label: value}`` contract:
+    per-label mean/variance/std/standard error and a parameter-to-expectation
+    mapping.
+  * :class:`~microquantum.analysis.state.StateAnalysis` — statevectors
+    (normalization, probabilities, most probable state, expectation of a
+    *diagonal* observable) and density matrices (trace, purity, diagonal
+    measurement probabilities).
+  * :class:`~microquantum.analysis.aggregation.ResultAggregator` — grouping by
+    parameter bindings, backend, status or dotted-path accessors while
+    preserving the original records (raw results -> aggregation -> derived
+    analysis; never raw results -> replace with summary).
+  * :class:`~microquantum.analysis.statistics` — population-vs-sample variance
+    (``ddof``), standard error, confidence intervals (0.90/0.95/0.99 presets or
+    explicit ``z``) and min/max/count, with strict numeric validation.
+
+MQ-07 stays SDK-side and in-memory: there is no database, dashboard, web/CRUD
+service, vendor/cloud integration or new quantum algorithm.  It only makes the
+existing backend/runtime/algorithm outputs inspectable, serializable and
+analysable.

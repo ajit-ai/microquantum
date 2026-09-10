@@ -126,3 +126,40 @@ and the same algorithm can ride the internal engine or the MQ-04 runtime.
   runtime with the enriched result payload.
 - `backend/06_custom_backend.py` — building a custom `Backend` with
   capabilities and the full plan contract.
+
+## Execution results & analytics (MQ-07)
+
+Records, sweeps, experiments and backend-independent analyses live fully
+in memory and are JSON-safe serializable. Every execution keeps its raw
+result; analysis never replaces it.
+
+- `analysis/01_execution_record.py` — one `ExecutionRecord` from the runtime:
+  metadata (status, backend, shots, seed, bindings, timing) plus the raw
+  `BackendResult` and a reproducibility fingerprint.
+- `analysis/02_batch_execution_records.py` — `execute_records()` over a
+  parameterized plan family; bindings and batch indices are preserved per
+  record.
+- `analysis/03_parameter_sweep.py` — `ParameterSweep` declaration forms
+  (explicit values, `range`, `num_points`), deterministic Cartesian product
+  and compatibility verification.
+- `analysis/04_experiment_run.py` — `Experiment` grouping fixed plans and
+  sweeps; `ExperimentResult` keeps raw records verbatim with success/failure
+  counts and backend names.
+- `analysis/05_sampling_analysis.py` — `SamplingAnalysis` over counts:
+  probabilities, most likely outcome, entropy, marginal and observable
+  moments with an explicit `value_of` mapping.
+- `analysis/06_expectation_analysis.py` — `ExpectationAnalysis` over the
+  existing `BackendResult.expectations` format: per-label mean/variance/
+  standard error and parameter-to-expectation mapping.
+- `analysis/07_state_analysis.py` — `StateAnalysis` on statevectors
+  (normalization, probabilities, most probable state, `expectation` of a
+  diagonal observable) and density matrices (trace, purity).
+- `analysis/08_result_aggregation.py` — `ResultAggregator` grouping by
+  parameter/backend/status or dotted paths while preserving the original
+  records (identity check).
+- `analysis/09_reproducibility_serialization.py` — SHA-256 execution
+  fingerprints, the configured-vs-deterministic distinction, and
+  record/experiment JSON round trips.
+- `analysis/10_failure_handling.py` — structured `ExecutionFailure` records:
+  failed batches never drop positions, and every failure is inspectable and
+  serializable.
