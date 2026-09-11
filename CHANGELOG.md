@@ -31,6 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   FAQ and troubleshooting.
 - GitHub Pages deployment workflow publishing the built HTML documentation
   (`.github/workflows/docs.yml`, run on pushes to `main`).
+- PyPI release workflows using Trusted Publishing: `python-publish.yml`
+  (publishes to PyPI on release publication) and `testpypi-publish.yml`
+  (publishes to TestPyPI on release publication or manual dispatch).
+- `microquantum 0.4.0` released to PyPI and TestPyPI (wheel + sdist).
 - Consolidated CI: single `ci.yml` with a multi-Python test matrix, lint +
   warning-free docs build; the duplicate `python-app.yml` workflow was removed.
 
