@@ -208,12 +208,13 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution workflow and
 
 - **v0.4.0** (current) — Developer Preview (see `docs/releases/developer-preview.rst`):
   complete warning-free documentation with auto-generated API reference,
-  GitHub Pages deployment, and a consolidated CI/packaging pipeline.
+  GitHub Pages deployment, a consolidated CI/packaging pipeline, and PyPI +
+  TestPyPI releases via Trusted Publishing (`python-publish.yml`,
+  `testpypi-publish.yml`).
 - **v0.3.0** — public open-source release: unified `Backend.run()`,
   serializable results (`to_dict()`), SPDX/legacy metadata cleanup, coverage +
   ruff gates, SDK-only docs.
-- **Next** — automated PyPI release workflow on version tags, stricter mypy
-  coverage, more hardware providers and tutorials.
+- **Next** — stricter mypy coverage, more hardware providers and tutorials.
 
 ---
 
