@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-09-12
+
+### Fixed
+- Batch sweep in `Runtime.execute_records` (and the Experiment layer) no longer
+  clobbers each plan's own `parameter_bindings` with an empty `{}` when no
+  caller sweep is provided. The sweep sentinel is now `None` (`combos_options =
+  [None]`), so per-plan bindings are preserved verbatim. Resolves `KeyError
+  'theta'`, zero-success sweep results, and dropped partial failures across the
+  batch/sweep/experiment test surface.
+
 ## [0.4.0] - 2026-09-10
 
 ### Added
