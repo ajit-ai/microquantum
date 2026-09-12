@@ -37,6 +37,28 @@ class Parameter:
     def __rmul__(self, scalar: complex) -> ParameterExpression:
         return ParameterExpression(self, coefficient=complex(scalar))
 
+    def __add__(
+        self, other: Union[float, int, complex]
+    ) -> ParameterExpression:
+        """Add a scalar offset to this parameter (``theta + 0.5``)."""
+        return ParameterExpression(self, constant=complex(other))
+
+    def __radd__(
+        self, other: Union[float, int, complex]
+    ) -> ParameterExpression:
+        return ParameterExpression(self, constant=complex(other))
+
+    def __sub__(
+        self, other: Union[float, int, complex]
+    ) -> ParameterExpression:
+        """Subtract a scalar offset from this parameter (``theta - 0.5``)."""
+        return ParameterExpression(self, constant=-complex(other))
+
+    def __rsub__(
+        self, other: Union[float, int, complex]
+    ) -> ParameterExpression:
+        return ParameterExpression(self, coefficient=-1.0, constant=complex(other))
+
     def __neg__(self) -> ParameterExpression:
         return ParameterExpression(self, coefficient=-1.0)
 

@@ -324,11 +324,12 @@ class IsingConverter:
 
         Args:
             qubo: QUBO problem.
-            solution: Binary solution vector.
+            solution: Binary solution vector (accepts a plain list/tuple).
 
         Returns:
             Dictionary with energy, solution vector, and feasibility.
         """
+        solution = np.asarray(solution)
         energy = qubo.energy(solution)
         return {
             "energy": energy,

@@ -117,5 +117,20 @@ class SamplingProblem(Problem):
             problems.append("sampling problem requires a circuit or num_qubits")
         return problems
 
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "SamplingProblem":
+        """Reconstruct a SamplingProblem from its serialized dictionary."""
+        from ..core.serialization import from_dict as circuit_from_dict
+
+        circuit_data = data.get("circuit")
+        circuit = circuit_from_dict(circuit_data) if circuit_data else None
+        return cls(
+            circuit,
+            num_samples=int(data.get("num_samples", 1024)),
+            num_qubits=data.get("num_qubits"),
+            name=data["name"],
+            metadata=data.get("metadata") or {},
+        )
+
 
 __all__ = ["Problem", "SamplingProblem"]

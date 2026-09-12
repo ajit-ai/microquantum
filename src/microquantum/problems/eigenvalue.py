@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, Any, Optional, Union
 import numpy as np
 
 from ..core.operators import Operator
-from ..core.pauli import PauliSum
+from ..core.pauli import PauliString, PauliSum
 from .base import Problem
 
 if TYPE_CHECKING:
@@ -86,6 +86,37 @@ def hamiltonian_to_dict(hamiltonian: Any) -> dict[str, Any]:
     return {"type": type(hamiltonian).__name__, "value": str(hamiltonian)}
 
 
+def hamiltonian_from_dict(data: dict[str, Any]) -> Hamiltonian:
+    """Reconstruct an Operator/PauliSum Hamiltonian from serialized data.
+
+    Inverse of :func:`hamiltonian_to_dict`.
+
+    Args:
+        data: The serialized Hamiltonian dictionary.
+
+    Returns:
+        The reconstructed Operator or PauliSum.
+    """
+    kind = data.get("type")
+    if kind == "Operator":
+        matrix = data.get("matrix")
+        if matrix is None:
+            raise ValueError("Operator serialization requires a 'matrix' entry")
+        return Operator(np.asarray(matrix, dtype=np.complex128))
+    if kind == "PauliSum":
+        terms = data.get("terms") or []
+        return PauliSum(
+            [
+                PauliString(str(term["label"]), complex(*list(term["coefficient"])))
+                for term in terms
+            ]
+        )
+    raise TypeError(
+        f"unsupported serialized Hamiltonian type {kind!r}; "
+        f"expected 'Operator' or 'PauliSum'"
+    )
+
+
 @dataclass
 class HamiltonianProblem(Problem):
     """A Hermitian Hamiltonian whose spectrum/eigenstates are of interest.
@@ -146,6 +177,17 @@ class HamiltonianProblem(Problem):
         )
         return data
 
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "HamiltonianProblem":
+        """Reconstruct a HamiltonianProblem from its serialized dictionary."""
+        ham = data.get("hamiltonian")
+        return cls(
+            hamiltonian_from_dict(ham) if ham else None,
+            num_qubits=data.get("num_qubits"),
+            name=data["name"],
+            metadata=data.get("metadata") or {},
+        )
+
 
 @dataclass
 class EigenvalueProblem(HamiltonianProblem):
@@ -189,11 +231,24 @@ class EigenvalueProblem(HamiltonianProblem):
         data["k"] = self.k
         return data
 
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "EigenvalueProblem":
+        """Reconstruct an EigenvalueProblem from its serialized dictionary."""
+        ham = data.get("hamiltonian")
+        return cls(
+            hamiltonian_from_dict(ham) if ham else None,
+            k=int(data.get("k", 1)),
+            num_qubits=data.get("num_qubits"),
+            name=data["name"],
+            metadata=data.get("metadata") or {},
+        )
+
 
 __all__ = [
     "HamiltonianProblem",
     "EigenvalueProblem",
     "hamiltonian_expectation",
     "hamiltonian_to_dict",
+    "hamiltonian_from_dict",
     "Hamiltonian",
 ]
