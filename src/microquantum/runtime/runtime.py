@@ -18,7 +18,7 @@ from __future__ import annotations
 import time
 import uuid
 from dataclasses import replace
-from typing import TYPE_CHECKING, Any, Optional, Sequence, Union, cast
+from typing import TYPE_CHECKING, Any, Mapping, Optional, Sequence, Union, cast
 
 import numpy as np
 
@@ -453,10 +453,18 @@ class ExecutionRuntime:
             One :class:`ExecutionRecord` per input (per combination), in order.
         """
         from itertools import product
+
         from ..experiments.record import ExecutionRecord
 
+        # A caller-provided binding *sweep* is expanded into one plan per
+        # combination.  When none is given we must NOT rewrite the input plans
+        # with an empty ``{}`` binding map -- each plan carries its own
+        # ``parameter_bindings`` and those must be preserved verbatim.
         if parameter_bindings:
-            combos: list[dict[str, Any]] = [
+            # Build the binding sweep.  ``binding_maps`` is a *concrete* list of
+            # real dicts (never ``None``), so iterating ``.items()`` here is not
+            # a union-attr hazard for mypy.
+            binding_maps: list[dict[str, Any]] = [
                 dict(zip(parameter_bindings.keys(), values, strict=True))
                 for values in product(
                     *(
@@ -465,15 +473,21 @@ class ExecutionRuntime:
                     )
                 )
             ]
-            combos = [{str(k): v for k, v in combo.items()} for combo in combos]
+            combos_options: list[Optional[dict[str, float]]] = [
+                {str(k): float(v) for k, v in combo.items()}
+                for combo in binding_maps
+            ]
         else:
-            combos = [{}]
+            # When no sweep is passed, ``None`` keeps each plan's *own*
+            # bindings: the empty sentinel list must not rewrite the input
+            # plans with a blank ``{}`` binding map.
+            combos_options = [None]
 
         batch_id = uuid.uuid4().hex[:8]
         records: list[ExecutionRecord] = []
-        for combo in combos:
+        for combo in combos_options:
             for index, item in enumerate(work):
-                context: Optional[ExecutionPlan] = None
+                plan: Optional[ExecutionPlan] = None
                 try:
                     plan = self._as_plan(
                         item,
@@ -484,19 +498,25 @@ class ExecutionRuntime:
                     )
                     plan = replace(
                         plan,
-                        parameter_bindings=combo,
+                        parameter_bindings=(
+                            cast(
+                                "Mapping[str | Parameter, float] | None",
+                                combo,
+                            )
+                            if combo is not None
+                            else plan.parameter_bindings
+                        ),
                         metadata={
                             **plan.metadata,
                             "batch_id": batch_id,
                             "batch_index": index,
                         },
                     )
-                    context = plan
                     records.append(self.execute_record(plan))
                 except Exception as exc:
                     records.append(
                         ExecutionRecord.failed(
-                            context if context is not None else self._context_plan(item),
+                            plan if plan is not None else self._context_plan(item),
                             exc,
                             backend_name=(
                                 backend if isinstance(backend, str) else None
