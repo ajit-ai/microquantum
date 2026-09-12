@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-from typing import Union
+from typing import Any, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -61,6 +61,11 @@ class Operator:
         return self._num_qubits
 
     @property
+    def shape(self) -> tuple[int, int]:
+        """The matrix shape ``(2^n, 2^n)`` of this operator."""
+        return self._matrix.shape
+
+    @property
     def name(self) -> str:
         """Gate name identifier."""
         return self._name
@@ -95,6 +100,27 @@ class Operator:
         if self.is_unitary:
             return self.dag
         return Operator(np.linalg.inv(self._matrix))
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Operator:
+        """Reconstruct an :class:`Operator` from its serialized dictionary.
+
+        Accepts the payload produced by :func:`~microquantum.problems.eigenvalue.hamiltonian_to_dict`
+        (``{"type": "Operator", "matrix": [...], ...}``) or a plain
+        ``{"matrix": [...]}`` mapping.
+
+        Args:
+            data: The serialized operator dictionary.
+
+        Returns:
+            The reconstructed operator.
+        """
+        matrix = data.get("matrix")
+        if matrix is None:
+            raise ValueError(
+                f"Operator.from_dict requires a 'matrix' entry, got keys {sorted(data)}"
+            )
+        return cls(np.asarray(matrix, dtype=np.complex128), name=data.get("name", "custom"))
 
     # ------------------------------------------------------------------
     # Algebraic dunder methods

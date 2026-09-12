@@ -119,5 +119,20 @@ class SearchProblem(Problem):
         data["num_targets"] = self.num_targets
         return data
 
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "SearchProblem":
+        """Reconstruct a SearchProblem from its serialized dictionary.
+
+        The ``target``-based form round-trips exactly; oracle/predicate
+        callables are not serialized and default to ``None``.
+        """
+        return cls(
+            num_qubits=int(data["num_qubits"]),
+            target=data.get("target"),
+            num_targets=int(data.get("num_targets", 1)),
+            name=data["name"],
+            metadata=dict(data.get("metadata") or {}),
+        )
+
 
 __all__ = ["SearchProblem"]

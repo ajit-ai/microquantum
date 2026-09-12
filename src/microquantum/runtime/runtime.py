@@ -426,6 +426,7 @@ class ExecutionRuntime:
         shots: int = 1024,
         seed: Optional[int] = None,
         metadata: Optional[dict[str, Any]] = None,
+        parameter_bindings: Optional[dict[str, Any]] = None,
     ) -> list["ExecutionRecord"]:
         """Execute a sequence of work items, collecting structured records.
 
@@ -435,51 +436,74 @@ class ExecutionRuntime:
         failures: each failed item yields a record in :class:`failed` state
         with an inspectable :class:`ExecutionFailure`.
 
+        When ``parameter_bindings`` is given, every input is executed once per
+        binding combination: each value must be a sequence (or a single scalar),
+        and the Cartesian product is submitted in deterministic order.
+
         Args:
             work: Sequence of plans/circuits to execute.
             backend: Backend override for circuit inputs.
             shots: Shots for circuit inputs.
             seed: Seed for circuit inputs.
             metadata: Metadata merged into circuit-input results.
+            parameter_bindings: Optional ``{parameter: [values...]}`` mapping
+                expanded into one record per binding combination.
 
         Returns:
-            One :class:`ExecutionRecord` per input, in order.
+            One :class:`ExecutionRecord` per input (per combination), in order.
         """
+        from itertools import product
         from ..experiments.record import ExecutionRecord
+
+        if parameter_bindings:
+            combos: list[dict[str, Any]] = [
+                dict(zip(parameter_bindings.keys(), values, strict=True))
+                for values in product(
+                    *(
+                        v if isinstance(v, (list, tuple)) else [v]
+                        for v in parameter_bindings.values()
+                    )
+                )
+            ]
+            combos = [{str(k): v for k, v in combo.items()} for combo in combos]
+        else:
+            combos = [{}]
 
         batch_id = uuid.uuid4().hex[:8]
         records: list[ExecutionRecord] = []
-        for index, item in enumerate(work):
-            context: Optional[ExecutionPlan] = None
-            try:
-                plan = self._as_plan(
-                    item,
-                    backend=backend,
-                    shots=shots,
-                    seed=seed,
-                    metadata=metadata,
-                )
-                plan = replace(
-                    plan,
-                    metadata={
-                        **plan.metadata,
-                        "batch_id": batch_id,
-                        "batch_index": index,
-                    },
-                )
-                context = plan
-                records.append(self.execute_record(plan))
-            except Exception as exc:
-                records.append(
-                    ExecutionRecord.failed(
-                        context if context is not None else self._context_plan(item),
-                        exc,
-                        backend_name=(
-                            backend if isinstance(backend, str) else None
-                        ),
-                        elapsed_seconds=0.0,
+        for combo in combos:
+            for index, item in enumerate(work):
+                context: Optional[ExecutionPlan] = None
+                try:
+                    plan = self._as_plan(
+                        item,
+                        backend=backend,
+                        shots=shots,
+                        seed=seed,
+                        metadata=metadata,
                     )
-                )
+                    plan = replace(
+                        plan,
+                        parameter_bindings=combo,
+                        metadata={
+                            **plan.metadata,
+                            "batch_id": batch_id,
+                            "batch_index": index,
+                        },
+                    )
+                    context = plan
+                    records.append(self.execute_record(plan))
+                except Exception as exc:
+                    records.append(
+                        ExecutionRecord.failed(
+                            context if context is not None else self._context_plan(item),
+                            exc,
+                            backend_name=(
+                                backend if isinstance(backend, str) else None
+                            ),
+                            elapsed_seconds=0.0,
+                        )
+                    )
         return records
 
     def run_experiment(self, experiment: Any) -> "ExperimentResult":

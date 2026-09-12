@@ -35,6 +35,14 @@ class VQEResult(JSONSerializable):
     eigenstate: dict[Parameter, float] = field(default_factory=dict)
     optimizer_result: Optional[OptimizerResult] = None
 
+    @property
+    def optimal_params(self) -> dict[Parameter, float]:
+        """Optimal rotation parameters found by the optimizer.
+
+        Alias of :attr:`eigenstate` (the ``{Parameter: value}`` mapping).
+        """
+        return self.eigenstate
+
 
 class VQE:
     """Variational Quantum Eigensolver.
