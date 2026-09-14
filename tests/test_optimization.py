@@ -74,7 +74,7 @@ class TestFuseSingleQubitGates:
         qc.h(0)
         qc.h(0)
         fused = fuse_single_qubit_gates(qc)
-        assert fused.depth <= qc.depth
+        assert fused.depth() <= qc.depth()
 
 
 class TestRemoveIdentityGates:

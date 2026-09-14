@@ -191,7 +191,7 @@ def circuit_stats(circuit: QuantumCircuit) -> dict[str, int]:
     single = sum(1 for op, _ in resolved if op.num_qubits == 1)
     return {
         "gate_count": total,
-        "depth": circuit.depth,
+        "depth": circuit.depth(),
         "single_qubit_gates": single,
         "two_qubit_gates": total - single,
     }

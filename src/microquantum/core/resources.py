@@ -137,7 +137,7 @@ class ResourceEstimator:
             gate_type_counts.get(n, 0) for n in _CNOT_GATE_NAMES
         )
 
-        depth = circuit.depth
+        depth = circuit.depth()
         num_qubits = circuit.num_qubits
         volume = num_qubits * depth
 
