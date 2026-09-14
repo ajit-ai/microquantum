@@ -44,7 +44,7 @@ def to_dict(circuit: QuantumCircuit) -> dict[str, Any]:
         "format_version": FORMAT_VERSION,
         "num_qubits": circuit.num_qubits,
         "num_gates": circuit.num_gates,
-        "depth": circuit.depth,
+        "depth": circuit.depth(),
         "gates": gates,
     }
 

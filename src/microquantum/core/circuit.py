@@ -83,7 +83,6 @@ class QuantumCircuit:
         """Total number of gate instructions."""
         return len(self._gate_instructions)
 
-    @property
     def depth(self) -> int:
         """Circuit depth computed via longest-path scheduling."""
         if not self._gate_instructions:
@@ -725,7 +724,7 @@ class QuantumCircuit:
             param_info = f", parameters=[{param_names}]"
         return (
             f"QuantumCircuit(num_qubits={self._num_qubits}, "
-            f"num_gates={self.num_gates}, depth={self.depth}"
+            f"num_gates={self.num_gates}, depth={self.depth()}"
             f"{param_info})"
         )
 
@@ -738,7 +737,7 @@ class QuantumCircuit:
             param_info = f", params=[{param_names}]"
         lines = [
             f"QuantumCircuit ({self._num_qubits} qubits, "
-            f"{self.num_gates} gates, depth {self.depth}{param_info})"
+            f"{self.num_gates} gates, depth {self.depth()}{param_info})"
         ]
         for instr in self._gate_instructions:
             if self._is_parameterized_gate(instr):

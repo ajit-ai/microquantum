@@ -190,16 +190,16 @@ class TestProperties:
         qc = QuantumCircuit(3)
         assert qc.num_qubits == 3
         assert qc.num_gates == 0
-        assert qc.depth == 0
+        assert qc.depth() == 0
 
     def test_depth_single_qubit(self) -> None:
         qc = QuantumCircuit(1).h(0).x(0).z(0)
-        assert qc.depth == 3
+        assert qc.depth() == 3
 
     def test_depth_parallel_gates(self) -> None:
         """Parallel gates on different qubits don't increase depth."""
         qc = QuantumCircuit(3).h(0).h(1).h(2)
-        assert qc.depth == 1
+        assert qc.depth() == 1
 
     def test_depth_mixed(self) -> None:
         """Mixed sequential and parallel gates."""
@@ -207,7 +207,7 @@ class TestProperties:
         qc.h(0)
         qc.cx(0, 1)
         qc.cx(1, 2)
-        assert qc.depth == 3
+        assert qc.depth() == 3
 
 
 # ---------------------------------------------------------------------------

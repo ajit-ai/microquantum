@@ -331,8 +331,8 @@ class PauliTwirling:
             qc.append(gate_op, gate_targets)
 
         return TwirlingResult(
-            original_depth=circuit.depth,
-            twirled_depth=qc.depth,
+            original_depth=circuit.depth(),
+            twirled_depth=qc.depth(),
             num_twirled_gates=num_twirled,
             twirled_circuit=qc,
         )

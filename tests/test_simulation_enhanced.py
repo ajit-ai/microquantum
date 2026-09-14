@@ -96,7 +96,7 @@ class TestFourthOrderSuzuki:
         H = PauliSum([PauliString("Z", 1.0)])
         r1 = fourth_order_simulation(H, evolution_time=1.0, num_steps=1)
         r2 = fourth_order_simulation(H, evolution_time=1.0, num_steps=3)
-        assert r2.circuit.depth >= r1.circuit.depth
+        assert r2.circuit.depth() >= r1.circuit.depth()
 
 
 class TestQDRIFT:
@@ -122,7 +122,7 @@ class TestQDRIFT:
         H = PauliSum([PauliString("Z", 1.0), PauliString("X", 0.5)])
         r1 = qdrift_simulation(H, evolution_time=1.0, num_samples=15, seed=42)
         r2 = qdrift_simulation(H, evolution_time=1.0, num_samples=15, seed=42)
-        assert r1.circuit.depth == r2.circuit.depth
+        assert r1.circuit.depth() == r2.circuit.depth()
 
     def test_different_seeds_different_circuits(self) -> None:
         """Different seeds should produce different circuits."""
@@ -130,7 +130,7 @@ class TestQDRIFT:
         r1 = qdrift_simulation(H, evolution_time=1.0, num_samples=20, seed=42)
         r2 = qdrift_simulation(H, evolution_time=1.0, num_samples=20, seed=99)
         # Very unlikely to be identical with different seeds
-        assert r1.circuit.depth != r2.circuit.depth or r1.circuit.num_qubits == r2.circuit.num_qubits
+        assert r1.circuit.depth() != r2.circuit.depth() or r1.circuit.num_qubits == r2.circuit.num_qubits
 
     def test_zero_hamiltonian(self) -> None:
         """Zero Hamiltonian should produce empty circuit."""
