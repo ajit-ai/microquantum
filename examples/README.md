@@ -58,6 +58,28 @@ example with `uv run python examples/<file>.py` from the repository root.
 - `execution/13_seeded_execution.py` — same circuit + same seed reproduces the
   same sampled counts and raw samples; a different seed samples afresh.
 
+## Parameterized circuits (MQ-12)
+
+- `12_parameterized_circuit.py` — a single symbolic `ry` gate: introspection
+  (`parameters`, `is_parameterized`), strict binding via `bind_parameters` and
+  execution.
+- `13_multiple_parameters.py` — several parameters, parameter expressions
+  (`2 * phi + 0.5`), partial binding, and loud rejection of unknown or
+  non-numeric bindings.
+- `14_parameter_sweep.py` — binding + execution across a sweep of values with
+  `run_parameter_sweep`.
+
+## Analytical gradients (MQ-13)
+
+- `15_parameter_shift_gradient.py` — exact parameter-shift gradients of
+  observable expectations: symbolic `Parameter.gradient` derivatives, closed
+  form / finite-difference agreement, `Operator` / `PauliString` / `PauliSum`
+  observables, and backend-integrated evaluation.
+- `16_gradient_descent_loop.py` — a gradient-driven variational loop: analytic
+  `gradient()` as an optimizer's `gradient_fn`, plus a manual
+  classical -> quantum -> classical update loop (the pattern behind
+  gradient-based VQE/QAOA).
+
 ## Algorithms on problems (MQ-05)
 
 The generic `Algorithm`/`Problem` layer: problems are JSON-safe data,

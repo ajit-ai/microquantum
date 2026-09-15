@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Analytical gradients via the parameter-shift rule (MQ-13): exact
+  `parameter_shift_gradient` for a single parameter and `gradient` for the
+  full vector, with name-based matching, chain-rule scaling for
+  `ParameterExpression` angles and per-occurrence summation for parameters
+  appearing in several gates. Observables may be `Operator`, `PauliString`
+  or `PauliSum` (no dense matrices), optionally placed on a subset of
+  qubits via `targets=`. Evaluation defaults to the built-in state-vector
+  engine or routes through the execution core with `backend=` / `seed=` /
+  `shots=` (exact and reproducible). New `Parameter.gradient()` /
+  `ParameterExpression.gradient()` return symbolic partial derivatives.
+  Results are plain `{Parameter: float}` dicts that plug directly into
+  gradient-mode optimizers as `gradient_fn`. New examples 15-16, a
+  `gradients` concept page, and strict validation (Mapping-only
+  `param_values`, shifts that are not integer multiples of pi).
 - Parameterized circuits & parameter execution (MQ-12): first-class
   `Parameter` support with a deterministic, read-only `circuit.parameters`
   tuple (name-sorted, name-identity dedup), strict `bind_parameters`
@@ -39,6 +53,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   front.
 
 ### Fixed
+- `parameter_shift_gradient` / `gradient` now apply the chain-rule
+  coefficient of `ParameterExpression` angles (a gate at `2 * theta`
+  contributes `2` times its shift difference) and match parameters by name
+  rather than object identity, consistent with the MQ-12 parameter model.
 - `sample_state` / `measure_qubits` now reject invalid shot counts (`< 1`).
 - `StatevectorBackend.run_circuit` records the execution `seed` and raw
   `samples` on the returned `BackendResult`.

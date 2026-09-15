@@ -33,7 +33,7 @@ for value in values:
 
 print("\nrun_parameter_sweep (values are per-parameter floats):")
 results = run_parameter_sweep(qc, values, shots=1024, seed=42)
-for value, result in zip(values, results):
+for value, result in zip(values, results, strict=True):
     counts = result.get_counts()
     print(f"  theta={value:6.3f}  P(1)={counts.get('1', 0) / 1024:.3f}")
 

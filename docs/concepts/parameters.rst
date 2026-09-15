@@ -150,15 +150,20 @@ the same logical parameter after concatenation.
 Parameter-shift gradients
 -------------------------
 
-:func:`~microquantum.parameter_shift_gradient` differentiates the expectation
-of an observable with respect to the circuit's parameters — the standard
-entry point for variational algorithms:
+Analytic gradients of observable expectations with respect to the
+circuit's parameters are provided by the parameter-shift rule
+(:func:`~microquantum.gradient` and
+:func:`~microquantum.parameter_shift_gradient`).  See
+:doc:`/concepts/gradients` for the full details, including symbolic
+:meth:`~microquantum.Parameter.gradient` derivatives, chain-rule handling
+of expressions and backend-integrated evaluation:
 
 .. code-block:: python
 
-   from microquantum import Operator, parameter_shift_gradient
+   from microquantum import Operator, gradient
 
-   grads = parameter_shift_gradient(qc, Operator.Z(), {theta: 0.5, phi: 1.2})
+   grads = gradient(qc, Operator.Z(), {theta: 0.5, phi: 1.2})
+   print(grads[theta])   # d<Z>/dtheta at the given point
 
 Sweeps & bindings in the runtime layer
 --------------------------------------
@@ -180,6 +185,10 @@ More examples
   partial binding and validation.
 * ``examples/14_parameter_sweep.py`` — binding + execution across a sweep of
   values.
+* ``examples/15_parameter_shift_gradient.py`` — analytic parameter-shift
+  gradients for ``Operator``/``PauliString``/``PauliSum`` observables.
+* ``examples/16_gradient_descent_loop.py`` — a gradient-driven variational
+  loop (the pattern used by gradient-based VQE/QAOA).
 
 Run any of them directly:
 

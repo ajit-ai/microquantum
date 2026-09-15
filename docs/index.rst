@@ -55,6 +55,7 @@ architecture that is ready for future hardware providers.
    concepts/circuits
    concepts/gates
    concepts/parameters
+   concepts/gradients
    concepts/measurement
    concepts/problems
    concepts/algorithms

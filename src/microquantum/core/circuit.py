@@ -16,7 +16,7 @@ from .state import StateVector
 from .tensor import expand_operator
 
 if TYPE_CHECKING:
-    from .measurement import MeasurementResult
+    pass
 
 
 # Internal tuple types for parameterized gate storage.
@@ -455,10 +455,11 @@ class QuantumCircuit:
                 resolved._gate_instructions.append(instr)
                 continue
             gate_type, param, target = instr
-            if isinstance(param, ParameterExpression):
-                name = param.parameter.name
-            else:
-                name = param.name
+            name = (
+                param.parameter.name
+                if isinstance(param, ParameterExpression)
+                else param.name
+            )
             if name in bindings:
                 if isinstance(param, ParameterExpression):
                     angle = param.evaluate(bindings)

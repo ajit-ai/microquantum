@@ -66,6 +66,27 @@ class Parameter:
     def __neg__(self) -> ParameterExpression:
         return ParameterExpression(self, coefficient=-1.0)
 
+    def gradient(self, parameter: Union["Parameter", str, None] = None) -> float:
+        """Symbolic partial derivative of this parameter w.r.t. a variable.
+
+        A :class:`Parameter` ``p`` is the identity scalar field in its own
+        variable: ``d(p)/dp = 1`` and ``d(p)/dq = 0`` for any other
+        variable ``q``.
+
+        Args:
+            parameter: The variable to differentiate with respect to, given
+                as a :class:`Parameter` or its name.  ``None`` (default)
+                differentiates with respect to the parameter itself.
+
+        Returns:
+            ``1.0`` if ``parameter`` denotes this parameter, ``0.0``
+            otherwise.
+        """
+        if parameter is None:
+            return 1.0
+        other = parameter if isinstance(parameter, str) else parameter.name
+        return 1.0 if other == self._name else 0.0
+
     def __hash__(self) -> int:
         return hash(self._name)
 
@@ -180,6 +201,31 @@ class ParameterExpression:
         if self._constant != 0:
             parts.append(f"+ {self._constant}")
         return " * ".join(parts) if len(parts) == 1 else " ".join(parts)
+
+    def gradient(self, parameter: Union[Parameter, str, None] = None) -> float:
+        """Symbolic derivative of the expression w.r.t. a variable.
+
+        For the linear expression ``a * p + c`` the derivative is the
+        coefficient: ``d(a*p + c)/dp = a``.  With respect to any other
+        variable the derivative is ``0.0``.  The additive constant ``c``
+        never contributes.
+
+        Args:
+            parameter: The variable to differentiate with respect to, given
+                as a :class:`Parameter` or its name.  ``None`` (default)
+                differentiates with respect to the expression's own
+                parameter.
+
+        Returns:
+            Real part of the coefficient when ``parameter`` denotes the
+            expression's parameter, ``0.0`` otherwise.
+        """
+        if parameter is None:
+            return float(self._coefficient.real)
+        other = parameter if isinstance(parameter, str) else parameter.name
+        if other == self._parameter.name:
+            return float(self._coefficient.real)
+        return 0.0
 
     def __str__(self) -> str:
         return repr(self)
