@@ -26,7 +26,7 @@ print(f"unbound parameters: {qc.parameters}")
 print(f"is_parameterized: {qc.is_parameterized}")
 
 bound = qc.bind_parameters({theta: np.pi / 2})
-print(f"\nafter binding theta = pi/2:")
+print("\nafter binding theta = pi/2:")
 print(f"  bound.is_parameterized: {bound.is_parameterized}")
 print(f"  original.is_parameterized: {qc.is_parameterized}  (unchanged)")
 

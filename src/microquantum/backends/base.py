@@ -591,7 +591,6 @@ class Backend(ABC):
             return reduced
 
         new_counts: dict[str, int] = {}
-        width = len(measured)
         for bitstring, count in result.counts.items():
             reduced = "".join(
                 bitstring[num_qubits - 1 - t] for t in measured
