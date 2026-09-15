@@ -3,8 +3,8 @@
 project = "MicroQuantum"
 copyright = "2026, Ajit Kumar"
 author = "Ajit Kumar"
-version = "0.4.0"
-release = "0.4.0"
+version = "0.4.1"
+release = "0.4.1"
 
 extensions = [
     "sphinx.ext.autodoc",

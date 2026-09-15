@@ -21,7 +21,7 @@ architecture that is ready for future hardware providers.
    :widths: 30 70
 
    * - Status
-     - **Developer Preview** (v0.4.0). Clean, tested, documented — but ``0.x``:
+     - **Developer Preview** (v0.4.1). Clean, tested, documented — but ``0.x``:
        APIs may still evolve before 1.0.
    * - Runtime
      - Pure Python + NumPy. No Qiskit, Cirq or OpenQASM dependency.

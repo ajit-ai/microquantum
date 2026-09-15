@@ -30,7 +30,7 @@ Build & install
 .. code-block:: console
 
    uv build                                   # → dist/ (wheel + sdist)
-   uv pip install --no-deps dist/microquantum-0.4.0-py3-none-any.whl
+   uv pip install --no-deps dist/microquantum-0.4.1-py3-none-any.whl
 
 Docs
 ----
