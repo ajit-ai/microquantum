@@ -18,8 +18,14 @@ Results
 :class:`~microquantum.BackendResult` carries the state vector / density
 matrix, raw ``samples``, measurement ``counts`` / ``probabilities``, labeled
 ``expectations``, ``eigenvalues``, a JSON-safe ``native`` payload, and the
-``shots`` / ``seed`` / ``target_name`` of the run.  Everything serializes via
-``to_dict()`` / ``to_json()``.
+``shots`` / ``seed`` / ``target_name`` of the run.  ``counts`` is a dict
+mapping measured bitstrings to shot counts, ordered big-endian;
+``get_counts()`` is an equivalent method accessor and ``state`` aliases the
+state vector.  Everything serializes via ``to_dict()`` / ``to_json()``.
+
+Circuit measurement annotations (``qc.measure`` / ``qc.measure_all``) are
+honored by ``Backend.run``: a proper subset restricts the returned counts to
+those qubits (see :doc:`execution-core`).
 
 Built-ins
 ---------

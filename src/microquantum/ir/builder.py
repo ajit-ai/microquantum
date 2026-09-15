@@ -111,7 +111,10 @@ def to_ir(
     for index, instr in enumerate(circuit._gate_instructions):
         ir.add(_to_ir_instruction(instr, index))
     if include_terminal_measurements:
-        for q in range(circuit.num_qubits):
+        measured = circuit.measurements
+        if not measured:
+            measured = list(range(circuit.num_qubits))
+        for q in measured:
             ir.add(Measurement(qubit=q, classical=q))
     return ir
 

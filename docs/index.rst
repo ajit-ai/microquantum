@@ -88,6 +88,7 @@ architecture that is ready for future hardware providers.
 
    execution/execution-plan
    execution/runtime
+   execution/execution-core
    execution/backends
    execution/capabilities
    execution/providers

@@ -19,6 +19,9 @@ class MeasurementResult:
         counts: Dictionary mapping bitstrings to shot counts.
         shots: Total number of measurement shots.
         qubits: List of qubit indices that were measured.
+        samples: Raw per-shot outcome indices sampled from the state
+            (big-endian ordering).  ``None`` when the sampling path does
+            not produce them.
     """
 
     def __init__(
@@ -26,10 +29,12 @@ class MeasurementResult:
         counts: dict[str, int],
         shots: int,
         qubits: list[int],
+        samples: Optional[list[int]] = None,
     ) -> None:
         self._counts = dict(counts)
         self._shots = shots
         self._qubits = list(qubits)
+        self._samples = list(samples) if samples is not None else None
 
     @property
     def counts(self) -> dict[str, int]:
@@ -45,6 +50,11 @@ class MeasurementResult:
     def qubits(self) -> list[int]:
         """List of measured qubit indices."""
         return list(self._qubits)
+
+    @property
+    def samples(self) -> Optional[list[int]]:
+        """Raw per-shot outcome indices (big-endian), if available."""
+        return list(self._samples) if self._samples is not None else None
 
     def get_counts(self) -> dict[str, int]:
         """Return raw bitstring count dictionary (Big-Endian ordering)."""
@@ -64,12 +74,15 @@ class MeasurementResult:
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize to a JSON-safe dictionary."""
-        return {
+        data: dict[str, Any] = {
             "counts": self.get_counts(),
             "shots": int(self._shots),
             "qubits": list(self._qubits),
             "probabilities": self.get_probabilities(),
         }
+        if self._samples is not None:
+            data["samples"] = list(self._samples)
+        return data
 
     def to_json(self) -> str:
         """Serialize to a JSON string."""
@@ -99,6 +112,16 @@ def _format_bitstring(index: int, num_qubits: int) -> str:
     return format(index, f"0{num_qubits}b")
 
 
+def _validate_shots(shots: int) -> int:
+    """Validate a shot count, returning it unchanged."""
+    if not isinstance(shots, (int, np.integer)):
+        raise ValueError(f"shots must be an integer, got {type(shots).__name__}")
+    shots = int(shots)
+    if shots < 1:
+        raise ValueError(f"shots must be >= 1, got {shots}")
+    return shots
+
+
 def sample_state(
     state: StateVector,
     shots: int = 1000,
@@ -114,6 +137,7 @@ def sample_state(
     Returns:
         MeasurementResult with bitstring counts.
     """
+    shots = _validate_shots(shots)
     rng = np.random.default_rng(seed)
     probs = np.abs(state.amplitudes) ** 2
     probs = probs / np.sum(probs)
@@ -129,6 +153,7 @@ def sample_state(
         counts=counts,
         shots=shots,
         qubits=list(range(state.num_qubits)),
+        samples=[int(o) for o in outcomes],
     )
 
 
@@ -160,6 +185,7 @@ def measure_qubits(
                 f"{n}-qubit state (valid: 0..{n - 1})"
             )
 
+    shots = _validate_shots(shots)
     rng = np.random.default_rng(seed)
     probs = np.abs(state.amplitudes) ** 2
     probs = probs / np.sum(probs)
@@ -196,6 +222,7 @@ def measure_qubits(
         counts=counts,
         shots=shots,
         qubits=sorted(targets),
+        samples=[int(o) for o in outcomes],
     )
 
 

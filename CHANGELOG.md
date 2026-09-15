@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Quantum execution and measurement core (MQ-11): explicit circuit measurement
+  annotations via `QuantumCircuit.measure` / `measure_all` (with an ordered,
+  serializable `measurements` property), `BackendResult.get_counts()` and
+  `BackendResult.state` accessors, deterministic per-shot `samples` on
+  measurement results, and `Backend.run` restricting counts to measured qubits.
+  Measurement annotations persist through JSON, OpenQASM 2.0, IR and
+  parameter binding/circuit concatenation.
+
+### Fixed
+- `sample_state` / `measure_qubits` now reject invalid shot counts (`< 1`).
+- `StatevectorBackend.run_circuit` records the execution `seed` and raw
+  `samples` on the returned `BackendResult`.
+
 ## [0.4.1] - 2026-09-12
 
 ### Fixed

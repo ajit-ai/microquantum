@@ -46,6 +46,7 @@ def to_dict(circuit: QuantumCircuit) -> dict[str, Any]:
         "num_gates": circuit.num_gates,
         "depth": circuit.depth(),
         "gates": gates,
+        "measurements": list(circuit.measurements),
     }
 
 
@@ -76,6 +77,9 @@ def from_dict(data: dict[str, Any]) -> QuantumCircuit:
         angle = gate_dict.get("angle", 0.0)
 
         _add_gate(qc, name, targets, angle)
+
+    for qubit in data.get("measurements", []):
+        qc.measure(qubit)
 
     return qc
 
