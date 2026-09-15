@@ -206,7 +206,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution workflow and
 
 ## Roadmap
 
-- **v0.4.0** (current) — Developer Preview (see `docs/releases/developer-preview.rst`):
+- **v0.4.1** (current) — Developer Preview (see `docs/releases/developer-preview.rst`):
   complete warning-free documentation with auto-generated API reference,
   GitHub Pages deployment, a consolidated CI/packaging pipeline, and PyPI +
   TestPyPI releases via Trusted Publishing (`python-publish.yml`,
