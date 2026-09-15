@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Parameterized circuits & parameter execution (MQ-12): first-class
+  `Parameter` support with a deterministic, read-only `circuit.parameters`
+  tuple (name-sorted, name-identity dedup), strict `bind_parameters`
+  validation (unknown / non-numeric / complex / ambiguous bindings fail
+  fast instead of being silently ignored), non-destructive partial binding,
+  parameter-preserving JSON serialization for `Parameter` and
+  `ParameterExpression` gates, an optional `parameter_values=` binding map
+  on `Backend.run` / `submit_circuit` (delegating to the canonical binder),
+  and honest OpenQASM 2.0 export that raises rather than dropping
+  parameterized gates. New examples 12-14 and a rewritten parameters
+  concept page.
 - Quantum execution and measurement core (MQ-11): explicit circuit measurement
   annotations via `QuantumCircuit.measure` / `measure_all` (with an ordered,
   serializable `measurements` property), `BackendResult.get_counts()` and
@@ -15,6 +26,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   measurement results, and `Backend.run` restricting counts to measured qubits.
   Measurement annotations persist through JSON, OpenQASM 2.0, IR and
   parameter binding/circuit concatenation.
+
+### Changed
+- `QuantumCircuit.parameters` now returns a name-sorted tuple (was a set).
+  `bind_parameters` now raises `ValueError` for keys that match no circuit
+  parameter, `TypeError` for non-numeric values, and `ValueError` for
+  complex or duplicate bindings; mixed unknown+known mappings fail instead
+  of silently ignoring the unknown entries.
+- `Parameter` gained `__mul__` (`theta * 2`), mirroring the existing
+  `2 * theta` support.
+- `append_parameterized` validates its gate type and parameter type up
+  front.
 
 ### Fixed
 - `sample_state` / `measure_qubits` now reject invalid shot counts (`< 1`).

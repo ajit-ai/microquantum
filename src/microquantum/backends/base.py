@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import uuid
 from abc import ABC, abstractmethod
+from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -18,6 +19,7 @@ from ..core.state import StateVector
 
 if TYPE_CHECKING:
     from ..core.circuit import QuantumCircuit
+    from ..core.parameter import Parameter
     from ..runtime.plan import ExecutionPlan
 
 from .capabilities import BackendCapabilities, simulator_capabilities
@@ -525,6 +527,7 @@ class Backend(ABC):
         shots: int = 1024,
         initial_state: Optional[StateVector] = None,
         seed: Optional[int] = None,
+        parameter_values: Optional[Mapping[Union[str, "Parameter"], Union[int, float, complex]]] = None,
     ) -> BackendResult:
         """Execute a bound circuit via the high-level API.
 
@@ -538,10 +541,16 @@ class Backend(ABC):
             shots: Number of measurement shots.
             initial_state: Optional initial state vector.
             seed: RNG seed for reproducibility.
+            parameter_values: Optional mapping of :class:`Parameter` objects
+                (or names) to numeric values.  When provided, the circuit is
+                bound through the canonical ``bind_parameters()`` logic before
+                execution.
 
         Returns:
             BackendResult with measurement counts and simulation state.
         """
+        if parameter_values is not None:
+            circuit = circuit.bind_parameters(parameter_values)
         circuit._ensure_bound()
         gates = [(op.matrix, targets) for op, targets in circuit.gates]
         result = self.run_circuit(
@@ -606,6 +615,7 @@ class Backend(ABC):
         shots: int = 1024,
         initial_state: Optional[StateVector] = None,
         seed: Optional[int] = None,
+        parameter_values: Optional[Mapping[Union[str, "Parameter"], Union[int, float, complex]]] = None,
     ) -> Job:
         """Submit a high-level circuit for execution and return a Job.
 
@@ -618,6 +628,7 @@ class Backend(ABC):
             shots: Number of measurement shots.
             initial_state: Optional initial state vector.
             seed: RNG seed for reproducibility.
+            parameter_values: Optional binding map (see :meth:`run`).
 
         Returns:
             A :class:`Job` holding the execution result on completion.
@@ -636,6 +647,7 @@ class Backend(ABC):
                 shots=shots,
                 initial_state=initial_state,
                 seed=seed,
+                parameter_values=parameter_values,
             )
             job.result = result
             job.status = JobStatus.COMPLETED

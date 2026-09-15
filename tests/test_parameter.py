@@ -111,26 +111,27 @@ class TestParameterizedCircuit:
         theta = Parameter("theta")
         qc = QuantumCircuit(1).rx(theta, 0)
         assert qc.is_parameterized
-        assert qc.parameters == {theta}
+        assert qc.parameters == (theta,)
 
     def test_single_parameter_ry(self) -> None:
         theta = Parameter("theta")
         qc = QuantumCircuit(1).ry(theta, 0)
         assert qc.is_parameterized
-        assert qc.parameters == {theta}
+        assert qc.parameters == (theta,)
 
     def test_single_parameter_rz(self) -> None:
         theta = Parameter("theta")
         qc = QuantumCircuit(1).rz(theta, 0)
         assert qc.is_parameterized
-        assert qc.parameters == {theta}
+        assert qc.parameters == (theta,)
 
     def test_multiple_unique_parameters(self) -> None:
         theta = Parameter("theta")
         phi = Parameter("phi")
         qc = QuantumCircuit(2).ry(theta, 0).rx(phi, 1)
         assert qc.is_parameterized
-        assert qc.parameters == {theta, phi}
+        # deterministic name order (phi < theta)
+        assert qc.parameters == (phi, theta)
 
     def test_duplicate_parameter_same_name(self) -> None:
         theta = Parameter("theta")
@@ -142,7 +143,17 @@ class TestParameterizedCircuit:
         theta = Parameter("theta")
         qc = QuantumCircuit(2).h(0).ry(theta, 1).cx(0, 1)
         assert qc.is_parameterized
-        assert qc.parameters == {theta}
+        assert qc.parameters == (theta,)
+
+    def test_parameters_deterministic_order(self) -> None:
+        z = Parameter("z_angle")
+        a = Parameter("a_angle")
+        m = Parameter("m_angle")
+        qc = QuantumCircuit(3).ry(z, 0).rx(a, 1).rz(m, 2)
+        assert qc.parameters == (a, m, z)
+        # tuple is immutable (read-only view)
+        with pytest.raises(TypeError):
+            qc.parameters[0] = a  # type: ignore[index]
 
     def test_no_parameters(self) -> None:
         qc = QuantumCircuit(2).h(0).cx(0, 1)
@@ -210,12 +221,12 @@ class TestBindParameters:
         assert bound.is_parameterized
         assert theta in bound.parameters
 
-    def test_bind_extra_parameters_ok(self) -> None:
+    def test_bind_unknown_parameter_raises(self) -> None:
         theta = Parameter("theta")
         phi = Parameter("phi")
         qc = QuantumCircuit(1).ry(theta, 0)
-        bound = qc.bind_parameters({theta: 0.5, phi: 0.3})
-        assert not bound.is_parameterized
+        with pytest.raises(ValueError, match="unknown parameter"):
+            qc.bind_parameters({theta: 0.5, phi: 0.3})
 
     def test_get_unitary_requires_binding(self) -> None:
         theta = Parameter("theta")
@@ -246,7 +257,7 @@ class TestCircuitComposition:
         qc2 = QuantumCircuit(2).rx(phi, 1)
         combined = qc1 + qc2
         assert combined.is_parameterized
-        assert combined.parameters == {theta, phi}
+        assert combined.parameters == (phi, theta)
 
     def test_bind_concatenated_circuit(self) -> None:
         theta = Parameter("theta")

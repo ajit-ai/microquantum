@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import TYPE_CHECKING, Optional, Union
 
 if TYPE_CHECKING:
@@ -10,13 +11,12 @@ if TYPE_CHECKING:
 import numpy as np
 
 from .operators import Operator
-from .parameter import Parameter
+from .parameter import Parameter, ParameterExpression
 from .state import StateVector
 from .tensor import expand_operator
 
 if TYPE_CHECKING:
     from .measurement import MeasurementResult
-    from .parameter import ParameterExpression
 
 
 # Internal tuple types for parameterized gate storage.
@@ -45,7 +45,7 @@ class QuantumCircuit:
         depth: Circuit depth (sequential gate layers).
         num_gates: Total number of gate instructions.
         is_parameterized: Whether the circuit contains unbound parameters.
-        parameters: Set of unbound Parameter instances.
+        parameters: Unbound parameters, in deterministic name order.
     """
 
     def __init__(self, num_qubits: int) -> None:
@@ -100,18 +100,25 @@ class QuantumCircuit:
         return max(qubit_finish.values())
 
     @property
-    def parameters(self) -> set[Parameter]:
-        """Set of all unbound Parameter instances in the circuit."""
-        params: set[Parameter] = set()
+    def parameters(self) -> tuple[Parameter, ...]:
+        """Unbound parameters of the circuit, in deterministic name order.
+
+        Parameters are identified by name; the same-name parameter used in
+        several gates appears exactly once.  The returned tuple is
+        read-only from the caller's perspective and sorted alphabetically
+        by name.
+        """
+        seen: dict[str, Parameter] = {}
         for instr in self._gate_instructions:
-            if self._is_parameterized_gate(instr):
-                param = instr[1]
-                if isinstance(param, Parameter):
-                    params.add(param)
-                # ParameterExpression contains a Parameter
-                if hasattr(param, "parameter"):
-                    params.add(param.parameter)
-        return params
+            if not self._is_parameterized_gate(instr):
+                continue
+            param = instr[1]
+            symbol = (
+                param.parameter if isinstance(param, ParameterExpression) else param
+            )
+            if symbol.name not in seen:
+                seen[symbol.name] = symbol
+        return tuple(sorted(seen.values(), key=lambda p: p.name))
 
     @property
     def is_parameterized(self) -> bool:
@@ -199,20 +206,38 @@ class QuantumCircuit:
     def append_parameterized(
         self,
         gate_type: str,
-        param: Union[float, int, complex, Parameter],
+        param: Union[float, int, complex, Parameter, ParameterExpression],
         target: int,
     ) -> QuantumCircuit:
         """Append a parameterized rotation gate.
 
         Args:
             gate_type: One of "rx", "ry", "rz".
-            param: Rotation angle (numeric or Parameter).
+            param: Rotation angle (numeric, Parameter or
+                ParameterExpression).
             target: Target qubit index.
 
         Returns:
             self, for method chaining.
+
+        Raises:
+            ValueError: If gate_type is not a supported rotation gate.
+            TypeError: If param is not numeric, a Parameter or a
+                ParameterExpression.
         """
         self._validate_targets([target])
+        if gate_type not in ("rx", "ry", "rz"):
+            raise ValueError(
+                f"parameterized gate type '{gate_type}' is not supported; "
+                f"only 'rx', 'ry', 'rz' accept symbolic angles"
+            )
+        if not isinstance(
+            param, (Parameter, ParameterExpression, int, float, complex)
+        ):
+            raise TypeError(
+                f"param must be a numeric angle, Parameter or "
+                f"ParameterExpression, got {type(param).__name__}"
+            )
         if isinstance(param, (int, float, complex)):
             # Immediate numeric evaluation — store concrete operator
             gate_map = {"rx": Operator.Rx, "ry": Operator.Ry, "rz": Operator.Rz}
@@ -255,23 +280,25 @@ class QuantumCircuit:
         return self.append(Operator.Tdg(), [q])
 
     def rx(
-        self, theta: Union[float, int, complex, Parameter], q: int
+        self, theta: Union[float, int, complex, Parameter, ParameterExpression], q: int
     ) -> QuantumCircuit:
         """Apply Rx(theta) rotation to qubit q.
 
         Args:
-            theta: Rotation angle in radians, or a Parameter.
+            theta: Rotation angle in radians, a Parameter or a
+                ParameterExpression.
             q: Target qubit index.
         """
         return self.append_parameterized("rx", theta, q)
 
     def ry(
-        self, theta: Union[float, int, complex, Parameter], q: int
+        self, theta: Union[float, int, complex, Parameter, ParameterExpression], q: int
     ) -> QuantumCircuit:
         """Apply Ry(theta) rotation to qubit q.
 
         Args:
-            theta: Rotation angle in radians, or a Parameter.
+            theta: Rotation angle in radians, a Parameter or a
+                ParameterExpression.
             q: Target qubit index.
         """
         return self.append_parameterized("ry", theta, q)
@@ -386,75 +413,110 @@ class QuantumCircuit:
     # ------------------------------------------------------------------
 
     def bind_parameters(
-        self, param_map: dict[Union[str, Parameter], float]
+        self,
+        param_map: Mapping[Union[str, Parameter], Union[int, float, complex]],
     ) -> QuantumCircuit:
-        """Return a new circuit with parameters bound to values.
+        """Return a new circuit with parameters bound to numeric values.
 
-        Parameters present in param_map are substituted; others remain
-        as symbolic parameters in the returned circuit.
+        Every parameter whose name appears in ``param_map`` is replaced
+        by the corresponding numeric value; all other parameters remain
+        symbolic in the returned circuit.  The original circuit is never
+        modified.
+
+        Validation is strict (MQ-12):
+
+        * Unknown parameters that match no circuit parameter raise
+          ``ValueError``.
+        * Non-numeric values raise ``TypeError``.
+        * Complex binding values with a non-zero imaginary part raise
+          ``ValueError``.
+        * Ambiguous definitions (the same logical parameter specified
+          twice) raise ``ValueError``.
 
         Args:
-            param_map: Mapping from Parameter (or name) to float value.
+            param_map: Mapping from ``Parameter`` (or parameter name) to
+                a numeric value.
 
         Returns:
-            A new QuantumCircuit with bound parameters resolved.
+            A new :class:`QuantumCircuit` with matched parameters resolved
+            and any unbound parameters kept symbolic.
+
+        Raises:
+            TypeError: If ``param_map`` is not a mapping, a key is not a
+                ``Parameter``/``str``, or a value is not numeric.
+            ValueError: If the mapping references unknown parameters, uses
+                a complex value, or binds the same parameter twice.
         """
+        bindings = self._validate_bindings(param_map)
+        gate_map = {"rx": Operator.Rx, "ry": Operator.Ry, "rz": Operator.Rz}
         resolved = QuantumCircuit(self._num_qubits)
         for instr in self._gate_instructions:
             if not self._is_parameterized_gate(instr):
                 resolved._gate_instructions.append(instr)
                 continue
-
-            gate_type = instr[0]
-            param = instr[1]
-            target = instr[2]
-            if self._param_in_map(param, param_map):
-                angle = self._resolve_param(param, param_map)
-                gate_map = {
-                    "rx": Operator.Rx, "ry": Operator.Ry, "rz": Operator.Rz
-                }
+            gate_type, param, target = instr
+            if isinstance(param, ParameterExpression):
+                name = param.parameter.name
+            else:
+                name = param.name
+            if name in bindings:
+                if isinstance(param, ParameterExpression):
+                    angle = param.evaluate(bindings)
+                else:
+                    angle = bindings[name]
                 op = gate_map[gate_type](angle)
                 resolved._gate_instructions.append((op, [target]))
             else:
-                # Keep as parameterized
                 resolved._gate_instructions.append(instr)
         resolved._measurements = list(self._measurements)
         return resolved
 
-    @staticmethod
-    def _param_in_map(
-        param: Union[Parameter, "ParameterExpression"],
-        param_map: dict[Union[str, Parameter], float],
-    ) -> bool:
-        """Check if a parameter's value is present in param_map."""
-        from .parameter import ParameterExpression
+    def _validate_bindings(
+        self,
+        param_map: object,
+    ) -> dict[str, float]:
+        """Validate a binding mapping and return canonical ``{name: float}``.
 
-        if isinstance(param, ParameterExpression):
-            return QuantumCircuit._param_in_map(param.parameter, param_map)
-        if isinstance(param, Parameter):
-            return param in param_map or param.name in param_map
-        return False
-
-    @staticmethod
-    def _resolve_param(
-        param: Union[Parameter, "ParameterExpression"],
-        param_map: dict[Union[str, Parameter], float],
-    ) -> float:
-        """Resolve a parameter or expression to a numeric value."""
-        from .parameter import ParameterExpression
-
-        if isinstance(param, ParameterExpression):
-            return param.evaluate(param_map)
-        if isinstance(param, Parameter):
-            # Try by object first, then by name
-            if param in param_map:
-                return float(param_map[param])
-            if param.name in param_map:
-                return float(param_map[param.name])
-            raise KeyError(
-                f"Parameter '{param.name}' not found in param_map"
+        Enforces the MQ-12 strict binding contract: mapping type, key
+        types, numeric-only values, no complex angles, no duplicate
+        definitions and no unknown parameters.
+        """
+        if not isinstance(param_map, Mapping):
+            raise TypeError(
+                f"bind_parameters expects a Mapping of parameters to "
+                f"values, got {type(param_map).__name__}"
             )
-        raise TypeError(f"Expected Parameter or ParameterExpression, got {type(param)}")
+        known: set[str] = {p.name for p in self.parameters}
+        bindings: dict[str, float] = {}
+        for key, value in param_map.items():
+            if isinstance(key, Parameter):
+                name = key.name
+            elif isinstance(key, str):
+                name = key
+            else:
+                raise TypeError(
+                    f"binding keys must be Parameter instances or "
+                    f"parameter names, got {type(key).__name__}"
+                )
+            if name in bindings:
+                raise ValueError(
+                    f"parameter '{name}' is bound more than once; "
+                    f"provide each parameter exactly once"
+                )
+            if not _is_numeric_binding(value):
+                raise TypeError(
+                    f"value for parameter '{name}' must be numeric, "
+                    f"got {type(value).__name__}"
+                )
+            bindings[name] = _coerce_binding_value(value, name)
+        unknown = sorted(n for n in bindings if n not in known)
+        if unknown:
+            available = sorted(known)
+            raise ValueError(
+                f"bind_parameters received unknown parameter(s): {unknown}; "
+                f"circuit parameters are: {available}"
+            )
+        return bindings
 
     # ------------------------------------------------------------------
     # Simulation & unitary
@@ -810,3 +872,40 @@ class QuantumCircuit:
                 target_str = ",".join(str(t) for t in targets)
                 lines.append(f"  {name}({target_str})")
         return "\n".join(lines)
+
+
+# ------------------------------------------------------------------
+# Binding validation helpers (module-level, used by QuantumCircuit)
+# ------------------------------------------------------------------
+
+
+def _is_numeric_binding(value: object) -> bool:
+    """Return True if *value* is a numeric type suitable for a binding."""
+    if isinstance(value, bool):
+        return False
+    return isinstance(
+        value,
+        (int, float, complex, np.integer, np.floating, np.complexfloating),
+    )
+
+
+def _coerce_binding_value(value: object, name: str) -> float:
+    """Coerce a numeric value to a float, rejecting non-real angles.
+
+    Args:
+        value: The raw value supplied by the caller.
+        name: Parameter name (used in error messages).
+
+    Returns:
+        Real part of the numeric value.
+
+    Raises:
+        ValueError: If the value has a non-zero imaginary part.
+    """
+    number: complex = complex(value)  # type: ignore[arg-type, call-overload]
+    if abs(number.imag) > 1e-12:
+        raise ValueError(
+            f"value for parameter '{name}' must be real, "
+            f"got {value!r} (imaginary part {number.imag})"
+        )
+    return number.real
