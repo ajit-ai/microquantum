@@ -16,12 +16,18 @@ import numpy as np
 
 from .circuit import QuantumCircuit
 from .operators import Operator
+from .parameter import Parameter, ParameterExpression
 
 FORMAT_VERSION = "1.0"
 
 
 def to_dict(circuit: QuantumCircuit) -> dict[str, Any]:
     """Serialize a quantum circuit to a JSON-compatible dictionary.
+
+    Parameterized rotation gates are preserved symbolically: each entry
+    carries ``"parameterized": true`` plus a ``"params"`` description of
+    the :class:`~microquantum.Parameter` or
+    :class:`~microquantum.ParameterExpression` occupying its angle slot.
 
     Args:
         circuit: The circuit to serialize.
@@ -30,7 +36,21 @@ def to_dict(circuit: QuantumCircuit) -> dict[str, Any]:
         Dictionary representation of the circuit.
     """
     gates: list[dict[str, Any]] = []
-    for op, targets in circuit.gates:
+    for instr in circuit._gate_instructions:
+        if len(instr) == 3 and isinstance(instr[0], str):
+            gate_type = instr[0]
+            param = instr[1]
+            target = instr[2]
+            gates.append(
+                {
+                    "name": gate_type,
+                    "targets": [int(target)],
+                    "parameterized": True,
+                    "params": [_param_spec(param)],
+                }
+            )
+            continue
+        op, targets = instr
         gate_dict: dict[str, Any] = {
             "name": op.name,
             "targets": targets,
@@ -72,11 +92,17 @@ def from_dict(data: dict[str, Any]) -> QuantumCircuit:
     qc = QuantumCircuit(num_qubits)
 
     for gate_dict in data["gates"]:
-        name = gate_dict["name"]
-        targets = gate_dict["targets"]
-        angle = gate_dict.get("angle", 0.0)
+        if gate_dict.get("parameterized"):
+            name = gate_dict["name"]
+            targets = gate_dict["targets"]
+            param = _param_from_spec(gate_dict["params"][0])
+            qc.append_parameterized(name, param, targets[0])
+        else:
+            name = gate_dict["name"]
+            targets = gate_dict["targets"]
+            angle = gate_dict.get("angle", 0.0)
 
-        _add_gate(qc, name, targets, angle)
+            _add_gate(qc, name, targets, angle)
 
     for qubit in data.get("measurements", []):
         qc.measure(qubit)
@@ -148,6 +174,49 @@ def _extract_angle(op: Operator, gate_type: str) -> float:
     elif gate_type == "rz":
         return float(np.angle(m[1, 1])) * 2.0
     return 0.0
+
+
+def _param_spec(param: Any) -> dict[str, Any]:
+    """Serialize a Parameter or ParameterExpression to a JSON dict."""
+    if isinstance(param, Parameter):
+        return {"type": "parameter", "name": param.name}
+    if isinstance(param, ParameterExpression):
+        return {
+            "type": "expression",
+            "parameter": param.parameter.name,
+            "coefficient": {
+                "real": param.coefficient.real,
+                "imag": param.coefficient.imag,
+            },
+            "constant": {
+                "real": param.constant.real,
+                "imag": param.constant.imag,
+            },
+        }
+    raise TypeError(
+        f"cannot serialize {type(param).__name__} as a parameter; "
+        f"expected Parameter or ParameterExpression"
+    )
+
+
+def _param_from_spec(spec: dict[str, Any]) -> Any:
+    """Rebuild a Parameter or ParameterExpression from a param spec."""
+    kind = spec.get("type")
+    if kind == "parameter":
+        return Parameter(spec["name"])
+    if kind == "expression":
+        coef = complex(
+            spec["coefficient"]["real"], spec["coefficient"]["imag"]
+        )
+        constant = complex(
+            spec["constant"]["real"], spec["constant"]["imag"]
+        )
+        return ParameterExpression(
+            Parameter(spec["parameter"]),
+            coefficient=coef,
+            constant=constant,
+        )
+    raise ValueError(f"Unsupported parameter spec: {spec!r}")
 
 
 def _add_gate(qc: QuantumCircuit, name: str, targets: list[int], angle: float) -> None:

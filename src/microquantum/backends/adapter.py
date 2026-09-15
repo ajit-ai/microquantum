@@ -16,12 +16,14 @@ vendor error into the validation/execution error style used by the SDK.
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Any, Optional
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray
 
 from ..core.circuit import QuantumCircuit
+from ..core.parameter import Parameter
 from ..core.state import StateVector
 from .base import Backend, BackendResult
 
@@ -74,7 +76,10 @@ class BackendAdapter(Backend):
         shots: int = 1024,
         initial_state: Optional[StateVector] = None,
         seed: Optional[int] = None,
+        parameter_values: Optional[Mapping[Union[str, Parameter], Union[int, float, complex]]] = None,
     ) -> BackendResult:
+        if parameter_values is not None:
+            circuit = circuit.bind_parameters(parameter_values)
         handle = self.submit_to_vendor(circuit, shots=shots, seed=seed)
         return self.collect_from_vendor(handle, circuit)
 

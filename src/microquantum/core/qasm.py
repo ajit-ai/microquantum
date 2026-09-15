@@ -58,6 +58,12 @@ _FROM_QASM: dict[str, tuple[str, int]] = {
 def to_qasm(circuit: QuantumCircuit, header: bool = True) -> str:
     """Export a quantum circuit to OpenQASM 2.0 format.
 
+    OpenQASM 2.0 has no symbolic parameters, so a circuit with unbound
+    parameters cannot be represented faithfully: ``to_qasm`` raises
+    :class:`ValueError` in that case instead of silently dropping the
+    parameterized gates.  Bind the circuit first (``circuit.bind_
+    parameters({...})``) to export a concrete, numeric circuit.
+
     Args:
         circuit: The quantum circuit to export.
         header: Whether to include the QASM header and qreg/creg declarations.
@@ -66,8 +72,16 @@ def to_qasm(circuit: QuantumCircuit, header: bool = True) -> str:
         OpenQASM 2.0 string representation.
 
     Raises:
-        ValueError: If the circuit contains gates not representable in QASM 2.0.
+        ValueError: If the circuit is parameterized, or contains gates not
+            representable in QASM 2.0.
     """
+    if circuit.is_parameterized:
+        names = ", ".join(p.name for p in circuit.parameters)
+        raise ValueError(
+            f"Cannot export a parameterized circuit to OpenQASM 2.0: "
+            f"unbound parameters [{names}]. OpenQASM 2.0 has no symbolic "
+            f"parameters; call bind_parameters() before exporting."
+        )
     lines: list[str] = []
 
     if header:

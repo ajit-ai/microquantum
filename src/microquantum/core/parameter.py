@@ -37,6 +37,10 @@ class Parameter:
     def __rmul__(self, scalar: complex) -> ParameterExpression:
         return ParameterExpression(self, coefficient=complex(scalar))
 
+    def __mul__(self, scalar: complex) -> ParameterExpression:
+        """Multiply this parameter by a scalar (``theta * 2``)."""
+        return ParameterExpression(self, coefficient=complex(scalar))
+
     def __add__(
         self, other: Union[float, int, complex]
     ) -> ParameterExpression:

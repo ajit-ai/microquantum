@@ -7,13 +7,15 @@ target real hardware through any :class:`HardwareProvider`.
 
 from __future__ import annotations
 
-from typing import Optional
+from collections.abc import Mapping
+from typing import Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray
 
 from ..backends.base import Backend, BackendResult, Job, JobStatus
 from ..core.circuit import QuantumCircuit
+from ..core.parameter import Parameter
 from ..core.state import StateVector
 from .base import HardwareProvider
 
@@ -75,6 +77,7 @@ class HardwareBackend(Backend):
         shots: int = 1024,
         initial_state: Optional[StateVector] = None,
         seed: Optional[int] = None,
+        parameter_values: Optional[Mapping[Union[str, Parameter], Union[int, float, complex]]] = None,
     ) -> Job:
         """Submit a real circuit to hardware and return an async job.
 
@@ -83,10 +86,13 @@ class HardwareBackend(Backend):
             shots: Number of measurement shots.
             initial_state: Not applicable on raw hardware; ignored.
             seed: Not applicable on real hardware; ignored.
+            parameter_values: Optional binding map, bound before submission.
 
         Returns:
             A :class:`Job` that will be completed once the provider returns.
         """
+        if parameter_values is not None:
+            circuit = circuit.bind_parameters(parameter_values)
         job = Job()
         job.status = JobStatus.RUNNING
         hw_job = self._provider.submit(circuit, shots=shots)
@@ -141,6 +147,7 @@ class HardwareBackend(Backend):
         shots: int = 1024,
         initial_state: Optional[StateVector] = None,
         seed: Optional[int] = None,
+        parameter_values: Optional[Mapping[Union[str, Parameter], Union[int, float, complex]]] = None,
     ) -> BackendResult:
         """Execute a bound circuit on hardware and block for the result.
 
@@ -149,10 +156,13 @@ class HardwareBackend(Backend):
             shots: Number of measurement shots.
             initial_state: Not applicable on hardware hardware; ignored.
             seed: Not applicable on real hardware; ignored.
+            parameter_values: Optional binding map, bound before execution.
 
         Returns:
             BackendResult with hardware measurement counts.
         """
+        if parameter_values is not None:
+            circuit = circuit.bind_parameters(parameter_values)
         circuit._ensure_bound()
         hw_job = self._provider.submit(circuit, shots=shots)
         data = hw_job.wait_for_result()

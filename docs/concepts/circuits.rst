@@ -47,8 +47,9 @@ Queries
 * ``gate_count(gate_type=None)`` — count gates, optionally for one type.
 * ``contains_gate(gate_type)`` — does the circuit use a given gate?
 * ``gates()`` — raw instruction list ``(Operator, targets)``.
-* ``parameters()`` — the set of free :class:`~microquantum.Parameter` s.
-* ``is_parameterized()`` — ``True`` when any gate carries a symbolic angle.
+* ``parameters`` — the free :class:`~microquantum.Parameter` s, as a
+  read-only tuple in deterministic name order.
+* ``is_parameterized`` — ``True`` when any gate carries a symbolic angle.
 * ``to_ir()`` / ``from_ir()`` — convert to/from the IR (see :doc:`/execution/runtime`).
 
 Execution
