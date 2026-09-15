@@ -3,6 +3,7 @@
 import numpy as np
 import pytest
 
+from microquantum.backends.statevector import StatevectorBackend
 from microquantum.core import (
     MeasurementResult,
     Operator,
@@ -241,11 +242,13 @@ class TestCircuitMeasurement:
     """Test QuantumCircuit.measure_all and expectation_value."""
 
     def test_circuit_measure_all(self) -> None:
-        qc = QuantumCircuit(2).h(0).cx(0, 1)
-        result = qc.measure_all(shots=10000, seed=42)
+        qc = QuantumCircuit(2).h(0).cx(0, 1).measure_all()
+        assert qc.measurements == [0, 1]
+        result = StatevectorBackend().run(qc, shots=10000, seed=42)
         counts = result.get_counts()
         assert "01" not in counts
         assert "10" not in counts
+        assert set(counts.keys()) <= {"00", "11"}
 
     def test_circuit_expectation_value(self) -> None:
         qc = QuantumCircuit(1)

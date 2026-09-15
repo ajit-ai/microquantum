@@ -121,6 +121,19 @@ class BackendResult:
         total = sum(self.counts.values())
         return {k: v / total for k, v in self.counts.items()}
 
+    @property
+    def state(self) -> Optional[NDArray[np.complex128]]:
+        """Alias for :attr:`statevector` (the simulation state)."""
+        return self.statevector
+
+    def get_counts(self) -> dict[str, int]:
+        """Raw bitstring count dictionary (same object as :attr:`counts`).
+
+        Method-style accessor for callers that prefer ``result.get_counts()``
+        over attribute access; equivalent to ``dict(result.counts)``.
+        """
+        return dict(self.counts)
+
     def most_frequent(self) -> str:
         """Return the most frequently measured bitstring."""
         if not self.counts:
@@ -531,12 +544,60 @@ class Backend(ABC):
         """
         circuit._ensure_bound()
         gates = [(op.matrix, targets) for op, targets in circuit.gates]
-        return self.run_circuit(
+        result = self.run_circuit(
             num_qubits=circuit.num_qubits,
             gates=gates,
             shots=shots,
             initial_state=initial_state,
             seed=seed,
+        )
+        return self._restrict_measurements(result, circuit.measurements, circuit.num_qubits)
+
+    @staticmethod
+    def _restrict_measurements(
+        result: BackendResult,
+        measured: list[int],
+        num_qubits: int,
+    ) -> BackendResult:
+        """Restrict a full-width result to the circuit's measured qubits.
+
+        When a circuit marks a *proper subset* of its qubits for measurement,
+        the returned counts/samples are reduced to those qubits (in circuit
+        measurement order, left to right = big-endian).  Sampling the full
+        state and marginalizing is statistically identical to sampling the
+        marginal directly, so no extra randomness is needed.
+
+        When every qubit is measured (or none are), the result passes through
+        unchanged.
+        """
+        qubits = set(range(num_qubits))
+        if not measured or set(measured) == qubits or len(measured) != len(set(measured)):
+            return result
+
+        def _reduce_index(full_index: int) -> int:
+            reduced: int = 0
+            for t in measured:
+                bit = (full_index >> (num_qubits - 1 - t)) & 1
+                reduced = (reduced << 1) | bit
+            return reduced
+
+        new_counts: dict[str, int] = {}
+        width = len(measured)
+        for bitstring, count in result.counts.items():
+            reduced = "".join(
+                bitstring[num_qubits - 1 - t] for t in measured
+            )
+            new_counts[reduced] = new_counts.get(reduced, 0) + count
+
+        new_samples = None
+        if result.samples is not None:
+            new_samples = [_reduce_index(int(s)) for s in result.samples]
+
+        return replace(
+            result,
+            counts=new_counts,
+            samples=new_samples,
+            metadata={**result.metadata, "measured_qubits": list(measured)},
         )
 
     def submit_circuit(

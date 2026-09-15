@@ -93,6 +93,9 @@ def to_qasm(circuit: QuantumCircuit, header: bool = True) -> str:
         else:
             lines.append(f'{qasm_gate} {qubit_args};')
 
+    for qubit in circuit.measurements:
+        lines.append(f'measure q[{qubit}] -> c[{qubit}];')
+
     return "\n".join(lines) + "\n"
 
 
@@ -157,6 +160,9 @@ def _parse_qreg(line: str) -> int:
 def _apply_qasm_gate(qc: QuantumCircuit, line: str) -> None:
     """Apply a single QASM gate line to a circuit."""
     line = line.rstrip(";").strip()
+    if line.startswith("measure "):
+        _apply_measure(qc, line)
+        return
     if "(" in line:
         gate_part, qubit_part = line.split("(", 1)
         gate_name = gate_part.strip()
@@ -180,6 +186,16 @@ def _apply_qasm_gate(qc: QuantumCircuit, line: str) -> None:
         )
 
     _add_gate_by_name(qc, factory_name, qubits, angle)
+
+
+def _apply_measure(qc: QuantumCircuit, line: str) -> None:
+    """Record a ``measure q[i] -> c[j];`` statement on the circuit."""
+    body = line[len("measure "):].strip()
+    q_part, c_part = body.split("->", 1)
+    qubits = _parse_qubit_args(q_part)
+    if len(qubits) != 1:
+        raise ValueError(f"measure expects one qubit, got: {line}")
+    qc.measure(qubits[0])
 
 
 def _parse_qubit_args(args: str) -> list[int]:

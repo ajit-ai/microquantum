@@ -70,5 +70,9 @@ class StatevectorBackend(Backend):
             backend_name=self.name,
             statevector=state.amplitudes.copy(),
             counts=measurement.counts,
+            samples=measurement.samples,
+            shots=shots,
+            seed=seed,
+            target_name=self.target.name,
             metadata={"shots": shots},
         )

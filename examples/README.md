@@ -49,6 +49,15 @@ example with `uv run python examples/<file>.py` from the repository root.
 - `execution/10_end_to_end.py` — full pipeline with IR, plan, target,
   backend, enriched result and JSON exports.
 
+## Quantum execution and measurement core (MQ-11)
+
+- `execution/11_single_qubit_measurement.py` — prepare |1>, annotate the
+  measurement, and inspect real sampled counts from `StatevectorBackend`.
+- `execution/12_bell_state_measurement.py` — Bell state (H + CX) sampled over
+  1000 shots; the distribution is dominated by `00` / `11`.
+- `execution/13_seeded_execution.py` — same circuit + same seed reproduces the
+  same sampled counts and raw samples; a different seed samples afresh.
+
 ## Algorithms on problems (MQ-05)
 
 The generic `Algorithm`/`Problem` layer: problems are JSON-safe data,

@@ -41,6 +41,7 @@ class QuantumCircuit:
     Attributes:
         num_qubits: Number of qubits in the circuit.
         gates: Ordered list of gate instructions.
+        measurements: Qubit indices marked for measurement (in order).
         depth: Circuit depth (sequential gate layers).
         num_gates: Total number of gate instructions.
         is_parameterized: Whether the circuit contains unbound parameters.
@@ -60,6 +61,7 @@ class QuantumCircuit:
             raise ValueError(f"num_qubits must be >= 1, got {num_qubits}")
         self._num_qubits = num_qubits
         self._gate_instructions: list[_GateInstruction] = []
+        self._measurements: list[int] = []
 
     @property
     def num_qubits(self) -> int:
@@ -416,6 +418,7 @@ class QuantumCircuit:
             else:
                 # Keep as parameterized
                 resolved._gate_instructions.append(instr)
+        resolved._measurements = list(self._measurements)
         return resolved
 
     @staticmethod
@@ -540,23 +543,61 @@ class QuantumCircuit:
     # Measurement & expectation values
     # ------------------------------------------------------------------
 
-    def measure_all(
-        self, shots: int = 1000, seed: Optional[int] = None
-    ) -> MeasurementResult:
-        """Execute the circuit and sample all qubits.
+    def measure(self, qubit: int) -> QuantumCircuit:
+        """Mark a qubit for measurement in the computational basis.
+
+        Measurements are represented explicitly on the circuit: they do
+        not alter the gates or execute anything.  The backend samples the
+        measured qubits during execution.
 
         Args:
-            shots: Number of measurement shots.
-            seed: Optional RNG seed for reproducibility.
+            qubit: Qubit index to measure.
 
         Returns:
-            MeasurementResult with bitstring counts.
-        """
-        from .measurement import sample_state
+            self, for method chaining.
 
-        self._ensure_bound()
-        state = self.run()
-        return sample_state(state, shots=shots, seed=seed)
+        Raises:
+            ValueError: If the qubit index is out of range or already
+                measured.
+        """
+        self._validate_targets([qubit])
+        if qubit in self._measurements:
+            raise ValueError(
+                f"Qubit {qubit} is already marked for measurement"
+            )
+        self._measurements.append(qubit)
+        return self
+
+    def measure_all(self) -> QuantumCircuit:
+        """Mark every qubit for measurement in the computational basis.
+
+        Unlike earlier revisions, this method only records the measurement
+        instructions on the circuit; it does not execute anything.  Pass the
+        circuit to a backend to run and sample:
+
+        .. code-block:: python
+
+           qc = QuantumCircuit(2).h(0).cx(0, 1).measure_all()
+           result = StatevectorBackend().run(qc, shots=1000, seed=42)
+           print(result.counts())   # {'00': ~500, '11': ~500}
+
+        Returns:
+            self, for method chaining.
+        """
+        for qubit in range(self._num_qubits):
+            if qubit not in self._measurements:
+                self._measurements.append(qubit)
+        return self
+
+    @property
+    def measurements(self) -> list[int]:
+        """Qubit indices marked for measurement (in `.measure()` order).
+
+        The list is ordered by insertion; measurement output bitstrings
+        follow this same order (left to right) for deterministic, documented
+        classical output ordering.
+        """
+        return list(self._measurements)
 
     def expectation_value(
         self,
@@ -713,6 +754,7 @@ class QuantumCircuit:
         result._gate_instructions = (
             list(self._gate_instructions) + list(other._gate_instructions)
         )
+        result._measurements = list(self._measurements) + list(other._measurements)
         return result
 
     def __repr__(self) -> str:
@@ -722,10 +764,13 @@ class QuantumCircuit:
                 p.name for p in sorted(self.parameters, key=lambda p: p.name)
             )
             param_info = f", parameters=[{param_names}]"
+        measure_info = ""
+        if self._measurements:
+            measure_info = f", measurements={self._measurements}"
         return (
             f"QuantumCircuit(num_qubits={self._num_qubits}, "
             f"num_gates={self.num_gates}, depth={self.depth()}"
-            f"{param_info})"
+            f"{param_info}{measure_info})"
         )
 
     def __str__(self) -> str:
@@ -735,9 +780,13 @@ class QuantumCircuit:
                 p.name for p in sorted(self.parameters, key=lambda p: p.name)
             )
             param_info = f", params=[{param_names}]"
+        measure_info = ""
+        if self._measurements:
+            measure_info = f", measurements={self._measurements}"
         lines = [
             f"QuantumCircuit ({self._num_qubits} qubits, "
-            f"{self.num_gates} gates, depth {self.depth()}{param_info})"
+            f"{self.num_gates} gates, depth {self.depth()}{param_info}"
+            f"{measure_info})"
         ]
         for instr in self._gate_instructions:
             if self._is_parameterized_gate(instr):
