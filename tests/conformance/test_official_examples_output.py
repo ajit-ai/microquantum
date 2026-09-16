@@ -259,6 +259,53 @@ REGISTRY: dict[str, list] = {
     "examples/variational/03_optimizer_comparison.py": [
         lambda p: re.search(r"\b(BFGS|Adam|COBYLA|SPSA|GradientDescent)\b", p.stdout) is not None,
     ],
+    "examples/22_ir_roundtrip.py": [
+        lambda p: re.search(r"round-trip fidelity: 1\.00", p.stdout) is not None,
+        "terminal measurements with flag: [0, 1, 2]",
+        "Example 22 completed!",
+    ],
+    "examples/23_ir_to_circuit.py": [
+        "validation errors: []",
+        lambda p: re.search(r"rebuilt vs equivalent circuit fidelity: 1\.00", p.stdout)
+        is not None,
+        "rejected:",
+        "Example 23 completed!",
+    ],
+    "examples/24_basic_compilation.py": [
+        "level 0",
+        "level 1",
+        "level 2",
+        "cancel-adjacent-inverse",
+        lambda p: re.search(r"semantics preserved: fidelity = 1\.00", p.stdout)
+        is not None,
+    ],
+    "examples/25_optimization_before_after.py": [
+        "before:",
+        "after:",
+        lambda p: re.search(r"state fidelity after\s+: 1\.00", p.stdout) is not None,
+        "Example 25 completed!",
+    ],
+    "examples/26_parameterized_compilation.py": [
+        "compiled parameters: ['theta']",
+        lambda p: re.search(r"compile\(bind\) == bind\(compile\): fidelity 1\.00", p.stdout)
+        is not None,
+        "level 2: {'rx': 2}",
+    ],
+    "examples/27_measurement_preserving_optimization.py": [
+        "measurement order in source: [3, 1, 2]",
+        "measurement order compiled : [3, 1, 2]",
+        "measurements act as barriers to cancellation: gates=2 measurements=[0, 1]",
+    ],
+    "examples/28_target_validation.py": [
+        "cz lowered toward 'h, cx' basis",
+        "compiled gates : {'h': 2, 'cnot': 1}",
+        "unsupported 't' gate is reported, not dropped",
+    ],
+    "examples/29_execute_compiled_circuit.py": [
+        "cancel-adjacent-inverse",
+        "sampled counts (seeded):",
+        "Example 29 completed!",
+    ],
 }
 
 

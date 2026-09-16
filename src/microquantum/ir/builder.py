@@ -21,6 +21,7 @@ from ..core.operators import Operator
 from ..core.parameter import Parameter, ParameterExpression
 from .circuit_ir import IRCircuit
 from .nodes import Barrier, Condition, ConditionalBlock, Gate, IRParam, Measurement, Reset
+from .validation import assert_valid
 
 if TYPE_CHECKING:
     from ..core.circuit import QuantumCircuit
@@ -52,11 +53,19 @@ _OP_FACTORIES: dict[str, object] = {
 
 
 def _rotation_angle(op: Operator) -> float:
-    """Recover the rotation angle theta from Rx/Ry/Rz matrix."""
+    """Recover the rotation angle theta from Rx/Ry/Rz matrix.
+
+    Uses ``atan2`` on the matrix entries so the sign of the angle (and
+    therefore the exact unitary, up to floating point) is preserved
+    through the circuit -> IR boundary.
+    """
     m = np.asarray(op.matrix, dtype=np.complex128)
-    if op.name in ("rx", "ry"):
-        c = float(m[0, 0].real)
-        return 2.0 * math.acos(max(-1.0, min(1.0, c)))
+    if op.name == "rx":
+        # Rx(th) = [[cos, -i sin], [-i sin, cos]] -> sin(th/2) = -m[0,1].imag
+        return 2.0 * math.atan2(-float(m[0, 1].imag), float(m[0, 0].real))
+    if op.name == "ry":
+        # Ry(th) = [[cos, -sin], [sin, cos]] -> sin(th/2) = -m[0,1].real
+        return 2.0 * math.atan2(-float(m[0, 1].real), float(m[0, 0].real))
     if op.name == "rz":
         # M = [[e^{-i*theta/2}, 0], [0, e^{i*theta/2}]]
         return -2.0 * math.atan2(float(m[0, 0].imag), float(m[0, 0].real))
@@ -197,19 +206,24 @@ def _gate_to_instruction(gate: Gate) -> _CircuitInstruction:
 def from_ir(ir: IRCircuit) -> "QuantumCircuit":
     """Rebuild a :class:`QuantumCircuit` from gate-level IR.
 
-    Measurement and Barrier nodes are dropped (sampling happens on the
-    backend / is a synchronization hint).  Reset and conditional nodes are
-    not representable in a static :class:`QuantumCircuit` and raise
-    ``ValueError`` — use the dynamic-circuit path for those.
+    Terminal ``Measurement`` nodes are restored as ``circuit.measure(q)``
+    so compiled sample programs keep their measurements.  A measurement
+    whose classical-bit target differs from its qubit is not representable
+    in a static :class:`QuantumCircuit` and raises ``ValueError`` — use the
+    dynamic-circuit path for arbitrary classical-bit assignment.
+    ``Barrier`` nodes are dropped (synchronization hint).  Reset and
+    conditional nodes raise ``ValueError``.
 
     Args:
-        ir: The IR to convert back.
+        ir: The IR to convert back.  Must be structurally valid — malformed
+            IR fails explicitly.
 
     Returns:
         A QuantumCircuit executing the IR's gate list.
     """
     from ..core.circuit import QuantumCircuit
 
+    assert_valid(ir)
     circuit = QuantumCircuit(ir.num_qubits)
     for op in ir.operations:
         if isinstance(op, Gate):
@@ -222,7 +236,16 @@ def from_ir(ir: IRCircuit) -> "QuantumCircuit":
                     cast("Parameter", instr[1]),
                     instr[2],
                 )
-        elif isinstance(op, (Measurement, Barrier)):
+        elif isinstance(op, Measurement):
+            if op.classical is not None and op.classical != op.qubit:
+                raise ValueError(
+                    "measurement on qubit q"
+                    f"{op.qubit} mapped to classical bit c{op.classical} is "
+                    "not representable in a QuantumCircuit; use a "
+                    "DynamicCircuit for explicit classical-bit assignment"
+                )
+            circuit.measure(op.qubit)
+        elif isinstance(op, Barrier):
             continue
         elif isinstance(op, Reset):
             raise ValueError(

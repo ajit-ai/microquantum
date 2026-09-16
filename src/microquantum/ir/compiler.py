@@ -48,10 +48,21 @@ _OPTIMIZATION_PASSES = [
 ]
 
 
+def _normalize_basis(basis: set[str]) -> set[str]:
+    """Normalize a native-gate name set to MicroQuantum IR names.
+
+    The SDK's public :class:`~microquantum.core.device.Target`
+    ``native_gates`` may spell the controlled-NOT as ``"cx"`` while the IR
+    and passes use ``"cnot"``; treat them as the same gate so target-aware
+    decomposition and diagnostics behave consistently.
+    """
+    return {("cnot" if g.lower() == "cx" else g.lower()) for g in basis}
+
+
 def _compat_diagnostics(ir: IRCircuit, target: Target) -> list[str]:
     """Return a list of target-compatibility diagnostics for *ir*."""
     problems: list[str] = []
-    basis = set(target.native_gates)
+    basis = _normalize_basis(set(target.native_gates))
     if target.num_qubits is not None and ir.num_qubits > target.num_qubits:
         problems.append(
             f"circuit uses {ir.num_qubits} qubits but target '{target.name}' "
@@ -144,13 +155,16 @@ class Compiler:
     basis if a target is supplied) -> compatibility diagnostics.
 
     Args:
-        optimization_level: 0 = raw IR, 1 = identity removal + inverse
-            cancellation, 2 = also fuse same-axis rotations.
+        optimization_level: 0 = validation only (no passes), 1 = identity
+            removal + inverse cancellation, 2 = also fuse same-axis
+            rotations.  Levels outside 0..2 are rejected.
     """
 
     def __init__(self, optimization_level: int = 1) -> None:
-        if optimization_level < 0:
-            raise ValueError(f"optimization_level must be >= 0, got {optimization_level}")
+        if not 0 <= optimization_level <= 2:
+            raise ValueError(
+                f"optimization_level must be in 0..2, got {optimization_level}"
+            )
         self._optimization_level = optimization_level
 
     @property
@@ -176,7 +190,9 @@ class Compiler:
 
         Returns:
             A :class:`CompilationResult` holding source IR, compiled IR,
-            applied passes and diagnostics.
+            applied passes and diagnostics.  ``result.circuit()`` rebuilds an
+            executable :class:`QuantumCircuit`; terminal measurements present
+            in the source are preserved through compilation and rebuilding.
         """
         if isinstance(input_, IRCircuit):
             source = input_
@@ -211,14 +227,34 @@ class Compiler:
             passes_applied=[p.name for p in pipeline],
             diagnostics=diagnostics,
             mapping=mapping,
-            metadata={
-                "optimization_level": self._optimization_level,
-                "source_qubits": source.num_qubits,
-                "source_gates": source.num_gates,
-                "compiled_gates": compiled.num_gates,
-                "compiled_depth": compiled.depth,
-            },
+            metadata=_compilation_metadata(source, compiled, self._optimization_level),
         )
+
+
+def _compilation_metadata(
+    source: IRCircuit,
+    compiled: IRCircuit,
+    optimization_level: int,
+) -> dict[str, Any]:
+    """Build the JSON-safe compilation metadata payload."""
+    def gate_counts(ir: IRCircuit) -> dict[str, int]:
+        counts: dict[str, int] = {}
+        for op in ir.walk():
+            if isinstance(op, Gate):
+                counts[op.name] = counts.get(op.name, 0) + 1
+        return dict(sorted(counts.items()))
+
+    return {
+        "optimization_level": optimization_level,
+        "source_qubits": source.num_qubits,
+        "source_gates": source.num_gates,
+        "source_depth": source.depth,
+        "compiled_qubits": compiled.num_qubits,
+        "compiled_gates": compiled.num_gates,
+        "compiled_depth": compiled.depth,
+        "source_gates_by_type": gate_counts(source),
+        "compiled_gates_by_type": gate_counts(compiled),
+    }
 
 
 __all__ = ["Compiler", "CompilationResult"]
