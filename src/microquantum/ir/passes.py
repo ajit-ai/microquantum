@@ -319,6 +319,10 @@ class GateDecomposition(IRPass):
     Gates that cannot be decomposed are left in place; use the compiler's
     diagnostics to detect them.
 
+    The basis is normalized to MicroQuantum IR gate names, so a
+    ``Target`` spelling the controlled-NOT as ``"cx"`` is equivalent to
+    the IR's ``"cnot"``.
+
     Args:
         basis_gates: The supported gate-name set (e.g. a
             :class:`~microquantum.core.device.Target`'s ``native_gates``).
@@ -332,7 +336,9 @@ class GateDecomposition(IRPass):
             names: Iterable[str] = basis_gates.native_gates
         else:
             names = basis_gates
-        self._basis = set(names)
+        if isinstance(names, str):
+            names = [names]
+        self._basis = {("cnot" if g.lower() == "cx" else g.lower()) for g in names}
 
     @property
     def name(self) -> str:

@@ -8,6 +8,7 @@ same exception type the public circuit layer uses for invalid inputs.
 
 from __future__ import annotations
 
+from ..core.parameter import Parameter, ParameterExpression
 from .circuit_ir import IRCircuit
 from .nodes import (
     Barrier,
@@ -20,6 +21,8 @@ from .nodes import (
 )
 
 _ROTATION_GATES = frozenset({"rx", "ry", "rz"})
+
+_VALID_PARAM_TYPES = (int, float, complex, Parameter, ParameterExpression)
 
 _GATE_ARITY: dict[str, int] = {
     "h": 1, "x": 1, "y": 1, "z": 1,
@@ -58,6 +61,18 @@ def validate_operation(
                 errors.append(
                     f"{loc}rotation gate '{op.name}' requires exactly one parameter"
                 )
+            elif op.params:
+                p = op.params[0]
+                if not isinstance(p, _VALID_PARAM_TYPES):
+                    errors.append(
+                        f"{loc}rotation gate '{op.name}' has a non-numeric "
+                        f"parameter {p!r}"
+                    )
+                elif isinstance(p, complex):
+                    errors.append(
+                        f"{loc}rotation gate '{op.name}' requires a real "
+                        f"angle, got complex {p!r}"
+                    )
         elif op.params:
             errors.append(f"{loc}gate '{op.name}' does not accept parameters")
         if op.condition is not None:

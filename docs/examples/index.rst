@@ -8,6 +8,31 @@ categories.  This page embeds the canonical snippets; run any demo directly:
 
    python examples/execution/01_basic_execution.py
 
+Consolidated notebook
+---------------------
+
+The individual ``.py`` files are the **canonical** examples.  As a convenience
+layer, the repository also ships a single **consolidated Jupyter notebook**
+that walks through the entire corpus:
+
+.. code-block:: console
+
+   examples/MicroQuantum_Examples.ipynb
+
+Every notebook cell simply executes the corresponding authoritative example
+file (through a small :code:`run_example` helper defined in the notebook's
+setup cell), so the notebook can never drift from the examples.  Open it with
+any Jupyter client (for example ``jupyter lab`` or VS Code) from the
+repository root:
+
+.. code-block:: console
+
+   jupyter lab examples/MicroQuantum_Examples.ipynb
+
+The notebook is validated by the conformance suite (JSON structure, full
+example coverage, no missing file references, and in-order execution of every
+code cell) with no Jupyter runtime dependency on the SDK itself.
+
 .. toctree::
    :maxdepth: 2
 
@@ -39,6 +64,14 @@ Example tree (all current examples)
    ├── 19_noise_through_executor.py
    ├── 20_tensor_network_simulation.py
    ├── 21_cross_simulator_comparison.py
+   ├── 22_ir_roundtrip.py
+   ├── 23_ir_to_circuit.py
+   ├── 24_basic_compilation.py
+   ├── 25_optimization_before_after.py
+   ├── 26_parameterized_compilation.py
+   ├── 27_measurement_preserving_optimization.py
+   ├── 28_target_validation.py
+   ├── 29_execute_compiled_circuit.py
    ├── rsa_vulnerability_assessment.py
    ├── algorithms/            VQE, QAOA, Grover, phase estimation, ...
    │   ├── 01_problem_hierarchy.py
