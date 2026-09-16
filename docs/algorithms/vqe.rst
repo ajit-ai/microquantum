@@ -26,7 +26,7 @@ Usage
    print(vqe.validate(problem))               # []
    result = vqe.solve(problem, initial_params={theta: 0.5})
    print(result.eigenvalue)                   # ~ -1.0
-   print(result.optimal_params)               # {"theta": ~pi}
+   print(result.optimal_params)               # {Parameter('theta'): ~pi}
 
 Constructor
 -----------

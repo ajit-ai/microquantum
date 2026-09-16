@@ -18,10 +18,10 @@ ordering means amplitude index ``1`` corresponds to the bitstring ``...001``.
    sv = StateVector(2)                       # |00>
    sv.amplitudes[3] = 1.0 / 2**0.5           # |11> component
    sv = sv.normalize()                       # |psi> = (|00> + |11>)/sqrt(2)
-   print(sv.dim())                           # 4
+   print(sv.dim)                             # 4
    print(sv.num_qubits)                      # 2
    print(sv.is_normalized)                   # True
-   print(sv)                                 # (~0.707)|00> + (~0.707)|11>
+   print(sv)                                 # (~0.816)|00> + (~0.577)|11>
 
 Properties and operations
 -------------------------

@@ -37,7 +37,7 @@ Usage
    result = exp.run(ExecutionRuntime(backend=MockBackend()))
 
    print(result.status)                # "completed"
-   print(len(result.executions()))     # 4 records, order preserved
+   print(len(result.executions))       # 4 records, order preserved
    print(result.success_count)         # 4
    print(result.failure_count)         # 0
    print(result.all_successful)        # True

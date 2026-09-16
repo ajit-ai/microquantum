@@ -14,7 +14,11 @@ Every built-in algorithm follows the base contract from
 
 .. code-block:: python
 
-   algorithm = SomeAlgorithm(...)
+   from microquantum import SearchProblem
+   from microquantum.algorithms import GroverSearch
+
+   problem = SearchProblem(num_qubits=2, target=[1])
+   algorithm = GroverSearch.from_problem(problem)
    diagnostics = algorithm.validate(problem)   # list[str], [] when valid
    result = algorithm.solve(problem, runtime=None)
 

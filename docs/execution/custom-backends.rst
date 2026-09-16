@@ -17,7 +17,21 @@ Adapter example
 
 .. code-block:: python
 
-   from microquantum import BackendAdapter, BackendResult
+   from microquantum import BackendAdapter, BackendResult, QuantumCircuit
+
+   class _FakeVendor:
+       """Stand-in for a vendor SDK (never leaks through the SDK surface)."""
+
+       def submit(self, wire, *, shots):
+           return {"wire": wire, "shots": shots}          # opaque handle
+
+       def collect(self, handle):
+           return {"counts": {"00": handle["shots"]}, "shots": handle["shots"]}
+
+   vendor = _FakeVendor()
+
+   def to_wire(circuit):
+       return circuit.qasm()
 
    class MyVendorBackend(BackendAdapter):
        @property
@@ -32,13 +46,17 @@ Adapter example
            # map every vendor result/error back into a BackendResult
            data = vendor.collect(handle)
            return BackendResult(
+               num_qubits=circuit.num_qubits,
+               backend_name=self.name,
                counts=data["counts"],
                shots=int(data["shots"]),
                metadata={"vendor": "my-vendor"},
            )
 
    backend = MyVendorBackend()
+   bound_circuit = QuantumCircuit(2).h(0).cx(0, 1)
    result = backend.run(bound_circuit, shots=1000, seed=0)
+   print(result.counts)
 
 Usage notes
 -----------

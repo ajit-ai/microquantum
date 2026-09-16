@@ -42,10 +42,13 @@ class QuantumCircuit:
         num_qubits: Number of qubits in the circuit.
         gates: Ordered list of gate instructions.
         measurements: Qubit indices marked for measurement (in order).
-        depth: Circuit depth (sequential gate layers).
         num_gates: Total number of gate instructions.
         is_parameterized: Whether the circuit contains unbound parameters.
         parameters: Unbound parameters, in deterministic name order.
+
+    Methods:
+        Circuit depth (longest critical path) can be queried with the
+        ``depth()`` method.
     """
 
     def __init__(self, num_qubits: int) -> None:

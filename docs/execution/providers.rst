@@ -20,7 +20,7 @@ backend family, never an executor.
    from microquantum import LocalProvider, available_backends
 
    provider = LocalProvider()
-   backends = provider.available_backends()     # local simulator names
+   backends = provider.backends()               # local simulator names
    print(backends)
    print(available_backends())
 
@@ -38,9 +38,9 @@ resolves names through its attached registry (falling back to the module-level
    from microquantum import BackendRegistry, MockBackend
 
    registry = BackendRegistry()
-   registry.register("mock", MockBackend())
+   registry.register(MockBackend(name="mock"))
    print(registry.has("mock"))        # True
-   print(registry.names())            # ["mock"]
+   print(registry.names())            # ['local_simulator', 'mock']
 
 Hardware (optional boundary)
 ----------------------------

@@ -34,7 +34,7 @@ Creating a parameter expression
 .. code-block:: python
 
    expr = 2 * theta + 0.5   # ParameterExpression over theta
-   qc = QuantumCircuit(1).ry(expr, 0)
+   expr_qc = QuantumCircuit(1).ry(expr, 0)
 
 Supported operations are ``+``, ``-`` and ``*`` (with numbers), negation,
 and scaling.  An expression keeps its math symbolic until the parameter it
@@ -106,7 +106,7 @@ To sweep a circuit across values, bind and run per value:
 .. code-block:: python
 
    for value in [0.0, 0.5, 1.0, 1.5]:
-       bound = qc.bind_parameters({theta: value})
+       bound = qc.bind_parameters({theta: value, phi: 1.2})
        result = StatevectorBackend().run(bound, shots=1024, seed=42)
 
 or use the runtime helper, which returns one :class:`BackendResult` per
@@ -116,7 +116,9 @@ binding:
 
    from microquantum import run_parameter_sweep
 
-   results = run_parameter_sweep(qc, [0.0, 0.5, 1.0, 1.5], shots=1024, seed=42)
+   results = run_parameter_sweep(
+       qc, [{theta: v, phi: 1.2} for v in [0.0, 0.5, 1.0, 1.5]],
+       shots=1024, seed=42)
 
 Serialization
 -------------
@@ -162,7 +164,7 @@ of expressions and backend-integrated evaluation:
 
    from microquantum import Operator, gradient
 
-   grads = gradient(qc, Operator.Z(), {theta: 0.5, phi: 1.2})
+   grads = gradient(qc, Operator.Z(), {theta: 0.5, phi: 1.2}, targets=[0])
    print(grads[theta])   # d<Z>/dtheta at the given point
 
 Sweeps & bindings in the runtime layer

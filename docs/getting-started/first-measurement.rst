@@ -26,6 +26,8 @@ Direct measurement
 
 .. code-block:: python
 
+   from microquantum import sample_state
+
    state = qc.run()
    sample = sample_state(state, shots=8, seed=1)   # MeasurementResult
    print(sample.counts)                            # {'00': ~4, '11': ~4}

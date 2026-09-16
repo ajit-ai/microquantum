@@ -21,9 +21,26 @@ Example
 
 .. code-block:: python
 
+   from microquantum import (
+       ExecutionRuntime,
+       Experiment,
+       ExperimentResult,
+       MockBackend,
+       Parameter,
+       ParameterSweep,
+       QuantumCircuit,
+   )
+
+   theta = Parameter("theta")
+   ansatz = QuantumCircuit(1).ry(theta, 0)
+
+   exp = Experiment("rx-results", shots=64, seed=1)
+   exp.add_circuit(ansatz, name="theta=0", parameter_bindings={"theta": 0.0})
+   exp.add_sweep(ParameterSweep({"theta": [0.5, 1.0]}), base=ansatz)
+
    result = exp.run(ExecutionRuntime(backend=MockBackend()))
 
-   for record in result.executions():
+   for record in result.executions:
        print(
            record.status, record.parameter_bindings,
            record.metadata.get("sweep_name", "-"),

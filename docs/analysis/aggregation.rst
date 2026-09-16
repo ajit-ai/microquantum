@@ -13,10 +13,20 @@ Usage
 .. code-block:: python
 
    from microquantum import ResultAggregator
+   from microquantum.experiments.record import ExecutionRecord
 
-   # result: an ExperimentResult (or a sequence of records/results)
+   result = [
+       ExecutionRecord(execution_id="1", plan_name="sweep", backend="sim",
+                       parameter_bindings={"theta": 0.0},
+                       metadata={"sweep_name": "freq_sweep"}),
+       ExecutionRecord(execution_id="2", plan_name="sweep", backend="sim",
+                       parameter_bindings={"theta": 0.5},
+                       metadata={"sweep_name": "freq_sweep"}),
+       ExecutionRecord(execution_id="3", plan_name="sweep", backend="hw",
+                       parameter_bindings={"theta": 1.0}, metadata={}),
+   ]
    agg = ResultAggregator(result)
-   print(agg.record_count)                     # number of records
+   print(agg.record_count)                     # 3
 
    # group by dotted-path accessor (attribute or nested field)
    by_backend = agg.group_by("backend")

@@ -25,7 +25,7 @@ Example: Bell-state measurement
 
 .. code-block:: python
 
-   from microquantum import QuantumCircuit, StatevectorBackend
+   from microquantum import QuantumCircuit, StatevectorBackend, sample_state
 
    qc = QuantumCircuit(2)
    qc.h(0)

@@ -48,9 +48,10 @@ execution:
    from microquantum import Parameter, QuantumCircuit
 
    theta = Parameter("theta")
-   qc = QuantumCircuit(1).ry(theta, 0)
+   phi = Parameter("phi")
+   qc = QuantumCircuit(1).ry(theta, 0).rz(phi, 0)
 
-   available = {p.name for p in qc.parameters}   # {"theta"}
+   available = {p.name for p in qc.parameters}   # {"theta", "phi"}
    print(sweep.validate(available))    # [] if compatible
    sweep.verify(available)             # raises ValueError on mismatch
 

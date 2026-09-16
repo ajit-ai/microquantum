@@ -17,13 +17,19 @@ One-shot execution
 
 .. code-block:: python
 
-   from microquantum import ExecutionRuntime, StatevectorBackend
+   from microquantum import (
+       ExecutionPlan,
+       ExecutionRuntime,
+       QuantumCircuit,
+       StatevectorBackend,
+   )
 
+   qc = QuantumCircuit(2).h(0).cx(0, 1)
    runtime = ExecutionRuntime(backend=StatevectorBackend())
    result = runtime.execute(qc, shots=1024, seed=1)
    print(result.counts)
 
-   plan = ExecutionPlan.from_circuit(qc, backend="statevector", shots=512)
+   plan = ExecutionPlan.from_circuit(qc, backend="local_simulator", shots=512, seed=2)
    result = runtime.execute(plan)
 
 Runtime internals

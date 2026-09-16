@@ -54,7 +54,7 @@ Example
    print(vqe.validate(problem))            # []
    result = vqe.solve(problem, initial_params={theta: 0.5})
    print(result.eigenvalue)                # ~ -1.0
-   print(result.to_dict()["algorithm"])    # "VQE"
+   print(result.to_dict()["eigenstate"])   # optimal {"theta": ...}
 
 Optimizers
 ----------
