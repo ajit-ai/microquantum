@@ -80,6 +80,29 @@ example with `uv run python examples/<file>.py` from the repository root.
   classical -> quantum -> classical update loop (the pattern behind
   gradient-based VQE/QAOA).
 
+## Simulator family (MQ-14)
+
+The four real simulators (state vector, density matrix, MPS, tree tensor
+network) now share one contract: `shots=None` means deterministic execution
+(exact amplitudes, no sampling), shots/seed validation is uniform, and every
+simulator advertises its capabilities and target.
+
+- `17_statevector_simulation.py` — state-vector backend in depth: exact
+  `shots=None` execution, seeded reproducibility, parameterized circuits,
+  measurement subsets, and the dense-memory budget error.
+- `18_density_matrix_simulation.py` — density-matrix backend: exact
+  pure-state equivalence with the state vector, coherence, purity loss under
+  noise, and the `EXECUTION_DENSITY_MATRIX` capability.
+- `19_noise_through_executor.py` — noise via the uniform `Executor` API:
+  deterministic noisy probabilities, seeded noisy sampling, channel
+  calibration, and the loud backend+noise conflict error.
+- `20_tensor_network_simulation.py` — MPS with a bond-dimension cap and
+  tracked truncation error on 20 qubits; TTN exact agreement, 32-qubit
+  deterministic runs, and the TTN sampling cap pointing at MPS.
+- `21_cross_simulator_comparison.py` — one circuit, four simulators: exact
+  agreement of probability vectors, same-seed sampling parity, statistical
+  sampling consistency, and per-simulator capability/target portraits.
+
 ## Algorithms on problems (MQ-05)
 
 The generic `Algorithm`/`Problem` layer: problems are JSON-safe data,

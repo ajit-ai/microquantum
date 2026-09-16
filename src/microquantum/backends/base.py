@@ -30,6 +30,30 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _normalize_shots(shots: Optional[int]) -> Optional[int]:
+    """Validate a shot count, allowing ``None`` for deterministic runs.
+
+    ``shots=None`` requests deterministic (un-sampled) execution; a positive
+    integer requests shot-based sampling.  Anything else is rejected.
+
+    Returns:
+        The validated shot count (or ``None``).
+
+    Raises:
+        ValueError: If ``shots`` is not ``None`` or a positive integer.
+    """
+    if shots is None:
+        return None
+    if not isinstance(shots, (int, np.integer)):
+        raise ValueError(
+            f"shots must be a positive integer or None, got {type(shots).__name__}"
+        )
+    shots = int(shots)
+    if shots < 1:
+        raise ValueError(f"shots must be >= 1 or None, got {shots}")
+    return shots
+
+
 def _array_from_dict(mapping: dict[str, Any], key: str) -> Optional[NDArray[np.complex128]]:
     """Rebuild a complex128 array from its serialized ``to_dict()`` value.
 
@@ -460,7 +484,7 @@ class Backend(ABC):
         self,
         num_qubits: int,
         gates: list[tuple[NDArray[np.complex128], list[int]]],
-        shots: int = 1024,
+        shots: Optional[int] = 1024,
         initial_state: Optional[StateVector] = None,
         seed: Optional[int] = None,
     ) -> BackendResult:
@@ -469,7 +493,8 @@ class Backend(ABC):
         Args:
             num_qubits: Number of qubits in the circuit.
             gates: List of (gate_matrix, target_qubits) pairs.
-            shots: Number of measurement shots.
+            shots: Number of measurement shots.  ``None`` requests a
+                deterministic (un-sampled) run with no counts.
             initial_state: Optional initial state vector.
             seed: Optional RNG seed.
 
@@ -481,7 +506,7 @@ class Backend(ABC):
         self,
         num_qubits: int,
         gates: list[tuple[NDArray[np.complex128], list[int]]],
-        shots: int = 1024,
+        shots: Optional[int] = 1024,
         initial_state: Optional[StateVector] = None,
         seed: Optional[int] = None,
     ) -> Job:
@@ -490,7 +515,8 @@ class Backend(ABC):
         Args:
             num_qubits: Number of qubits.
             gates: List of (gate_matrix, target_qubits) pairs.
-            shots: Number of measurement shots.
+            shots: Number of measurement shots.  ``None`` requests a
+                deterministic (un-sampled) run.
             initial_state: Optional initial state.
             seed: Optional RNG seed.
 
@@ -524,7 +550,7 @@ class Backend(ABC):
     def run(
         self,
         circuit: QuantumCircuit,
-        shots: int = 1024,
+        shots: Optional[int] = 1024,
         initial_state: Optional[StateVector] = None,
         seed: Optional[int] = None,
         parameter_values: Optional[Mapping[Union[str, "Parameter"], Union[int, float, complex]]] = None,
@@ -538,7 +564,8 @@ class Backend(ABC):
         Args:
             circuit: The quantum circuit to execute. Unbound parameters
                 raise ``ValueError``.
-            shots: Number of measurement shots.
+            shots: Number of measurement shots.  ``None`` requests a
+                deterministic (un-sampled) run with no counts.
             initial_state: Optional initial state vector.
             seed: RNG seed for reproducibility.
             parameter_values: Optional mapping of :class:`Parameter` objects
@@ -611,7 +638,7 @@ class Backend(ABC):
     def submit_circuit(
         self,
         circuit: QuantumCircuit,
-        shots: int = 1024,
+        shots: Optional[int] = 1024,
         initial_state: Optional[StateVector] = None,
         seed: Optional[int] = None,
         parameter_values: Optional[Mapping[Union[str, "Parameter"], Union[int, float, complex]]] = None,
@@ -624,7 +651,8 @@ class Backend(ABC):
 
         Args:
             circuit: The bound quantum circuit to execute.
-            shots: Number of measurement shots.
+            shots: Number of measurement shots.  ``None`` requests a
+                deterministic (un-sampled) run.
             initial_state: Optional initial state vector.
             seed: RNG seed for reproducibility.
             parameter_values: Optional binding map (see :meth:`run`).

@@ -44,7 +44,7 @@ def execute(
     *,
     plan: Optional[ExecutionPlan] = None,
     backend: Optional[Backend] = None,
-    shots: int = 1024,
+    shots: Optional[int] = 1024,
     seed: Optional[int] = None,
     target: Optional[Target] = None,
     parameter_bindings: Optional[ParameterBinding] = None,
@@ -87,7 +87,7 @@ def submit(
     *,
     plan: Optional[ExecutionPlan] = None,
     backend: Optional[Backend] = None,
-    shots: int = 1024,
+    shots: Optional[int] = 1024,
     seed: Optional[int] = None,
 ) -> Job:
     """Submit a circuit (or plan) and return its :class:`Job`."""
@@ -111,7 +111,7 @@ def submit(
 def execute_batch(
     work: Sequence[Work],
     *,
-    shots: int = 1024,
+    shots: Optional[int] = 1024,
     seed: Optional[int] = None,
     backend: Optional[Backend] = None,
     raise_on_error: bool = True,
@@ -129,7 +129,7 @@ def execute_batch(
 def submit_batch(
     work: Sequence[Work],
     *,
-    shots: int = 1024,
+    shots: Optional[int] = 1024,
     seed: Optional[int] = None,
     backend: Optional[Backend] = None,
 ) -> list[Job]:
@@ -159,7 +159,7 @@ def run_hybrid(
     update: Any,
     initial: Any,
     *,
-    shots: int = 1024,
+    shots: Optional[int] = 1024,
     seed: Optional[int] = None,
     name: str = "hybrid",
 ) -> list[BackendResult]:
@@ -177,7 +177,7 @@ def execute_records(
     work: Sequence[Work],
     *,
     backend: Optional[Backend] = None,
-    shots: int = 1024,
+    shots: Optional[int] = 1024,
     seed: Optional[int] = None,
     metadata: Optional[dict[str, Any]] = None,
 ) -> list[ExecutionRecord]:

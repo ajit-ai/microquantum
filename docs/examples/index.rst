@@ -34,6 +34,11 @@ Example tree (all current examples)
    ├── 14_parameter_sweep.py
    ├── 15_parameter_shift_gradient.py
    ├── 16_gradient_descent_loop.py
+   ├── 17_statevector_simulation.py
+   ├── 18_density_matrix_simulation.py
+   ├── 19_noise_through_executor.py
+   ├── 20_tensor_network_simulation.py
+   ├── 21_cross_simulator_comparison.py
    ├── rsa_vulnerability_assessment.py
    ├── algorithms/            VQE, QAOA, Grover, phase estimation, ...
    │   ├── 01_problem_hierarchy.py

@@ -8,6 +8,7 @@ from typing import Optional
 import numpy as np
 from numpy.typing import NDArray
 
+from ._limits import check_dense_allocation
 from .state import StateVector
 
 
@@ -42,6 +43,9 @@ class DensityMatrix:
         """
         if num_qubits < 1:
             raise ValueError(f"num_qubits must be >= 1, got {num_qubits}")
+
+        if matrix is None:
+            check_dense_allocation(num_qubits, density=True, kind="density matrix")
 
         self._num_qubits = num_qubits
         self._dim = 2 ** num_qubits
@@ -188,8 +192,6 @@ class DensityMatrix:
         # Sort indices to trace over in descending order
         sorted_over = sorted(trace_over, reverse=True)
         for q in sorted_over:
-            2 ** q
-            2 ** (n - q - 1)
             # Trace over axis q (physical) and axis n+q (bra)
             rho_tensor = np.trace(rho_tensor, axis1=q, axis2=n + q)
 

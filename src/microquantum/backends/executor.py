@@ -13,7 +13,7 @@ from ..core.circuit import QuantumCircuit
 from ..core.measurement import sample_state
 from ..core.operators import Operator
 from ..core.state import StateVector
-from .base import Backend
+from .base import Backend, _normalize_shots
 from .noise import NoiseModel
 
 
@@ -32,7 +32,7 @@ class ExecutorResult:
 
     counts: dict[str, int]
     probabilities: dict[str, float]
-    shots: int
+    shots: Optional[int]
     num_qubits: int
     statevector: Optional[NDArray[np.complex128]] = None
     metadata: dict = field(default_factory=dict)
@@ -52,7 +52,7 @@ class ExecutorResult:
         return {
             "counts": dict(self.counts),
             "probabilities": dict(self.probabilities),
-            "shots": int(self.shots),
+            "shots": int(self.shots) if self.shots is not None else None,
             "num_qubits": int(self.num_qubits),
             "statevector": json_safe(self.statevector),
             "metadata": dict(self.metadata),
@@ -122,15 +122,17 @@ class ExecutorResult:
         return sv.fidelity(state)
 
     def __repr__(self) -> str:
+        shots = "deterministic" if self.shots is None else f"shots={self.shots}"
         return (
             f"ExecutorResult(num_qubits={self.num_qubits}, "
-            f"shots={self.shots}, "
+            f"{shots}, "
             f"outcomes={len(self.counts)})"
         )
 
     def __str__(self) -> str:
+        shots = "deterministic" if self.shots is None else f"{self.shots} shots"
         lines = [
-            f"ExecutorResult ({self.num_qubits} qubits, {self.shots} shots)",
+            f"ExecutorResult ({self.num_qubits} qubits, {shots})",
         ]
         for bitstring in sorted(self.counts):
             lines.append(f"  |{bitstring}>: {self.counts[bitstring]}")
@@ -148,9 +150,12 @@ class Executor:
     Args:
         backend: Optional backend for execution delegation.
         noise_model: Optional noise model applied after each gate when
-            using internal density-matrix simulation (ignored when a
-            backend is supplied).
-        seed: Global RNG seed.  Per-call *seed* arguments take precedence.
+            using internal density-matrix simulation.  Providing both a
+            backend and a noise model is an error — the noise model would
+            otherwise be silently ignored.
+
+    Raises:
+        ValueError: If both ``backend`` and ``noise_model`` are provided.
     """
 
     def __init__(
@@ -159,6 +164,16 @@ class Executor:
         noise_model: Optional[NoiseModel] = None,
         seed: Optional[int] = None,
     ) -> None:
+        if backend is not None and noise_model is not None:
+            raise ValueError(
+                "Executor accepts either a backend or a noise_model, not both; "
+                "a noise model would be silently ignored by backend delegation."
+            )
+        if noise_model is not None and not isinstance(noise_model, NoiseModel):
+            raise TypeError(
+                "noise_model must be a NoiseModel or None, "
+                f"got {type(noise_model).__name__}"
+            )
         self._backend = backend
         self._noise_model = noise_model
         self._seed = seed
@@ -170,20 +185,22 @@ class Executor:
     def run(
         self,
         circuit: QuantumCircuit,
-        shots: int = 1024,
+        shots: Optional[int] = 1024,
         seed: Optional[int] = None,
     ) -> ExecutorResult:
         """Execute a single circuit.
 
         Args:
             circuit: The quantum circuit to execute (must be bound).
-            shots: Number of measurement shots.
+            shots: Number of measurement shots.  ``None`` requests a
+                deterministic (un-sampled) run with no counts.
             seed: RNG seed.  Falls back to the instance seed.
 
         Returns:
             :class:`ExecutorResult` with counts, probabilities, and metadata.
         """
         effective_seed = seed if seed is not None else self._seed
+        _normalize_shots(shots)
 
         if self._backend is not None:
             return self._run_via_backend(circuit, shots, effective_seed)
@@ -196,14 +213,15 @@ class Executor:
     def run_batch(
         self,
         circuits: list[QuantumCircuit],
-        shots: int = 1024,
+        shots: Optional[int] = 1024,
         seed: Optional[int] = None,
     ) -> list[ExecutorResult]:
         """Execute a list of circuits independently.
 
         Args:
             circuits: List of quantum circuits.
-            shots: Number of measurement shots per circuit.
+            shots: Number of measurement shots per circuit.  ``None``
+                requests a deterministic (un-sampled) run per circuit.
             seed: Base RNG seed.  Each circuit receives an offset seed
                 to keep results independent.
 
@@ -252,7 +270,7 @@ class Executor:
 
             for bs, count in result.counts.items():
                 merged_counts[bs] = merged_counts.get(bs, 0) + count
-            total_shots += result.shots
+            total_shots += result.shots or 0
 
             if has_sv and result.statevector is not None:
                 if sv_accum is None:
@@ -288,29 +306,39 @@ class Executor:
     def _run_statevector(
         self,
         circuit: QuantumCircuit,
-        shots: int,
+        shots: Optional[int],
         seed: Optional[int],
     ) -> ExecutorResult:
         """Execute via native state-vector simulation."""
         state = circuit.run()
-        measurement = sample_state(state, shots=shots, seed=seed)
+
+        if shots is None:
+            counts: dict[str, int] = {}
+            probabilities: dict[str, float] = {}
+            result_shots = None
+        else:
+            measurement = sample_state(state, shots=shots, seed=seed)
+            counts = measurement.counts
+            probabilities = measurement.get_probabilities()
+            result_shots = measurement.shots
 
         return ExecutorResult(
-            counts=measurement.counts,
-            probabilities=measurement.get_probabilities(),
-            shots=measurement.shots,
+            counts=counts,
+            probabilities=probabilities,
+            shots=result_shots,
             num_qubits=circuit.num_qubits,
             statevector=state.amplitudes.copy(),
             metadata={
                 "backend": "statevector",
                 "seed": seed,
+                "deterministic": shots is None,
             },
         )
 
     def _run_with_noise(
         self,
         circuit: QuantumCircuit,
-        shots: int,
+        shots: Optional[int],
         seed: Optional[int],
     ) -> ExecutorResult:
         """Execute via density-matrix simulation with noise after each gate."""
@@ -336,33 +364,43 @@ class Executor:
         if total > 0:
             probs = probs / total
 
-        rng = np.random.default_rng(seed)
-        outcomes = rng.choice(rho.dim, size=shots, p=probs)
+        if shots is None:
+            counts: dict[str, int] = {}
+            probabilities: dict[str, float] = {
+                format(i, f"0{n}b"): float(probs[i]) for i in range(rho.dim)
+            }
+            probabilities = {k: v for k, v in probabilities.items() if v > 0}
+            result_shots: Optional[int] = None
+        else:
+            rng = np.random.default_rng(seed)
+            outcomes = rng.choice(rho.dim, size=shots, p=probs)
 
-        counts: dict[str, int] = {}
-        for outcome in outcomes:
-            bs = format(int(outcome), f"0{n}b")
-            counts[bs] = counts.get(bs, 0) + 1
+            counts = {}
+            for outcome in outcomes:
+                bs = format(int(outcome), f"0{n}b")
+                counts[bs] = counts.get(bs, 0) + 1
 
-        probabilities = {k: v / shots for k, v in counts.items()}
+            probabilities = {k: v / shots for k, v in counts.items()}
+            result_shots = shots
 
         return ExecutorResult(
             counts=counts,
             probabilities=probabilities,
-            shots=shots,
+            shots=result_shots,
             num_qubits=n,
             statevector=None,
             metadata={
                 "backend": "density_matrix",
                 "noise_model": str(self._noise_model),
                 "seed": seed,
+                "deterministic": shots is None,
             },
         )
 
     def _run_via_backend(
         self,
         circuit: QuantumCircuit,
-        shots: int,
+        shots: Optional[int],
         seed: Optional[int],
     ) -> ExecutorResult:
         """Delegate execution to a Backend instance."""
@@ -372,6 +410,12 @@ class Executor:
         from ..providers.backend import HardwareBackend
 
         if isinstance(self._backend, HardwareBackend):
+            if shots is None:
+                raise ValueError(
+                    "Hardware backends require an explicit positive shots "
+                    "count; deterministic (shots=None) execution is only "
+                    "supported for simulators."
+                )
             backend_result = self._backend.run(circuit, shots=shots)
             probabilities = backend_result.probabilities
             return ExecutorResult(
@@ -398,8 +442,8 @@ class Executor:
             shots=shots,
             seed=seed,
         )
+        probabilities = {} if shots is None else backend_result.probabilities
 
-        probabilities = backend_result.probabilities
         sv: Optional[NDArray[np.complex128]] = (
             backend_result.statevector
             if backend_result.statevector is not None
@@ -409,7 +453,7 @@ class Executor:
         return ExecutorResult(
             counts=backend_result.counts,
             probabilities=probabilities,
-            shots=shots,
+            shots=backend_result.shots,
             num_qubits=circuit.num_qubits,
             statevector=sv,
             metadata={

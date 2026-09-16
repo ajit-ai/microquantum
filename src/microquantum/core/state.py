@@ -8,6 +8,8 @@ from typing import Optional
 import numpy as np
 from numpy.typing import NDArray
 
+from ._limits import check_dense_allocation
+
 
 class StateVector:
     """A quantum state vector in the computational basis.
@@ -42,6 +44,9 @@ class StateVector:
         """
         if num_qubits < 1:
             raise ValueError(f"num_qubits must be >= 1, got {num_qubits}")
+
+        if amplitudes is None:
+            check_dense_allocation(num_qubits, density=False, kind="state vector")
 
         self._num_qubits = num_qubits
         self._dim = 2**num_qubits

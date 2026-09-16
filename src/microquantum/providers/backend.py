@@ -50,7 +50,7 @@ class HardwareBackend(Backend):
         self,
         num_qubits: int,
         gates: list[tuple[NDArray[np.complex128], list[int]]],
-        shots: int = 1024,
+        shots: Optional[int] = 1024,
         initial_state: Optional[StateVector] = None,
         seed: Optional[int] = None,
     ) -> Job:
@@ -74,7 +74,7 @@ class HardwareBackend(Backend):
     def submit_circuit(
         self,
         circuit: QuantumCircuit,
-        shots: int = 1024,
+        shots: Optional[int] = 1024,
         initial_state: Optional[StateVector] = None,
         seed: Optional[int] = None,
         parameter_values: Optional[Mapping[Union[str, Parameter], Union[int, float, complex]]] = None,
@@ -93,6 +93,11 @@ class HardwareBackend(Backend):
         """
         if parameter_values is not None:
             circuit = circuit.bind_parameters(parameter_values)
+        if shots is None:
+            raise ValueError(
+                "hardware backends require an explicit positive shots count; "
+                "deterministic (shots=None) execution is only supported for simulators"
+            )
         job = Job()
         job.status = JobStatus.RUNNING
         hw_job = self._provider.submit(circuit, shots=shots)
@@ -130,7 +135,7 @@ class HardwareBackend(Backend):
         self,
         num_qubits: int,
         gates: list[tuple[NDArray[np.complex128], list[int]]],
-        shots: int = 1024,
+        shots: Optional[int] = 1024,
         initial_state: Optional[StateVector] = None,
         seed: Optional[int] = None,
     ) -> BackendResult:
@@ -144,7 +149,7 @@ class HardwareBackend(Backend):
     def run(
         self,
         circuit: QuantumCircuit,
-        shots: int = 1024,
+        shots: Optional[int] = 1024,
         initial_state: Optional[StateVector] = None,
         seed: Optional[int] = None,
         parameter_values: Optional[Mapping[Union[str, Parameter], Union[int, float, complex]]] = None,
@@ -163,6 +168,11 @@ class HardwareBackend(Backend):
         """
         if parameter_values is not None:
             circuit = circuit.bind_parameters(parameter_values)
+        if shots is None:
+            raise ValueError(
+                "hardware backends require an explicit positive shots count; "
+                "deterministic (shots=None) execution is only supported for simulators"
+            )
         circuit._ensure_bound()
         hw_job = self._provider.submit(circuit, shots=shots)
         data = hw_job.wait_for_result()
