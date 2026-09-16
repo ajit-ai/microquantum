@@ -148,6 +148,12 @@ architecture that is ready for future hardware providers.
 
 .. toctree::
    :maxdepth: 2
+   :caption: Quality
+
+   quality/index
+
+.. toctree::
+   :maxdepth: 2
    :caption: Project
 
    releases/developer-preview
