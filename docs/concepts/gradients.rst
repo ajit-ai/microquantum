@@ -99,6 +99,9 @@ and may act on a *subset* of the circuit's qubits via ``targets=``:
 
    from microquantum import PauliString, PauliSum
 
+   phi = Parameter("phi")
+   qc2 = QuantumCircuit(2).ry(theta, 0).rz(phi, 1)
+
    obs = PauliSum([PauliString("X", 0.5), PauliString("Z", -0.3)])
    d = parameter_shift_gradient(qc, obs, theta, {theta: 0.6})
 
@@ -121,7 +124,7 @@ through the MQ-11/12 execution core (``backend.run``), with optional
 
    from microquantum import StatevectorBackend
 
-   grads = gradient(qc, obs, {theta: 0.5, phi: 1.2},
+   grads = gradient(qc, obs, {theta: 0.5},
                     backend=StatevectorBackend(), seed=7)
 
 Expectation values are computed from the exact state vector, so the

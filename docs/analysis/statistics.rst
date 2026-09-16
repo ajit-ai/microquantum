@@ -27,7 +27,10 @@ Example
 
    from microquantum import (
        confidence_interval,
+       count,
+       maximum,
        mean,
+       minimum,
        standard_deviation,
        standard_error,
        variance,
@@ -41,8 +44,9 @@ Example
    print(standard_error(shots))
    print(confidence_interval(shots, confidence=0.95))
 
-   print(mean([]))                   # ValueError: must not be empty
-   print(variance([1.0]))            # ValueError: need > ddof samples
+   print(minimum(shots))             # 0.497
+   print(maximum(shots))             # 0.504
+   print(count(shots))               # 6
 
 Usage
 -----

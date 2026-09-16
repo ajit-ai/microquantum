@@ -9,7 +9,7 @@ Usage
 
 .. code-block:: python
 
-   from microquantum import OptimizationProblem, Parameter, QuantumCircuit
+   from microquantum import OptimizationProblem
    from microquantum.algorithms import QAOA
    from microquantum.optimization import QUBOBuilder
    from microquantum.optimizers import COBYLA
@@ -19,16 +19,11 @@ Usage
    builder.add_quadratic(0, 1, 2.0)          # unconstrained target
    problem = OptimizationProblem.from_qubo(builder.build("cut"), name="cut")
 
-   qaoa = QAOA(
-       p=1,
-       optimizer=COBYLA(max_iter=200),
-   )
-   # or: qaoa = QAOA.from_problem(problem, p=1, optimizer=COBYLA(max_iter=200))
-
+   qaoa = QAOA.from_problem(problem, num_layers=1, optimizer=COBYLA(max_iter=200))
    print(qaoa.validate(problem))             # []
-   result = qaoa.solve(problem, seed=0)
-   print(result.optimal_bitstring, result.optimal_energy)
-   print(result.statevector)                 # QAOA output state
+   result = qaoa.solve(problem)
+   print(result.eigenvalue)                  # optimal energy
+   print(result.optimal_params)              # tuned layer angles
 
 How it works
 ------------

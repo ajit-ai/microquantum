@@ -37,7 +37,7 @@ Usage
    print("statevector" in caps.execution)     # True
    print("shots" in caps.execution)           # True
    print(caps.circuit_features)      # set of feature tokens
-   print(caps.qubit_capacity)        # unbounded / advertised
+   print(caps.max_qubits)            # unbounded / advertised (None = unbounded)
    print(caps.to_dict())             # JSON-safe (no execution)
 
 Contract integration

@@ -12,16 +12,15 @@ Usage
    from microquantum import SearchProblem
    from microquantum.algorithms import GroverSearch
 
-   problem = SearchProblem(3, target=[1, 5], name="find-1-and-5")
+   problem = SearchProblem(num_qubits=3, target=[1, 5], name="find-1-and-5")
    print(problem.validate())               # []
 
-   grover = GroverSearch()
-   # or: grover = GroverSearch.from_problem(problem)
+   grover = GroverSearch.from_problem(problem)
    result = grover.solve(problem, seed=0)
 
-   print(result.found_items)            # [1, 5] (indices of marked items)
-   print(result.num_queries)            # ~O(sqrt(2**n / m)) oracle calls
-   print(result.success)                # True/False
+   print(result.most_probable)              # 1 — one of the marked items
+   print(result.num_iterations)             # 1 Grover iteration
+   print(result.success_probability)        # ~1.0
 
 Problem types
 -------------

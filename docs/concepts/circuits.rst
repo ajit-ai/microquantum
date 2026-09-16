@@ -22,7 +22,7 @@ Building a circuit
    print(qc.num_qubits)   # 2
    print(qc.num_gates)    # 4
    print(qc.depth())      # circuit depth
-   print(qc.gates())      # [(Operator, [targets]), ...]
+   print(qc.gates)        # [(Operator, [targets]), ...]
 
 Appending operators
 -------------------

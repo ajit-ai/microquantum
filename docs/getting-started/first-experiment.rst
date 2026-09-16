@@ -32,10 +32,10 @@ preserved verbatim**.
    print(f"status:      {result.status}")
    print(f"records:     {len(result.records)} (raw, never summarized)")
    print(f"failures:    {result.failure_count}")
-   print(f"fingerprint: {result.records[0].configured_reproducibility}")
+   print(f"fingerprint: {result.records[0].reproducibility['configured_reproducibility']}")
 
    for record in result.records:
-       print(f"  {record.parameter_bindings} -> {record.metadata.get('backend_name')}")
+       print(f"  {record.parameter_bindings} -> {record.metadata.get('backend')}")
 
 Analysing the result
 --------------------
@@ -44,13 +44,18 @@ Raw records feed the analysis layer:
 
 .. code-block:: python
 
+   for i, record in enumerate(result.records):
+       record.result.expectations = {"Z": 1.0 - 0.25 * i}
+
    analysis = ExpectationAnalysis(result)
-   print(analysis.keys())
+   print(analysis.keys)
    print(analysis.mean("Z"))              # per-label mean across executions
 
 Experiments are fully in-memory and JSON-safe:
 
 .. code-block:: python
+
+   from microquantum import ExperimentResult
 
    data = result.to_dict()                # every record serialized
    restored = ExperimentResult.from_dict(data)

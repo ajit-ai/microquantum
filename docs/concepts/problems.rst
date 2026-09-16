@@ -33,9 +33,11 @@ Creating problems
 
    from microquantum import (
        EigenvalueProblem,
+       HamiltonianProblem,
        Operator,
        OptimizationProblem,
        PauliSum,
+       QuantumCircuit,
        SamplingProblem,
        SearchProblem,
    )
@@ -51,7 +53,7 @@ Creating problems
    opt  = OptimizationProblem.from_qubo(builder.build("cut"), name="maxcut")
    spin = OptimizationProblem.from_ising(PauliSum.from_label("ZZ", 1.0))
 
-   search = SearchProblem(2, targets=[1, 2], name="search")
+   search = SearchProblem(num_qubits=2, target=[1, 2], name="search")
 
 Validation and serialization
 ----------------------------

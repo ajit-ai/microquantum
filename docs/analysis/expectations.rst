@@ -22,10 +22,15 @@ Usage
    theta = Parameter("theta")
    ansatz = QuantumCircuit(1).ry(theta, 0)
 
-   # backend that reports labeled expectations (e.g. via Z-measurement)
+   # Simulate with MockBackend and supply Z-expectation values directly.
    backend = MockBackend()
    r1 = backend.run(ansatz.bind_parameters({theta: 0.0}), shots=1024, seed=0)
+   r1.expectations = {"Z": 1.0}
+   r1.parameter_bindings = {"theta": 0.0}
+
    r2 = backend.run(ansatz.bind_parameters({theta: 0.5}), shots=1024, seed=0)
+   r2.expectations = {"Z": 0.8776}
+   r2.parameter_bindings = {"theta": 0.5}
 
    analysis = ExpectationAnalysis([r1, r2])
    print(analysis.keys)                 # ('Z',) — the labels present

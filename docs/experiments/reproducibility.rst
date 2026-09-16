@@ -30,11 +30,17 @@ Both live under ``record.reproducibility``:
 
 .. code-block:: python
 
-   for record in result.executions():
-       rep = record.reproducibility()
+   from microquantum import ExecutionRuntime, Experiment, StatevectorBackend, QuantumCircuit
+
+   experiment = Experiment("repro", backend=StatevectorBackend(), shots=16, seed=7)
+   experiment.add_circuit(QuantumCircuit(1).h(0), name="ghz")
+   result = experiment.run(ExecutionRuntime(backend=StatevectorBackend()))
+
+   for record in result.executions:
+       rep = record.reproducibility
        print(rep["fingerprint"])
        print(rep["configured_reproducibility"])   # True
-       print(rep["deterministic_execution"])      # True for seeded simulators
+       print(rep["deterministic_execution"])      # None unless a backend asserts determinism
 
 Why configuration-based?
 ------------------------

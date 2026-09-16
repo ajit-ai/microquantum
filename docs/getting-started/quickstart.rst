@@ -87,7 +87,7 @@ Experiment + analysis
 
    exp_result = exp.run(runtime=ExecutionRuntime(backend=MockBackend()))
    analysis = ExpectationAnalysis(exp_result)
-   print(analysis.keys())
+   print(analysis.keys)
 
 Next: the :doc:`/concepts/overview` for the full execution model, or jump
 straight to :doc:`first-circuit`.

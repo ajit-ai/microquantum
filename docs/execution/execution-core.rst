@@ -21,7 +21,8 @@ deterministic seed:
    qc.cx(0, 1)
    qc.measure_all()
 
-   result = StatevectorBackend().run(qc, shots=1000, seed=42)
+   backend = StatevectorBackend()
+   result = backend.run(qc, shots=1000, seed=42)
    print(result.counts)      # {'00': 503, '11': 497}   (seed=42)
 
 The result is a :class:`~microquantum.BackendResult` exposing sampled

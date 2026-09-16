@@ -50,7 +50,7 @@ Measure effective quantum volume:
 
    qv = QuantumVolumeBenchmark(max_qubits=5, seed=42)
    result = qv.run()
-   print(f"Quantum volume: {result.quantum_volume}")
+   print(f"Quantum volume: {result.value}")
 
 Gate Set Tomography
 -------------------
@@ -62,7 +62,7 @@ Characterize individual gate fidelity:
    from microquantum import GateSetTomography
    from microquantum.core import Operator
 
-   gst = GateSetTomography([Operator.H(), Operator.X(), Operator.CNOT()])
+   gst = GateSetTomography([Operator.H(), Operator.X()])
    result = gst.run()
 
    for name, fid in zip(result.gate_names, result.gate_fidelities):
@@ -77,6 +77,6 @@ Measure circuit execution speed:
 
    from microquantum import CLOPSBenchmark
 
-   clops = CLOPSBenchmark(num_qubits=3, duration_seconds=2.0)
+   clops = CLOPSBenchmark(num_qubits=3, num_layers=5, num_circuits=20, seed=0)
    result = clops.run()
-   print(f"CLOPS: {result.clops:.0f}")
+   print(f"CLOPS: {result.value:.0f}")

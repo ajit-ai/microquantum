@@ -39,6 +39,12 @@ For a result carrying a density matrix (or a
 
 .. code-block:: python
 
+   import numpy as np
+
+   # density matrix for the Bell state prepared above
+   density_matrix_result = np.outer(state.amplitudes,
+                                    np.conjugate(state.amplitudes))
+
    dm_analysis = StateAnalysis(density_matrix_result)
    print(dm_analysis.kind)                # "density_matrix"
    print(dm_analysis.trace())             # 1.0

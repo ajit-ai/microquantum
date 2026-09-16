@@ -18,7 +18,7 @@ Usage
    print(problem.validate())                  # []
 
    data = problem.to_dict()
-   restored = SamplingProblem(**data)         # JSON-safe round trip
+   restored = SamplingProblem.from_dict(data)  # JSON-safe round trip
    print(restored.num_samples)                # 1024
 
 What it maps to

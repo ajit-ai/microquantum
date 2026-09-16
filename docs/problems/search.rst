@@ -24,11 +24,11 @@ Usage
 
    from microquantum import SearchProblem
 
-   problem = SearchProblem(3, target=[1, 5], name="find-1-and-5")
-   assert SearchProblem(3, target=1).validate() == []      # target: int
-   assert SearchProblem(3, target=[1, 5]).validate() == [] # target: list
+   problem = SearchProblem(name="find-1-and-5", num_qubits=3, target=[1, 5])
+   assert SearchProblem(name="int", num_qubits=3, target=1).validate() == []      # target: int
+   assert SearchProblem(name="list", num_qubits=3, target=[1, 5]).validate() == [] # target: list
    assert (
-       SearchProblem(3, predicate=lambda i: i % 2 == 1).validate() == []
+       SearchProblem(name="predicate", num_qubits=3, predicate=lambda i: i % 2 == 1).validate() == []
    )
 
    print(problem.target_indices())        # [1, 5]

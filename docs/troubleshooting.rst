@@ -58,7 +58,12 @@ Sampling backends need an explicit ``seed`` for reproducible output:
 
 .. code-block:: python
 
-   backend.run(qc, shots=1024, seed=0)
+   from microquantum import QuantumCircuit, StatevectorBackend
+
+   qc = QuantumCircuit(1).h(0)
+   backend = StatevectorBackend()
+   result = backend.run(qc, shots=1024, seed=0)
+   print(result.counts)
 
 Configured reproducibility (fingerprint) is guaranteed; *output* determinism
 depends on the backend and seed.

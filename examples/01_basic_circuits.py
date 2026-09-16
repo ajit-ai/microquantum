@@ -49,7 +49,7 @@ def method_chaining():
     qc.h(0).cx(0, 1).cx(1, 2)  # Chain multiple gates
 
     print("\n=== Method Chaining ===")
-    print(f"Circuit: {qc.num_qubits} qubits, {qc.num_gates} gates, depth {qc.depth}")
+    print(f"Circuit: {qc.num_qubits} qubits, {qc.num_gates} gates, depth {qc.depth()}")
     print(qc.draw())
     return qc
 
@@ -91,7 +91,7 @@ def multi_qubit_gates():
 
     print("\n=== Multi-Qubit Gates ===")
     print(qc.draw())
-    print(f"Gates: {qc.num_gates}, Depth: {qc.depth}")
+    print(f"Gates: {qc.num_gates}, Depth: {qc.depth()}")
 
 
 if __name__ == "__main__":

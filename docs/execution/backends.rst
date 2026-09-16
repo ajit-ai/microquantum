@@ -52,10 +52,10 @@ Built-ins
    print(result.counts)
    print(result.most_frequent())
 
-   plan = ExecutionPlan.from_circuit(qc, backend=backend, shots=512)
+   plan = ExecutionPlan.from_circuit(qc, backend=backend, shots=512, seed=1)
    print(backend.validate(plan))     # []
    print(backend.supports(plan))     # True
-   print(backend.execute(plan) == backend.run(qc, shots=512))  # same data path
+   print(backend.execute(plan).counts == backend.run(qc, shots=512, seed=1).counts)  # same data path
 
 Noise
 -----
