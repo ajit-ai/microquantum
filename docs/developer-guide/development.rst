@@ -20,7 +20,7 @@ Verify
 
    uv run pytest tests/ -q                       # full test suite
    uv run pytest tests/ -q --cov=microquantum    # with coverage
-   uv run mypy src/microquantum/ --ignore-missing-imports
+   uv run mypy src/microquantum/                 # strict type check (0 errors)
    uv run ruff check src/ tests/ examples/
    uv run ruff format --check src/ tests/
 

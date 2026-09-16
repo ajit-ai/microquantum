@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional
 
-from ..core.circuit import QuantumCircuit
+from ..core.circuit import QuantumCircuit, _narrow_concrete, _narrow_parameterized
 
 _DEFAULT_GATE_COSTS: dict[str, float] = {
     "h": 1.0,
@@ -116,9 +116,9 @@ class ResourceEstimator:
 
         for instr in circuit._gate_instructions:
             name = (
-                str(instr[0])
+                str(_narrow_parameterized(instr)[0])
                 if QuantumCircuit._is_parameterized_gate(instr)
-                else instr[0].name  # type: ignore[union-attr]
+                else _narrow_concrete(instr)[0].name
             )
 
             gate_type_counts[name] = gate_type_counts.get(name, 0) + 1

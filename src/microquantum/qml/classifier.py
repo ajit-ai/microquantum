@@ -13,7 +13,7 @@ from typing import Optional
 import numpy as np
 
 from .._json import JSONSerializable
-from ..core.circuit import QuantumCircuit
+from ..core.circuit import QuantumCircuit, _narrow_concrete
 from ..core.parameter import Parameter
 from ..core.tensor import expand_operator
 from ..optimizers.base import Optimizer, OptimizerResult
@@ -160,18 +160,16 @@ class VariationalClassifier:
         for gate_instr in enc._gate_instructions:
             if QuantumCircuit._is_parameterized_gate(gate_instr):
                 continue
-            op = gate_instr[0]  # type: ignore[assignment]
-            targets = gate_instr[1]  # type: ignore[assignment,union-attr]
-            expanded = expand_operator(op, [int(t) for t in targets], total)  # type: ignore[arg-type,union-attr]
+            op, targets = _narrow_concrete(gate_instr)
+            expanded = expand_operator(op, [int(t) for t in targets], total)
             qc.append(expanded, list(range(total)))
 
         # Ansatz on all qubits
         for gate_instr in ansatz._gate_instructions:
             if QuantumCircuit._is_parameterized_gate(gate_instr):
                 continue
-            op = gate_instr[0]  # type: ignore[assignment]
-            targets = gate_instr[1]  # type: ignore[assignment,union-attr]
-            expanded = expand_operator(op, [int(t) for t in targets], total)  # type: ignore[arg-type,union-attr]
+            op, targets = _narrow_concrete(gate_instr)
+            expanded = expand_operator(op, [int(t) for t in targets], total)
             qc.append(expanded, list(range(total)))
 
         return qc

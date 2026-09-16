@@ -9,7 +9,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from .._json import json_safe, json_string
-from ..core.circuit import QuantumCircuit
+from ..core.circuit import QuantumCircuit, _narrow_concrete
 from ..core.measurement import sample_state
 from ..core.operators import Operator
 from ..core.state import StateVector
@@ -35,7 +35,7 @@ class ExecutorResult:
     shots: Optional[int]
     num_qubits: int
     statevector: Optional[NDArray[np.complex128]] = None
-    metadata: dict = field(default_factory=dict)
+    metadata: dict[str, object] = field(default_factory=dict)
 
     def most_frequent(self) -> str:
         """Return the bitstring with the highest count."""
@@ -349,14 +349,18 @@ class Executor:
 
         rho = DensityMatrix(n)
 
+        from ..core.circuit import _narrow_concrete
+
         for instr in circuit._gate_instructions:
             if QuantumCircuit._is_parameterized_gate(instr):
                 continue
-            op = instr[0]  # type: ignore[assignment]
-            targets = list(instr[1])  # type: ignore[arg-type]
-            full_gate = self._expand_gate(op.matrix, targets, n)  # type: ignore[union-attr]
+            c_instr = _narrow_concrete(instr)
+            op = c_instr[0]
+            targets = list(c_instr[1])
+            full_gate = self._expand_gate(op.matrix, targets, n)
             rho = rho.apply_unitary(full_gate)
-            rho = self._noise_model.apply(rho)  # type: ignore[union-attr]
+            assert self._noise_model is not None
+            rho = self._noise_model.apply(rho)
 
         probs = np.real(np.diag(rho.matrix))
         probs = np.clip(probs, 0, None)
@@ -434,9 +438,11 @@ class Executor:
         for instr in circuit._gate_instructions:
             if QuantumCircuit._is_parameterized_gate(instr):
                 continue
-            gates.append((instr[0].matrix, list(instr[1])))  # type: ignore[union-attr,arg-type]
+            op, targets = _narrow_concrete(instr)
+            gates.append((op.matrix, list(targets)))
 
-        backend_result = self._backend.run_circuit(  # type: ignore[union-attr]
+        assert self._backend is not None
+        backend_result = self._backend.run_circuit(
             num_qubits=circuit.num_qubits,
             gates=gates,
             shots=shots,

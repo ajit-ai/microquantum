@@ -25,6 +25,7 @@ from .._json import JSONSerializable, json_safe, json_string
 from ..core.parameter import Parameter
 from ..core.state import StateVector
 from ..ir import IRCircuit, from_ir
+from ..ir.compiler import CompilationResult
 
 if TYPE_CHECKING:
     from ..backends.base import Backend
@@ -97,6 +98,11 @@ class ExecutionPlan(JSONSerializable):
         elif self.compiled is not None:
             if self.circuit is not None:
                 raise ValueError("ExecutionPlan must specify exactly one of circuit/ir/compiled")
+            if not isinstance(self.compiled, CompilationResult):
+                raise TypeError(
+                    "ExecutionPlan.compiled must be a CompilationResult, "
+                    f"got {type(self.compiled).__name__}"
+                )
         elif self.circuit is None:
             raise ValueError("ExecutionPlan must specify one of circuit/ir/compiled")
         if self.optimization_level < 0 or self.optimization_level > 2:

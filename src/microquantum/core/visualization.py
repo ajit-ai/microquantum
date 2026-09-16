@@ -117,8 +117,9 @@ def _render(
         involved: set[int] = set()
         gate_at: dict[int, tuple[Operator, list[int]]] = {}
         for q in range(n):
-            if column[q] is not None:
-                op, targets = column[q]  # type: ignore[misc]
+            entry = column[q]
+            if entry is not None:
+                op, targets = entry
                 gate_at[q] = (op, targets)
                 involved.update(targets)
 

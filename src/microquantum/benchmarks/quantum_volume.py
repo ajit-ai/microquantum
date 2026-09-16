@@ -37,7 +37,7 @@ class BenchmarkResult(JSONSerializable):
     depth: int = 0
     success_rate: float = 0.0
     confidence: float = 0.0
-    raw_data: dict = field(default_factory=dict)
+    raw_data: dict[str, object] = field(default_factory=dict)
     timestamp: float = 0.0
 
 

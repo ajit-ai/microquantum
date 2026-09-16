@@ -23,5 +23,5 @@ or `quantsmind`.
 ## Verification before finishing a Phase
 - `uv sync --group dev`
 - Tests: `uv run pytest tests/ -q`
-- Type check: `uv run mypy src/microquantum/ --ignore-missing-imports`
+- Type check: `uv run mypy src/microquantum/`
 - No release to PyPI without: push + green CI + `v<version>` tag + TestPyPI check first.

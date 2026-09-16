@@ -93,6 +93,7 @@ architecture that is ready for future hardware providers.
    execution/backends
    execution/simulation
    execution/compilation
+   execution/compiler-runtime
    execution/capabilities
    execution/providers
    execution/custom-backends

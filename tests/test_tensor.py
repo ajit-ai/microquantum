@@ -173,6 +173,27 @@ class TestExpandOperator:
         result = expand_operator(Operator.CNOT(), [0, 1], 2)
         np.testing.assert_array_almost_equal(result.matrix, Operator.CNOT().matrix)
 
+    def test_expand_cnot_reversed_targets_respects_order(self) -> None:
+        """CNOT on [1,0] of 2 swaps control and target roles.
+
+        Regression: the k == n fast path previously returned the operator
+        for *any* permutation of all qubits, dropping the target order and
+        making DensityMatrixBackend treat cnot(1, 0) like cnot(0, 1).
+        """
+        result = expand_operator(Operator.CNOT(), [1, 0], 2)
+        swap12 = np.array(
+            [
+                [1, 0, 0, 0],
+                [0, 0, 1, 0],
+                [0, 1, 0, 0],
+                [0, 0, 0, 1],
+            ],
+            dtype=np.complex128,
+        )
+        expected = swap12 @ Operator.CNOT().matrix @ swap12
+        np.testing.assert_array_almost_equal(result.matrix, expected)
+        assert not np.allclose(result.matrix, Operator.CNOT().matrix)
+
     def test_expand_cnot_on_3_targets_01(self) -> None:
         """Expanding CNOT on [0,1] of 3 gives CNOT ⊗ I."""
         result = expand_operator(Operator.CNOT(), [0, 1], 3)

@@ -34,7 +34,7 @@ def _now_iso() -> str:
 def _sdk_version() -> str:
     """Best-effort SDK version string (never raises)."""
     try:
-        import microquantum  # type: ignore[import-not-found]
+        import microquantum
 
         return str(getattr(microquantum, "__version__", "unknown"))
     except Exception:

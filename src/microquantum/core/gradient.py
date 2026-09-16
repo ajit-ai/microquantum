@@ -45,7 +45,7 @@ from typing import Optional, Union
 
 import numpy as np
 
-from .circuit import QuantumCircuit
+from .circuit import QuantumCircuit, _narrow_parameterized
 from .operators import Operator
 from .parameter import Parameter, ParameterExpression
 from .pauli import PauliString, PauliSum
@@ -192,7 +192,8 @@ def _find_occurrences(
     for index, instr in enumerate(circuit._gate_instructions):
         if not QuantumCircuit._is_parameterized_gate(instr):
             continue
-        factor = _occurrence_gradient_factor(instr[1], target_param)
+        p_instr = _narrow_parameterized(instr)
+        factor = _occurrence_gradient_factor(p_instr[1], target_param)
         if factor != 0.0:
             occurrences.append((index, factor))
     return occurrences
@@ -216,9 +217,10 @@ def _build_shifted_circuit(
         if not QuantumCircuit._is_parameterized_gate(instr):
             resolved._gate_instructions.append(instr)
             continue
-        gate_type = instr[0]
-        gate_param = instr[1]
-        target = instr[2]
+        p_instr = _narrow_parameterized(instr)
+        gate_type = p_instr[0]
+        gate_param = p_instr[1]
+        target = p_instr[2]
         angle = _resolve_angle(gate_param, param_values)
         if index == gate_idx:
             angle += shift_amount

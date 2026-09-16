@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, Optional, Union
+from typing import Any, Callable, Optional, Union
 
 import numpy as np
 
@@ -95,7 +95,7 @@ class DynamicCircuitResult(JSONSerializable):
     final_state: StateVector
     classical_memory: dict[int, int]
     measurement_results: list[tuple[int, int, int]]
-    intermediate_measurements: list[dict]
+    intermediate_measurements: list[dict[str, object]]
 
 
 def _measure_single_qubit(
@@ -223,7 +223,7 @@ class DynamicCircuit:
             )
         self._num_qubits = num_qubits
         self._num_classical_bits = num_classical_bits
-        self._ops: list[tuple] = []
+        self._ops: list[tuple[Any, ...]] = []
 
     @property
     def num_qubits(self) -> int:
@@ -326,7 +326,9 @@ class DynamicCircuit:
                 f"Parameter '{theta.name}' not supported in dynamic circuits. "
                 f"Use a numeric angle."
             )
-        return self._add_gate(Operator.Rx(float(theta)), [q])  # type: ignore[arg-type]
+        if isinstance(theta, complex):
+            raise TypeError(f"rotation angle must be real, got {theta!r}")
+        return self._add_gate(Operator.Rx(float(theta)), [q])
 
     def ry(
         self, theta: Union[float, int, complex, Parameter], q: int
@@ -342,7 +344,9 @@ class DynamicCircuit:
                 f"Parameter '{theta.name}' not supported in dynamic circuits. "
                 f"Use a numeric angle."
             )
-        return self._add_gate(Operator.Ry(float(theta)), [q])  # type: ignore[arg-type]
+        if isinstance(theta, complex):
+            raise TypeError(f"rotation angle must be real, got {theta!r}")
+        return self._add_gate(Operator.Ry(float(theta)), [q])
 
     def rz(
         self, theta: Union[float, int, complex, Parameter], q: int
@@ -358,7 +362,9 @@ class DynamicCircuit:
                 f"Parameter '{theta.name}' not supported in dynamic circuits. "
                 f"Use a numeric angle."
             )
-        return self._add_gate(Operator.Rz(float(theta)), [q])  # type: ignore[arg-type]
+        if isinstance(theta, complex):
+            raise TypeError(f"rotation angle must be real, got {theta!r}")
+        return self._add_gate(Operator.Rz(float(theta)), [q])
 
     def cx(self, control: int, target: int) -> DynamicCircuit:
         """Apply CNOT (CX) gate."""
@@ -542,7 +548,7 @@ class DynamicCircuit:
 
         classical_reg = ClassicalRegister(self._num_classical_bits)
         measurement_results: list[tuple[int, int, int]] = []
-        intermediate_measurements: list[dict] = []
+        intermediate_measurements: list[dict[str, object]] = []
         step = 0
 
         for op in self._ops:

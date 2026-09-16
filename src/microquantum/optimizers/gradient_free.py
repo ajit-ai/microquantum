@@ -143,7 +143,7 @@ class NelderMead(Optimizer):
         return self._max_iter
 
     def _init_simplex(
-        self, params: dict[Parameter, float], cost_fn: Callable
+        self, params: dict[Parameter, float], cost_fn: Callable[[dict[Parameter, float]], float]
     ) -> None:
         """Initialize simplex around starting point."""
         keys = list(params.keys())

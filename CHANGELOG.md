@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **MQ-17: Strict mypy conformance** — Full SDK now passes `mypy --strict` with zero errors. Removed per-module error-code overrides for `circuit.py` and `gradient.py`. Added `_narrow_parameterized()`/`_narrow_concrete()` type-safe helpers. New conformance test gates strict mypy in CI.
 - Analytical gradients via the parameter-shift rule (MQ-13): exact
   `parameter_shift_gradient` for a single parameter and `gradient` for the
   full vector, with name-based matching, chain-rule scaling for

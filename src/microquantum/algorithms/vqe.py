@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any, Optional, Union
+from typing import Any, Optional, Union, cast
 
 import numpy as np
 
@@ -119,7 +120,9 @@ class VQE:
         state-vector engine.  The runtime returns an exact statevector
         regardless of ``shots``, so expectation values are deterministic.
         """
-        bound = self._ansatz.bind_parameters(param_values)  # type: ignore[arg-type]
+        bound = self._ansatz.bind_parameters(
+            cast(Mapping[Union[str, Parameter], Union[int, float, complex]], param_values)
+        )
         if self._runtime is None:
             return bound.run()
         result = self._runtime.execute(bound, shots=self._shots, seed=self._seed)
@@ -139,13 +142,15 @@ class VQE:
             for term in self._hamiltonian.terms:
                 op = term.to_operator()
                 grad = compute_gradient(
-                    self._ansatz, op, param_values  # type: ignore[arg-type]
+                    self._ansatz, op,
+                    cast(Mapping[Union[str, Parameter], float], param_values),
                 )
                 for p, value in grad.items():
                     total[p] = total.get(p, 0.0) + value
             return total
         return compute_gradient(
-            self._ansatz, self._hamiltonian, param_values  # type: ignore[arg-type]
+            self._ansatz, self._hamiltonian,
+            cast(Mapping[Union[str, Parameter], float], param_values),
         )
 
     # ------------------------------------------------------------------
@@ -281,12 +286,14 @@ class VQE:
         validation = self.validate(problem)
         if validation:
             raise ValueError("VQE problem validation failed:\n  - " + "\n  - ".join(validation))
+        hamiltonian = problem.hamiltonian
+        assert hamiltonian is not None
         from ..optimizers.gradient_descent import GradientDescent
 
         optimizer = self._optimizer if self._optimizer is not None else GradientDescent(learning_rate=0.1, max_iter=200)
         vqe = VQE(
             self._ansatz,
-            problem.hamiltonian,  # type: ignore[arg-type]
+            hamiltonian,
             optimizer,
             runtime=runtime if runtime is not None else self._runtime,
             shots=self._shots,

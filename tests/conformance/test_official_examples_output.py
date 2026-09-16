@@ -306,6 +306,27 @@ REGISTRY: dict[str, list] = {
         "sampled counts (seeded):",
         "Example 29 completed!",
     ],
+    "examples/30_compile_and_execute.py": [
+        "route A (backend.run)     :",
+        "route B (plan reuse)      :",
+        "route C (runtime compile) :",
+        "All three routes agree within seeded sampling tolerance.",
+        "Example 30 completed!",
+    ],
+    "examples/31_compile_compare_execution.py": [
+        "level 0",
+        "level 1",
+        "level 2",
+        "max |delta-p| vs original (exact):",
+        "max |delta-p| vs original (sampled):",
+        "Example 31 completed!",
+    ],
+    "examples/32_parameterized_compile_execute.py": [
+        "compiled parameters: ['phi', 'theta']",
+        "bind-after-compile fidelity: 1.00",
+        "parameterized runtime execution:",
+        "Example 32 completed!",
+    ],
 }
 
 

@@ -44,7 +44,7 @@ class MockBackend(Backend):
         name: str = "mock",
         max_qubits: Optional[int] = None,
         supports_shots: bool = True,
-        options: Optional[dict] = None,
+        options: Optional[dict[str, object]] = None,
     ) -> None:
         self._name = name
         self._max_qubits = max_qubits

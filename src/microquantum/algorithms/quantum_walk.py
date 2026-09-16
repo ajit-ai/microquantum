@@ -210,7 +210,7 @@ class DiscreteQuantumWalk:
                     abs(amps[idx]) ** 2
                 )
 
-        most_likely = max(probs, key=probs.get)  # type: ignore[arg-type]
+        most_likely = max(probs, key=probs.__getitem__)
 
         return QuantumWalkResult(
             circuit=qc,
@@ -394,7 +394,7 @@ class ContinuousQuantumWalk:
                     abs(amps[idx]) ** 2
                 )
 
-        most_likely = max(probs, key=probs.get)  # type: ignore[arg-type]
+        most_likely = max(probs, key=probs.__getitem__)
 
         seen_edges: set[tuple[int, int]] = set()
         for u in range(self._num_nodes):

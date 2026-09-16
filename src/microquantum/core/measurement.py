@@ -70,7 +70,7 @@ class MeasurementResult:
         """Return the bitstring with the highest count."""
         if not self._counts:
             return ""
-        return max(self._counts, key=self._counts.get)  # type: ignore[arg-type]
+        return max(self._counts, key=self._counts.__getitem__)
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize to a JSON-safe dictionary."""

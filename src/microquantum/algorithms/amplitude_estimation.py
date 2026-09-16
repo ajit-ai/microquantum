@@ -20,7 +20,7 @@ from typing import Optional
 import numpy as np
 
 from .._json import JSONSerializable
-from ..core.circuit import QuantumCircuit
+from ..core.circuit import QuantumCircuit, _narrow_concrete
 from ..core.operators import Operator
 from ..core.tensor import expand_operator
 
@@ -165,8 +165,7 @@ class AmplitudeEstimation:
         for gate_instr in sp._gate_instructions:
             if QuantumCircuit._is_parameterized_gate(gate_instr):
                 continue
-            op: Operator = gate_instr[0]  # type: ignore[assignment]
-            targets: list[int] = gate_instr[1]  # type: ignore[assignment]
+            op, targets = _narrow_concrete(gate_instr)
             expanded = expand_operator(op, targets, n)
             qc.append(expanded, list(range(m, total)))
 
@@ -188,8 +187,7 @@ class AmplitudeEstimation:
         for instr in iqft._gate_instructions:
             if QuantumCircuit._is_parameterized_gate(instr):
                 continue
-            iqft_op: Operator = instr[0]  # type: ignore[assignment]
-            iqft_targets: list[int] = instr[1]  # type: ignore[assignment]
+            iqft_op, iqft_targets = _narrow_concrete(instr)
             # Shift target qubits to evaluation qubit positions
             shifted = [t for t in iqft_targets]
             expanded = expand_operator(iqft_op, shifted, total)

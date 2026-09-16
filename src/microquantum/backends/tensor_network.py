@@ -165,7 +165,12 @@ class TreeTensorNetwork:
             a_in_l = left is not None and a in _leaf_set(left)
             b_in_l = left is not None and b in _leaf_set(left)
             if a_in_l == b_in_l:
-                current = left if a_in_l else right  # type: ignore[assignment]
+                if a_in_l:
+                    assert left is not None
+                    current = left
+                else:
+                    assert right is not None
+                    current = right
             else:
                 return current
         return current
@@ -182,8 +187,9 @@ class TreeTensorNetwork:
         """Contract a subtree to a dense block (up, 2^leaves)."""
         if node.is_leaf:
             return node.tensor
-        bl = self._contract(node.left)  # type: ignore[arg-type]
-        br = self._contract(node.right)  # type: ignore[arg-type]
+        assert node.left is not None and node.right is not None
+        bl = self._contract(node.left)
+        br = self._contract(node.right)
         t = node.tensor
         # t: (d_up, d_l, d_r); bl: (d_l, 2^kl); br: (d_r, 2^kr)
         tmp = tensordot(t, bl, axes=([1], [0]))          # (d_up, d_r, 2^kl)
@@ -328,8 +334,9 @@ class TreeTensorNetwork:
             if node.leaf_index is not None:
                 out.append(node.leaf_index)
         else:
-            self._leaf_order(node.left, out)  # type: ignore[arg-type]
-            self._leaf_order(node.right, out)  # type: ignore[arg-type]
+            assert node.left is not None and node.right is not None
+            self._leaf_order(node.left, out)
+            self._leaf_order(node.right, out)
 
     @staticmethod
     def _apply_gate_to_block(block: Any, ia: int, ib: int, gate: Any) -> Any:

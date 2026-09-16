@@ -296,7 +296,7 @@ class MatrixProductState:
             cutoff = truncation_threshold * float(s_np.max())
             keep = s_np > max(cutoff, 0.0)
             if max_bond_dim is not None:
-                keep[min(int(keep.sum()), max_bond_dim):] = False  # type: ignore[index]
+                keep[min(int(keep.sum()), max_bond_dim):] = False
             k = max(1, int(keep.sum()))
             discarded = float(s_np[~keep].sum() ** 2) if (~keep).any() else 0.0
             self.truncation_error += discarded
