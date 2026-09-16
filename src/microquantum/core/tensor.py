@@ -104,7 +104,7 @@ def expand_operator(
     if len(targets) != len(set(targets)):
         raise ValueError("target qubits must be distinct")
 
-    if k == n and sorted(targets) == list(range(n)):
+    if k == n and targets == list(range(n)):
         return op
 
     non_targets = sorted(set(range(n)) - set(targets))

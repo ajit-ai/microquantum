@@ -72,6 +72,9 @@ Example tree (all current examples)
    ├── 27_measurement_preserving_optimization.py
    ├── 28_target_validation.py
    ├── 29_execute_compiled_circuit.py
+   ├── 30_compile_and_execute.py
+   ├── 31_compile_compare_execution.py
+   ├── 32_parameterized_compile_execute.py
    ├── rsa_vulnerability_assessment.py
    ├── algorithms/            VQE, QAOA, Grover, phase estimation, ...
    │   ├── 01_problem_hierarchy.py

@@ -144,6 +144,19 @@ state vector is preserved exactly; measurements and symbolic parameters survive.
 - `29_execute_compiled_circuit.py` — running a compiled circuit on all four
   simulators with exact cross-backend agreement.
 
+## Compiler ↔ runtime integration (MQ-16)
+
+- `30_compile_and_execute.py` — the three equivalent execution routes for a
+  compiled program: `backend.run(compiled)`, `ExecutionPlan(compiled=...)`
+  reuse, and runtime `execute(circuit, optimization_level=...)` — identical
+  seeded estimates from all three.
+- `31_compile_compare_execution.py` — differential oracle: the same circuit
+  through levels 0/1/2 on all four simulators agrees with the original both
+  exactly (`shots=None`) and as seeded sampling estimates.
+- `32_parameterized_compile_execute.py` — symbolic compile then bind: compile
+  + bind == bind + compile (fidelity 1.00), and parameter bindings resolved by
+  the runtime on a compiled plan.
+
 ## Algorithms on problems (MQ-05)
 
 The generic `Algorithm`/`Problem` layer: problems are JSON-safe data,
