@@ -26,6 +26,7 @@ from typing import Any, Optional
 
 import numpy as np
 
+from ..core.device import Target
 from ..core.state import StateVector
 from .array_backend import (
     abs as ab_abs,
@@ -48,7 +49,8 @@ from .array_backend import (
 from .array_backend import (
     sum as ab_sum,
 )
-from .base import Backend, BackendResult
+from .base import Backend, BackendResult, _normalize_shots
+from .capabilities import BackendCapabilities, simulator_capabilities
 
 _COMPLEX = complex
 
@@ -424,15 +426,48 @@ class MPSBackend(Backend):
     def name(self) -> str:
         return "mps"
 
+    @property
+    def target(self) -> Target:
+        """Advertises a universal simulator gate set."""
+        return Target.universal(name=f"{self.name}_simulator")
+
+    @property
+    def capabilities(self) -> BackendCapabilities:
+        """Simulator capability set with the MPS engine metadata."""
+        caps = simulator_capabilities(max_qubits=None, statevector=True)
+        caps.metadata.update(
+            {
+                "engine": "mps",
+                "device_type": "cpu",
+                "numerics": "numpy",
+                "max_bond_dim": self.max_bond_dim,
+            }
+        )
+        return caps
+
     def run_circuit(
         self,
         num_qubits: int,
         gates: list[tuple[Any, list[int]]],
-        shots: int = 1024,
+        shots: Optional[int] = 1024,
         initial_state: Optional[StateVector] = None,
         seed: Optional[int] = None,
     ) -> BackendResult:
-        """Execute a circuit via matrix product state simulation."""
+        """Execute a circuit via matrix product state simulation.
+
+        Args:
+            num_qubits: Number of qubits.
+            gates: List of (gate_matrix, target_qubits) pairs.
+            shots: Number of measurement shots.  ``None`` requests a
+                deterministic (un-sampled) run: no counts are produced and
+                (for small systems) the exact final state vector is returned.
+            initial_state: Starting state. Defaults to |0...0>.
+            seed: RNG seed (falls back to the backend default seed).
+
+        Returns:
+            BackendResult with MPS metadata and measurement counts.
+        """
+        shots = _normalize_shots(shots)
         effective_seed = seed if seed is not None else self.seed
         if initial_state is None:
             mps = MatrixProductState.from_zeros(num_qubits)
@@ -457,7 +492,10 @@ class MPSBackend(Backend):
                     truncation_threshold=self.truncation_threshold,
                 )
 
-        counts = mps.sample(shots, seed=effective_seed)
+        counts: dict[str, int] = {}
+        if shots is not None:
+            counts = mps.sample(shots, seed=effective_seed)
+        result_shots: Optional[int] = shots
         statevector = None
         if mps.valid_statevector():
             statevector = np.asarray(to_numpy(mps.to_statevector()), dtype=np.complex128)
@@ -467,6 +505,9 @@ class MPSBackend(Backend):
             backend_name=self.name,
             statevector=statevector,
             counts=counts,
+            shots=result_shots,
+            seed=effective_seed,
+            target_name=self.target.name,
             metadata={
                 "shots": shots,
                 "seed": effective_seed,

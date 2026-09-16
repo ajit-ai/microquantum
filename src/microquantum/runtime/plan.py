@@ -37,11 +37,13 @@ BackendRef = Union["Backend", str]
 ParameterBinding = Mapping[Union[str, "Parameter"], float]
 
 
-def _validate_shots(shots: int) -> int:
+def _validate_shots(shots: Optional[int]) -> Optional[int]:
+    if shots is None:
+        return None
     if not isinstance(shots, int):
-        raise ValueError(f"shots must be an integer, got {type(shots).__name__}")
+        raise ValueError(f"shots must be an integer or None, got {type(shots).__name__}")
     if shots < 1:
-        raise ValueError(f"shots must be >= 1, got {shots}")
+        raise ValueError(f"shots must be >= 1 or None, got {shots}")
     return shots
 
 
@@ -61,7 +63,8 @@ class ExecutionPlan(JSONSerializable):
             on, or the *name* of a registered backend (resolved through the
             runtime's :class:`~microquantum.backends.registry.BackendRegistry`).
             The runtime falls back to its default backend when omitted.
-        shots: Number of measurement shots.
+        shots: Number of measurement shots.  ``None`` requests a
+            deterministic (un-sampled) run with no counts.
         parameter_bindings: Optional mapping of parameter names (or
             :class:`~microquantum.core.parameter.Parameter` objects) to
             numeric values to bind before execution.
@@ -78,7 +81,7 @@ class ExecutionPlan(JSONSerializable):
     compiled: Optional[Any] = None
     target: Optional[Any] = None
     backend: Optional[Any] = None
-    shots: int = 1024
+    shots: Optional[int] = 1024
     parameter_bindings: Optional[ParameterBinding] = None
     initial_state: Optional[StateVector] = None
     seed: Optional[int] = None
@@ -109,7 +112,7 @@ class ExecutionPlan(JSONSerializable):
         name: str = "main",
         target: Optional[Target] = None,
         backend: Optional[BackendRef] = None,
-        shots: int = 1024,
+        shots: Optional[int] = 1024,
         parameter_bindings: Optional[ParameterBinding] = None,
         initial_state: Optional[StateVector] = None,
         seed: Optional[int] = None,

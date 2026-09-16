@@ -256,7 +256,7 @@ class ExecutionRuntime:
         self,
         work: Sequence[Work],
         *,
-        shots: int = 1024,
+        shots: Optional[int] = 1024,
         seed: Optional[int] = None,
         backend: Optional[BackendRef] = None,
     ) -> list[Job]:
@@ -337,7 +337,7 @@ class ExecutionRuntime:
         self,
         work: Sequence[Work],
         *,
-        shots: int = 1024,
+        shots: Optional[int] = 1024,
         seed: Optional[int] = None,
         backend: Optional[BackendRef] = None,
         raise_on_error: bool = True,
@@ -423,7 +423,7 @@ class ExecutionRuntime:
         work: Sequence[Work],
         *,
         backend: Optional[BackendRef] = None,
-        shots: int = 1024,
+        shots: Optional[int] = 1024,
         seed: Optional[int] = None,
         metadata: Optional[dict[str, Any]] = None,
         parameter_bindings: Optional[dict[str, Any]] = None,
@@ -547,7 +547,7 @@ class ExecutionRuntime:
         parameter_values: SweepValues,
         *,
         parameter_name: Optional[str] = None,
-        shots: int = 1024,
+        shots: Optional[int] = 1024,
         seed: Optional[int] = None,
         target: Optional[Target] = None,
         optimization_level: int = 0,
@@ -618,7 +618,7 @@ class ExecutionRuntime:
         update: Any,
         initial: Any,
         *,
-        shots: int = 1024,
+        shots: Optional[int] = 1024,
         seed: Optional[int] = None,
         name: str = "hybrid",
     ) -> list[BackendResult]:
@@ -883,7 +883,11 @@ class ExecutionRuntime:
                     f"circuit uses {executable.num_qubits} qubits but target "
                     f"'{target.name}' supports at most {target.num_qubits}"
                 )
-            if target.max_shots is not None and plan.shots > target.max_shots:
+            if (
+                target.max_shots is not None
+                and plan.shots is not None
+                and plan.shots > target.max_shots
+            ):
                 problems.append(
                     f"plan requests {plan.shots} shots but target "
                     f"'{target.name}' supports at most {target.max_shots}"

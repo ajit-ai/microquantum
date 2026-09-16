@@ -41,7 +41,7 @@ class BackendAdapter(Backend):
 
     @abstractmethod
     def submit_to_vendor(
-        self, circuit: QuantumCircuit, *, shots: int, seed: Optional[int]
+        self, circuit: QuantumCircuit, *, shots: Optional[int], seed: Optional[int]
     ) -> Any:
         """Serialize a bound circuit to the vendor and submit it.
 
@@ -61,7 +61,7 @@ class BackendAdapter(Backend):
         self,
         num_qubits: int,
         gates: list[tuple[NDArray[np.complex128], list[int]]],
-        shots: int = 1024,
+        shots: Optional[int] = 1024,
         initial_state: Optional[StateVector] = None,
         seed: Optional[int] = None,
     ) -> BackendResult:
@@ -73,15 +73,21 @@ class BackendAdapter(Backend):
     def run(
         self,
         circuit: QuantumCircuit,
-        shots: int = 1024,
+        shots: Optional[int] = 1024,
         initial_state: Optional[StateVector] = None,
         seed: Optional[int] = None,
         parameter_values: Optional[Mapping[Union[str, Parameter], Union[int, float, complex]]] = None,
     ) -> BackendResult:
         if parameter_values is not None:
             circuit = circuit.bind_parameters(parameter_values)
-        handle = self.submit_to_vendor(circuit, shots=shots, seed=seed)
-        return self.collect_from_vendor(handle, circuit)
+        if shots is not None:
+            handle = self.submit_to_vendor(circuit, shots=shots, seed=seed)
+            return self.collect_from_vendor(handle, circuit)
+        raise ValueError(
+            f"adapter backend '{self.name}' requires an explicit positive "
+            "shots count; deterministic (shots=None) execution is only "
+            "supported for simulators."
+        )
 
 
 __all__ = ["BackendAdapter"]

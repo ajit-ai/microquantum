@@ -17,7 +17,7 @@ from numpy.typing import NDArray
 
 from ..core.device import Device, DeviceType, Target
 from ..core.state import StateVector
-from .base import Backend, BackendResult
+from .base import Backend, BackendResult, _normalize_shots
 from .capabilities import (
     EXECUTION_SAMPLING,
     EXECUTION_SHOTS,
@@ -93,7 +93,7 @@ class MockBackend(Backend):
         self,
         num_qubits: int,
         gates: list[tuple[NDArray[np.complex128], list[int]]],
-        shots: int = 1024,
+        shots: Optional[int] = 1024,
         initial_state: Optional[StateVector] = None,
         seed: Optional[int] = None,
     ) -> BackendResult:
@@ -101,7 +101,10 @@ class MockBackend(Backend):
 
         Counts are derived from the number of 2-qubit gates and the seed so
         repeat executions with the same seed produce identical results.
+        ``shots=None`` requests a deterministic (un-sampled) run: no counts
+        are produced.
         """
+        shots = _normalize_shots(shots)
         rng = np.random.default_rng(0 if seed is None else seed)
         two_qubit = sum(1 for _matrix, targets in gates if len(targets) >= 2)
         n_states = 2**num_qubits
@@ -111,16 +114,21 @@ class MockBackend(Backend):
         weight[0] = 0.5 - 0.1 * two_qubit
         weight = np.clip(weight, 1e-3, None)
         weight /= weight.sum()
-        indices = rng.choice(n_states, size=shots, p=weight)
-        counts: dict[str, int] = {}
-        for index in indices:
-            key = format(int(index), f"0{num_qubits}b")
-            counts[key] = counts.get(key, 0) + 1
+        indices: Optional[list[int]] = None
+        if shots is None:
+            counts: dict[str, int] = {}
+        else:
+            sampled = rng.choice(n_states, size=shots, p=weight)
+            indices = [int(i) for i in sampled]
+            counts = {}
+            for index in indices:
+                key = format(int(index), f"0{num_qubits}b")
+                counts[key] = counts.get(key, 0) + 1
         return BackendResult(
             num_qubits=num_qubits,
             backend_name=self.name,
             counts=counts,
-            samples=[int(i) for i in indices],
+            samples=indices,
             shots=shots,
             seed=seed,
             metadata={"mock": True, "legal": True},

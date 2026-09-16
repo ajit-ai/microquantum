@@ -20,3 +20,4 @@ re-executed.
    :maxdepth: 1
 
    CONFORMANCE_AZ_REPORT
+   CONFORMANCE_MQ14_REPORT
