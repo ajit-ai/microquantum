@@ -3,6 +3,23 @@
 This folder contains runnable demonstrations of the microquantum SDK. Run any
 example with `uv run python examples/<file>.py` from the repository root.
 
+## Consolidated notebook
+
+The individual `.py` files above are the canonical examples. A single
+consolidated Jupyter notebook — `examples/MicroQuantum_Examples.ipynb` — also
+walks through the whole corpus. Each notebook cell executes the corresponding
+authoritative example file through a `run_example` helper, so the notebook
+stays perfectly in sync with these files (no duplicated logic). Open it from
+the repository root:
+
+```console
+jupyter lab examples/MicroQuantum_Examples.ipynb
+```
+
+The notebook is validated by the conformance suite (structure, full example
+coverage, no missing references, and in-order execution of every cell) and
+adds no Jupyter runtime dependency to the SDK.
+
 ## Core programming model
 
 - `01_basic_circuits.py` — circuit construction, simulation, drawing, QASM
@@ -102,6 +119,30 @@ simulator advertises its capabilities and target.
 - `21_cross_simulator_comparison.py` — one circuit, four simulators: exact
   agreement of probability vectors, same-seed sampling parity, statistical
   sampling consistency, and per-simulator capability/target portraits.
+
+## Compiler pipeline (MQ-15)
+
+The `Compiler` is the single public entry point: validate -> optimize ->
+(decompose toward a `Target` basis) -> compatibility diagnostics. Levels 0/1/2
+map to validation-only, identity/inverse removal, and + rotation fusion. The
+state vector is preserved exactly; measurements and symbolic parameters survive.
+
+- `22_ir_roundtrip.py` — Circuit -> IR -> Circuit: conversion, IR inspection,
+  lossless rebuild (fidelity == 1), optional terminal measurements.
+- `23_ir_to_circuit.py` — building an `IRCircuit` by hand, structural
+  validation, and loud, explicit rejection of malformed IR.
+- `24_basic_compilation.py` — the `Compiler` entry point, optimization levels
+  0/1/2, applied passes and result metadata.
+- `25_optimization_before_after.py` — gate/depth/type metrics before and after
+  level-1 optimization with exact state preservation.
+- `26_parameterized_compilation.py` — symbolic parameters through the compiler,
+  `compile(bind) == bind(compile)`, and why symbolic rotations are never fused.
+- `27_measurement_preserving_optimization.py` — measurements keep their subset,
+  order and identity through compilation (optimization barriers).
+- `28_target_validation.py` — target/capability validation, `cz` lowering into
+  a limited basis, `cx`/`cnot` naming equivalence, and no silent gate drops.
+- `29_execute_compiled_circuit.py` — running a compiled circuit on all four
+  simulators with exact cross-backend agreement.
 
 ## Algorithms on problems (MQ-05)
 
