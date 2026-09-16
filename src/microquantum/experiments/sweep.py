@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import itertools
 import math
-from typing import Any, Mapping
+from typing import Any, Iterator, Mapping
 
 import numpy as np
 
@@ -269,7 +269,7 @@ class ParameterSweep(JSONSerializable):
         """Serialize the sweep to a JSON string."""
         return json_string(self.to_dict())
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[dict[str, float]]:
         return iter(self.combinations())
 
     def __repr__(self) -> str:

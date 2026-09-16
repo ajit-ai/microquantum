@@ -18,7 +18,7 @@ Usage::
 from __future__ import annotations
 
 import warnings
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 _DEFAULT_BACKEND = "numpy"
 
@@ -217,12 +217,12 @@ def matmul(a: Any, b: Any) -> Any:
 
 def svd(a: Any, full_matrices: bool = False) -> tuple[Any, Any, Any]:
     """Singular value decomposition (u, s, vh)."""
-    return xp().linalg.svd(a, full_matrices=full_matrices)  # type: ignore[no-any-return]
+    return cast(tuple[Any, Any, Any], xp().linalg.svd(a, full_matrices=full_matrices))
 
 
 def qr(a: Any) -> tuple[Any, Any]:
     """QR decomposition (q, r)."""
-    return xp().linalg.qr(a)  # type: ignore[no-any-return]
+    return cast(tuple[Any, Any], xp().linalg.qr(a))
 
 
 def real_if_close(a: Any) -> Any:

@@ -39,8 +39,14 @@ def tensor(
         raise TypeError("All items must be of the same type")
 
     if isinstance(first, StateVector):
-        return _tensor_states(items)  # type: ignore[arg-type]
-    return _tensor_operators(items)  # type: ignore[arg-type]
+        states: tuple[StateVector, ...] = tuple(
+            item for item in items if isinstance(item, StateVector)
+        )
+        return _tensor_states(states)
+    operators: tuple[Operator, ...] = tuple(
+        item for item in items if isinstance(item, Operator)
+    )
+    return _tensor_operators(operators)
 
 
 def _tensor_states(items: tuple[StateVector, ...]) -> StateVector:

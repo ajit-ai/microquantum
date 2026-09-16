@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, Union, cast
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+    from ..ir import IRCircuit
 
 import numpy as np
 
@@ -30,6 +32,18 @@ _GateInstruction = Union[_ConcreteGate, _ParameterizedGate]
 def _gate_name(op: Operator) -> str:
     """Get the gate name from an Operator instance."""
     return op.name
+
+
+def _narrow_parameterized(instr: _GateInstruction) -> _ParameterizedGate:
+    """Narrow a gate instruction to a parameterized triple."""
+    assert isinstance(instr, tuple) and len(instr) == 3 and isinstance(instr[0], str)
+    return instr
+
+
+def _narrow_concrete(instr: _GateInstruction) -> _ConcreteGate:
+    """Narrow a gate instruction to a concrete (Operator, targets) pair."""
+    assert isinstance(instr, tuple) and len(instr) == 2 and isinstance(instr[0], Operator)
+    return instr
 
 
 class QuantumCircuit:
@@ -115,7 +129,8 @@ class QuantumCircuit:
         for instr in self._gate_instructions:
             if not self._is_parameterized_gate(instr):
                 continue
-            param = instr[1]
+            p_instr = _narrow_parameterized(instr)
+            param = p_instr[1]
             symbol = (
                 param.parameter if isinstance(param, ParameterExpression) else param
             )
@@ -141,10 +156,8 @@ class QuantumCircuit:
     def _get_targets(instr: _GateInstruction) -> list[int]:
         """Extract target qubits from any gate instruction."""
         if QuantumCircuit._is_parameterized_gate(instr):
-            target = instr[2]
-            return [int(target)]
-        concrete = instr
-        return list(concrete[1])
+            return [int(_narrow_parameterized(instr)[2])]
+        return list(_narrow_concrete(instr)[1])
 
     def _ensure_bound(self) -> None:
         """Raise ValueError if circuit has unbound parameters."""
@@ -165,8 +178,10 @@ class QuantumCircuit:
         If theta is numeric, return it directly.
         If theta is a Parameter, look it up in bound values.
         """
-        if isinstance(theta, (int, float, complex)):
-            return float(theta)  # type: ignore[arg-type]
+        if isinstance(theta, (int, float)):
+            return float(theta)
+        if isinstance(theta, complex):
+            raise TypeError(f"rotation angle must be real, got {theta!r}")
         if isinstance(theta, Parameter):
             raise ValueError(
                 f"Parameter '{theta.name}' is not bound. "
@@ -241,11 +256,13 @@ class QuantumCircuit:
                 f"param must be a numeric angle, Parameter or "
                 f"ParameterExpression, got {type(param).__name__}"
             )
-        if isinstance(param, (int, float, complex)):
+        if isinstance(param, (int, float)):
             # Immediate numeric evaluation — store concrete operator
             gate_map = {"rx": Operator.Rx, "ry": Operator.Ry, "rz": Operator.Rz}
-            op = gate_map[gate_type](float(param))  # type: ignore[arg-type]
+            op = gate_map[gate_type](float(param))
             self._gate_instructions.append((op, [target]))
+        elif isinstance(param, complex):
+            raise TypeError(f"rotation angle must be real, got {param!r}")
         else:
             self._gate_instructions.append((gate_type, param, target))
         return self
@@ -361,7 +378,7 @@ class QuantumCircuit:
                 if instr[0] == gt:
                     count += 1
             else:
-                concrete_op = instr[0]
+                concrete_op = _narrow_concrete(instr)[0]
                 if _gate_name(concrete_op) == gt:
                     count += 1
         return count
@@ -389,9 +406,10 @@ class QuantumCircuit:
         result = QuantumCircuit(self._num_qubits)
         for instr in reversed(self._gate_instructions):
             if self._is_parameterized_gate(instr):
-                gate_type = instr[0]
-                param = instr[1]
-                target = instr[2]
+                p_instr = _narrow_parameterized(instr)
+                gate_type = p_instr[0]
+                param = p_instr[1]
+                target = p_instr[2]
                 from .parameter import Parameter, ParameterExpression
                 if isinstance(param, ParameterExpression):
                     angle = param.evaluate({})
@@ -406,8 +424,9 @@ class QuantumCircuit:
                 op = gate_map[gate_type](angle)
                 result._gate_instructions.append((op, [target]))
             else:
-                op = instr[0]
-                targets = instr[1]
+                c_instr = _narrow_concrete(instr)
+                op = c_instr[0]
+                targets = c_instr[1]
                 result._gate_instructions.append((op.inverse(), list(targets)))
         return result
 
@@ -457,7 +476,7 @@ class QuantumCircuit:
             if not self._is_parameterized_gate(instr):
                 resolved._gate_instructions.append(instr)
                 continue
-            gate_type, param, target = instr
+            gate_type, param, target = _narrow_parameterized(instr)
             name = (
                 param.parameter.name
                 if isinstance(param, ParameterExpression)
@@ -465,7 +484,7 @@ class QuantumCircuit:
             )
             if name in bindings:
                 if isinstance(param, ParameterExpression):
-                    angle = param.evaluate(bindings)
+                    angle = param.evaluate(cast(dict[Union[str, Parameter], float], bindings))
                 else:
                     angle = bindings[name]
                 op = gate_map[gate_type](angle)
@@ -535,7 +554,7 @@ class QuantumCircuit:
                 raise ValueError(
                     "Circuit has unbound parameters. Call bind_parameters() first."
                 )
-            result.append((instr[0], instr[1]))  # type: ignore[misc]
+            result.append(_narrow_concrete(instr))
         return result
 
     def get_unitary(self) -> Operator:
@@ -557,8 +576,9 @@ class QuantumCircuit:
                 raise ValueError(
                     "Circuit has unbound parameters. Call bind_parameters() first."
                 )
-            op = instr[0]
-            targets = instr[1]
+            c_instr = _narrow_concrete(instr)
+            op = c_instr[0]
+            targets = c_instr[1]
             expanded = expand_operator(op, targets, n)
             result = expanded.matrix @ result
 
@@ -599,8 +619,9 @@ class QuantumCircuit:
                 raise ValueError(
                     "Circuit has unbound parameters. Call bind_parameters() first."
                 )
-            op = instr[0]
-            targets = instr[1]
+            c_instr = _narrow_concrete(instr)
+            op = c_instr[0]
+            targets = c_instr[1]
             state = apply_gate(state, op.matrix, targets)
 
         return state
@@ -707,7 +728,7 @@ class QuantumCircuit:
         return _ir_to_ir(self, include_terminal_measurements=include_terminal_measurements)
 
     @staticmethod
-    def from_ir(ir: "object") -> "QuantumCircuit":
+    def from_ir(ir: IRCircuit) -> "QuantumCircuit":
         """Rebuild a QuantumCircuit from gate-level MicroQuantum IR.
 
         Args:
@@ -856,15 +877,17 @@ class QuantumCircuit:
         ]
         for instr in self._gate_instructions:
             if self._is_parameterized_gate(instr):
-                gate_type = instr[0]
-                param = instr[1]
-                target = instr[2]
+                p_instr = _narrow_parameterized(instr)
+                gate_type = p_instr[0]
+                param = p_instr[1]
+                target = p_instr[2]
                 name = gate_type.upper()
                 param_str = str(param)
                 lines.append(f"  {name}({param_str}, {target})")
             else:
-                op = instr[0]
-                targets = instr[1]
+                c_instr = _narrow_concrete(instr)
+                op = c_instr[0]
+                targets = c_instr[1]
                 gate_names = {
                     Operator.H: "H", Operator.X: "X", Operator.Y: "Y",
                     Operator.Z: "Z", Operator.S: "S", Operator.Sdg: "S†",
@@ -906,7 +929,7 @@ def _coerce_binding_value(value: object, name: str) -> float:
     Raises:
         ValueError: If the value has a non-zero imaginary part.
     """
-    number: complex = complex(value)  # type: ignore[arg-type, call-overload]
+    number: complex = complex(cast(Any, value))
     if abs(number.imag) > 1e-12:
         raise ValueError(
             f"value for parameter '{name}' must be real, "

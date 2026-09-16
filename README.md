@@ -189,8 +189,8 @@ uv sync --group dev
 # Run the test suite (with coverage report)
 uv run pytest tests/
 
-# Type check (0 errors expected)
-uv run mypy src/microquantum/ --ignore-missing-imports
+# Type check (strict, 0 errors expected)
+uv run mypy src/microquantum/
 
 # Lint / format
 uv run ruff check src tests examples
@@ -214,7 +214,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution workflow and
 - **v0.3.0** — public open-source release: unified `Backend.run()`,
   serializable results (`to_dict()`), SPDX/legacy metadata cleanup, coverage +
   ruff gates, SDK-only docs.
-- **Next** — stricter mypy coverage, more hardware providers and tutorials.
+- **Next** — more hardware providers and tutorials.
 
 ---
 

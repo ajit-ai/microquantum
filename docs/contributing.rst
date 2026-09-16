@@ -34,11 +34,11 @@ Before you submit changes
 
       uv run pytest tests/
 
-2. **Type check** — the SDK targets zero mypy errors:
+2. **Type check** — the SDK targets strict mypy conformance (zero errors):
 
    .. code-block:: console
 
-      uv run mypy src/microquantum/ --ignore-missing-imports
+      uv run mypy src/microquantum/
 
 3. **Lint** — keep new code ruff-clean:
 

@@ -13,7 +13,7 @@ IR itself carries plain floats and stays NumPy-free.
 from __future__ import annotations
 
 import math
-from typing import TYPE_CHECKING, Union, cast
+from typing import TYPE_CHECKING, Callable, Union, cast
 
 import numpy as np
 
@@ -34,7 +34,7 @@ _CircuitInstruction = Union[
     tuple[str, Union[Parameter, ParameterExpression], int],
 ]
 
-_OP_FACTORIES: dict[str, object] = {
+_OP_FACTORIES: dict[str, Callable[..., Operator]] = {
     "h": Operator.H,
     "x": Operator.X,
     "y": Operator.Y,
@@ -192,7 +192,7 @@ def _gate_to_instruction(gate: Gate) -> _CircuitInstruction:
             raise ValueError(f"{gate.name} requires exactly one parameter")
         param: IRParam = gate.params[0]
         if isinstance(param, (int, float, complex)):
-            op = _OP_FACTORIES[gate.name](complex(param).real)  # type: ignore[misc,operator]
+            op = _OP_FACTORIES[gate.name](complex(param).real)
             return (op, list(gate.qubits))
         return (gate.name, param, gate.qubits[0])
     if gate.params:
@@ -200,7 +200,7 @@ def _gate_to_instruction(gate: Gate) -> _CircuitInstruction:
     factory = _OP_FACTORIES.get(gate.name)
     if factory is None:
         raise ValueError(f"Unknown gate name for IR->circuit: {gate.name!r}")
-    return (factory(), list(gate.qubits))  # type: ignore[misc,operator]
+    return (factory(), list(gate.qubits))
 
 
 def from_ir(ir: IRCircuit) -> "QuantumCircuit":
@@ -229,7 +229,7 @@ def from_ir(ir: IRCircuit) -> "QuantumCircuit":
         if isinstance(op, Gate):
             instr = _gate_to_instruction(op)
             if len(instr) == 2:
-                circuit.append(instr[0], instr[1])  # type: ignore[arg-type]
+                circuit.append(instr[0], instr[1])
             else:
                 circuit.append_parameterized(
                     instr[0],

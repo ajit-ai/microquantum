@@ -6,8 +6,9 @@ terms that discourage orthogonality with previously found eigenstates.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Callable
+from typing import Callable, Union, cast
 
 import numpy as np
 
@@ -109,8 +110,12 @@ class VQD:
         params_b: dict[Parameter, float],
     ) -> float:
         """Compute |<psi_a|psi_b>|^2 overlap."""
-        sv_a = self._ansatz.bind_parameters(params_a).run()  # type: ignore[arg-type]
-        sv_b = self._ansatz.bind_parameters(params_b).run()  # type: ignore[arg-type]
+        sv_a = self._ansatz.bind_parameters(
+            cast(Mapping[Union[str, Parameter], Union[int, float, complex]], params_a)
+        ).run()
+        sv_b = self._ansatz.bind_parameters(
+            cast(Mapping[Union[str, Parameter], Union[int, float, complex]], params_b)
+        ).run()
         overlap = abs(np.vdot(sv_a.amplitudes, sv_b.amplitudes)) ** 2
         return float(overlap)
 
@@ -121,7 +126,9 @@ class VQD:
         state_idx: int,
     ) -> float:
         """Evaluate cost with overlap penalties."""
-        sv = self._ansatz.bind_parameters(params).run()  # type: ignore[arg-type]
+        sv = self._ansatz.bind_parameters(
+            cast(Mapping[Union[str, Parameter], Union[int, float, complex]], params)
+        ).run()
         energy = self._hamiltonian.expectation(sv)
 
         # Add overlap penalties

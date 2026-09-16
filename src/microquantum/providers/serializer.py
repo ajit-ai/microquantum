@@ -80,12 +80,11 @@ def _instruction_to_dict(instr: Any) -> dict[str, Any]:
         targets = [target]
         params = [theta]
     else:
-        op, targets_raw = instr  # type: ignore[misc]
-        op = op  # type: ignore[assignment]
-        gate = _gate_name(op)  # type: ignore[arg-type]
+        op, targets_raw = instr
+        gate = _gate_name(op)
         targets = [int(t) for t in targets_raw]
         if gate in ("rx", "ry", "rz"):
-            params = [_rotation_angle(op, gate)]  # type: ignore[arg-type]
+            params = [_rotation_angle(op, gate)]
 
     return {"gate": gate, "targets": targets, "params": params}
 

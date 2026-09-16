@@ -110,14 +110,16 @@ class StateAnalysis(JSONSerializable):
         """Hilbert-space dimension (2^num_qubits)."""
         if self._statevector is not None:
             return int(self._statevector.shape[0])
-        return int(self._density.shape[0])  # type: ignore[union-attr]
+        assert self._density is not None
+        return int(self._density.shape[0])
 
     # -- statevector ----------------------------------------------------------
 
     def amplitudes(self) -> NDArray[np.complex128]:
         """Complex amplitudes (statevector only)."""
         self._require_statevector()
-        return self._statevector.copy()  # type: ignore[union-attr]
+        assert self._statevector is not None
+        return self._statevector.copy()
 
     def norm_squared(self) -> float:
         """Sum of squared amplitude magnitudes (should be 1.0 when normalized)."""

@@ -191,17 +191,18 @@ class QAOA:
 
     def build_ansatz(self) -> QuantumCircuit:
         """Build the QAOA ansatz circuit with symbolic parameters."""
-        if self._is_generic:
+        ham = self._cost_hamiltonian
+        if isinstance(ham, PauliSum):
             return _build_qaoa_ansatz_generic(
                 self._num_qubits,
-                self._cost_hamiltonian,  # type: ignore[arg-type]
+                ham,
                 self._num_layers,
                 self._gamma_params,
                 self._beta_params,
             )
         return _build_qaoa_ansatz(
             self._num_qubits,
-            self._cost_hamiltonian,  # type: ignore[arg-type]
+            ham,
             self._num_layers,
             self._gamma_params,
             self._beta_params,

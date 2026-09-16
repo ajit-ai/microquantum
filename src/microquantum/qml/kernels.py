@@ -14,7 +14,7 @@ from typing import Optional
 
 import numpy as np
 
-from ..core.circuit import QuantumCircuit
+from ..core.circuit import QuantumCircuit, _narrow_concrete
 from ..core.tensor import expand_operator
 from .encoding import BaseEncoder, ZFeatureMap
 
@@ -80,11 +80,10 @@ class QuantumKernel:
         for gate_instr in circ1._gate_instructions:
             if QuantumCircuit._is_parameterized_gate(gate_instr):
                 continue
-            op = gate_instr[0]  # type: ignore[assignment]
-            targets = gate_instr[1]  # type: ignore[assignment,union-attr]
+            op, targets = _narrow_concrete(gate_instr)
             # Shift qubit indices by 1 (skip ancilla)
-            shifted = [int(t) + 1 for t in targets]  # type: ignore[union-attr]
-            expanded = expand_operator(op, shifted, total)  # type: ignore[arg-type]
+            shifted = [int(t) + 1 for t in targets]
+            expanded = expand_operator(op, shifted, total)
             qc.append(expanded, list(range(total)))
 
         # Controlled-SWAP between registers
@@ -104,11 +103,10 @@ class QuantumKernel:
         for gate_instr in reversed(circ2._gate_instructions):
             if QuantumCircuit._is_parameterized_gate(gate_instr):
                 continue
-            op = gate_instr[0]  # type: ignore[assignment]
-            targets = gate_instr[1]  # type: ignore[assignment,union-attr]
-            inv_op = op.inverse()  # type: ignore[union-attr]
-            shifted = [int(t) + 1 + n for t in targets]  # type: ignore[union-attr]
-            expanded = expand_operator(inv_op, shifted, total)  # type: ignore[arg-type]
+            op, targets = _narrow_concrete(gate_instr)
+            inv_op = op.inverse()
+            shifted = [int(t) + 1 + n for t in targets]
+            expanded = expand_operator(inv_op, shifted, total)
             qc.append(expanded, list(range(total)))
 
         # Hadamard on ancilla

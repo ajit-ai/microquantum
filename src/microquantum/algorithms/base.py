@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 
 @dataclass
@@ -86,7 +86,7 @@ class AlgorithmResult:
             "execution_metadata": dict(self.execution_metadata),
             "config": dict(self.config),
         }
-        return json_safe(data)  # type: ignore[no-any-return]
+        return cast(dict[str, Any], json_safe(data))
 
     def to_json(self) -> str:
         """Serialize to a JSON string."""

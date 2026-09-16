@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
+from typing import Union, cast
 
 import numpy as np
 
@@ -244,7 +246,9 @@ class AdaptVQE:
         Returns:
             Tuple of (state, energy).
         """
-        bound = ansatz.bind_parameters(param_values)  # type: ignore[arg-type]
+        bound = ansatz.bind_parameters(
+            cast(Mapping[Union[str, Parameter], Union[int, float, complex]], param_values)
+        )
         state = bound.run()
         energy = self._compute_energy(state)
         return state, energy
@@ -390,7 +394,9 @@ class AdaptVQE:
 
         # Build final ansatz with bound parameters
         final_ansatz = self._build_ansatz(selected_indices, params)
-        final_bound = final_ansatz.bind_parameters(param_values)  # type: ignore[arg-type]
+        final_bound = final_ansatz.bind_parameters(
+            cast(Mapping[Union[str, Parameter], Union[int, float, complex]], param_values)
+        )
         final_state = final_bound.run()
 
         return AdaptResult(

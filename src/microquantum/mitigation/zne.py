@@ -16,7 +16,7 @@ from typing import Optional
 import numpy as np
 
 from .._json import JSONSerializable
-from ..core.circuit import QuantumCircuit
+from ..core.circuit import QuantumCircuit, _narrow_concrete
 
 
 @dataclass
@@ -107,16 +107,14 @@ class ZeroNoiseExtrapolation:
         n = circuit.num_qubits
         folded = QuantumCircuit(n)
 
-        len(circuit._gate_instructions)
         for _fold in range((fold_level - 1) // 2):
             # Forward pass: add original gates
             for gate_instr in circuit._gate_instructions:
                 if QuantumCircuit._is_parameterized_gate(gate_instr):
                     continue
                 from ..core.tensor import expand_operator
-                op = gate_instr[0]  # type: ignore[assignment]
-                targets = gate_instr[1]  # type: ignore[assignment]
-                expanded = expand_operator(op, targets, n)  # type: ignore[arg-type]
+                op, targets = _narrow_concrete(gate_instr)
+                expanded = expand_operator(op, targets, n)
                 folded.append(expanded, list(range(n)))
 
             # Reverse pass: add inverse gates
@@ -124,10 +122,9 @@ class ZeroNoiseExtrapolation:
                 if QuantumCircuit._is_parameterized_gate(gate_instr):
                     continue
                 from ..core.tensor import expand_operator
-                op = gate_instr[0]  # type: ignore[assignment]
-                targets = gate_instr[1]  # type: ignore[assignment]
-                inv_op = op.inverse()  # type: ignore[union-attr]
-                expanded = expand_operator(inv_op, targets, n)  # type: ignore[arg-type]
+                op, targets = _narrow_concrete(gate_instr)
+                inv_op = op.inverse()
+                expanded = expand_operator(inv_op, targets, n)
                 folded.append(expanded, list(range(n)))
 
         # Final forward pass
@@ -135,9 +132,8 @@ class ZeroNoiseExtrapolation:
             if QuantumCircuit._is_parameterized_gate(gate_instr):
                 continue
             from ..core.tensor import expand_operator
-            op = gate_instr[0]  # type: ignore[assignment]
-            targets = gate_instr[1]  # type: ignore[assignment]
-            expanded = expand_operator(op, targets, n)  # type: ignore[arg-type]
+            op, targets = _narrow_concrete(gate_instr)
+            expanded = expand_operator(op, targets, n)
             folded.append(expanded, list(range(n)))
 
         return folded
