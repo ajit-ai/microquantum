@@ -75,6 +75,7 @@ Example tree (all current examples)
    ├── 30_compile_and_execute.py
    ├── 31_compile_compare_execution.py
    ├── 32_parameterized_compile_execute.py
+   ├── 33_stdlib_foundations.py
    ├── rsa_vulnerability_assessment.py
    ├── algorithms/            VQE, QAOA, Grover, phase estimation, ...
    │   ├── 01_problem_hierarchy.py

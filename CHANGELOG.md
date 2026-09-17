@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 117: System Standard Library** — new `microquantum.stdlib`
+  package (also re-exported from the top-level `microquantum` module):
+  `stdlib.bits` (MSB-first `int`↔bitstring conversions and Hamming
+  weight/distance, matching measurement-outcome conventions),
+  `stdlib.numbers` (`mod_2pi`, `wrap_angle`, `is_angle_close`,
+  `is_identity_angle` — modulo-`2*pi` rotation arithmetic), and
+  `stdlib.states` (factories for `basis_state`, `uniform_superposition`,
+  `bell_state`, `ghz_state`, `w_state` on `StateVector`, honouring the
+  dense-allocation budget).  Lays the stable, dependency-light foundation
+  layer for user programs, the runtime and the compiler.  Adds a curated
+  API docs page, example 33, and a dedicated test module.
 - **MQ-17: Strict mypy conformance** — Full SDK now passes `mypy --strict` with zero errors. Removed per-module error-code overrides for `circuit.py` and `gradient.py`. Added `_narrow_parameterized()`/`_narrow_concrete()` type-safe helpers. New conformance test gates strict mypy in CI.
 - Analytical gradients via the parameter-shift rule (MQ-13): exact
   `parameter_shift_gradient` for a single parameter and `gradient` for the

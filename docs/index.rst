@@ -140,6 +140,7 @@ architecture that is ready for future hardware providers.
    api/adapters
    api/benchmarks
    api/optimization
+   api/stdlib
 
 .. toctree::
    :maxdepth: 2
