@@ -8,6 +8,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 119: Runtime & Tooling** — makes the compiler/runtime stack directly
+  usable as a developer-facing system without redesigning the Phase-118
+  ecosystem:
+  - **Runtime configuration** — new `RuntimeConfig` (frozen, JSON-safe) holding
+    the backend (instance or registered name), `BackendRegistry`, default
+    target, history cap and default optimization level; `ExecutionRuntime`
+    accepts `config=...` (legacy kwargs still override), exposes `.config`, and
+    `configure(**overrides)` returns a fresh runtime with merged settings.
+  - **Stage-tagged errors** — new `microquantum.runtime.errors` hierarchy:
+    `ExecutionError(ValueError)` with `PlanningError`, `CompilationError`,
+    `RuntimeDispatchError`, `BackendExecutionError`, raised at the exact
+    pipeline stage (messages unchanged).  All subclass `ValueError`, so
+    existing `except ValueError` handlers keep working; `TypeError` plan-shape
+    errors are deliberately not wrapped.
+  - **Runtime introspection** — `runtime_info(runtime=None, registry=None)`
+    returns a JSON-safe `RuntimeInfo` snapshot (SDK/Python/NumPy versions,
+    sorted `ExecutionStrategy` values, live per-backend capability summaries
+    from the real registries, default backend and optimization level).
+  - **Developer CLI** — new `microquantum` console script (also
+    `python -m microquantum`) implemented dependency-free in the private
+    `microquantum._cli`: `version`/`--version`, `info`, `backends [--json]`
+    and `run FILE [--shots N --seed N --backend NAME --optimization-level N]`
+    for OpenQASM 2.0 files.  Runs through the canonical public Python APIs,
+    prints one-line errors to stderr with a non-zero exit (no traceback noise;
+    `--debug` restores it).
+  - Docs: `execution/runtime.rst` extended with configuration, errors and
+    introspection; new `execution/cli.rst` and curated `api/runtime.rst`;
+    package-ecosystem private-boundary rule updated to `_json` + `_cli`.
+    Tests: `test_runtime_config.py`, `test_runtime_info.py`,
+    `test_runtime_errors.py`, `test_cli.py`.
 - **Phase 118: Package Ecosystem** — establishes and locks the public package
   organization around the existing core, compiler, runtime, backends and the
   Phase-117 `microquantum.stdlib`.  The nine conceptual boundaries (core /

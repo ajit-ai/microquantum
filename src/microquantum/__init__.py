@@ -20,7 +20,9 @@ The public surface follows a stable, layered package layout (see
 ``__init__`` is the friendly gateway: names are re-exported from their single
 canonical home so ``from microquantum import X`` always resolves to the same
 object as the subpackage import.  Private implementation helpers stay private
-(module-level ``_`` prefix) and are not part of the public surface.
+(module-level ``_`` prefix) and are not part of the public surface; the entire
+private module boundary is ``microquantum._json`` (JSON helpers) and
+``microquantum._cli`` (developer CLI).
 """
 
 __version__ = "0.4.1"
@@ -260,6 +262,7 @@ from .runtime import (
     ExecutionRuntime,
     ExecutionStrategy,
     ExecutionTrace,
+    RuntimeConfig,
     TraceEvent,
     default_runtime,
     execute,
@@ -269,6 +272,7 @@ from .runtime import (
     run_experiment,
     run_hybrid,
     run_parameter_sweep,
+    runtime_info,
     submit,
     submit_batch,
 )
@@ -548,6 +552,8 @@ __all__ = [
     # Execution runtime
     "ExecutionPlan",
     "ExecutionRuntime",
+    "RuntimeConfig",
+    "runtime_info",
     "ExecutionStrategy",
     "ExecutionTrace",
     "TraceEvent",

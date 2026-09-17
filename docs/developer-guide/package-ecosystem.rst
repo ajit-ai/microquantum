@@ -21,8 +21,9 @@ Import policy
   (capability constants, strategy handlers, CSV/plot utilities) that are not
   part of the minimal top-level surface.
 * Internal helpers are private: their names or modules start with ``_`` (for
-  example ``microquantum._json``).  They are not covered by the compatibility
-  contract and must not be imported by user code.
+  example ``microquantum._json`` — JSON helpers — and ``microquantum._cli`` —
+  the ``microquantum`` console script's implementation).  They are not covered
+  by the compatibility contract and must not be imported by user code.
 
 Conceptual boundaries
 ---------------------

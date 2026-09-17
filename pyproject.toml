@@ -63,6 +63,9 @@ all = [
     "furo>=2024.8.6",
 ]
 
+[project.scripts]
+microquantum = "microquantum._cli:main"
+
 [project.urls]
 Homepage = "https://github.com/ajit-ai/microquantum"
 Repository = "https://github.com/ajit-ai/microquantum"

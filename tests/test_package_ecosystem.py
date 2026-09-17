@@ -124,11 +124,16 @@ class Test_top_level_gateway:
         for name in microquantum.__all__:
             assert not name.startswith("_")
 
-    def test_only_one_private_module(self):
+    def test_only_private_boundary_modules(self):
+        # `_json` (JSON helpers) and `_cli` (developer CLI) are the entire
+        # private module surface; everything else is public.
+        allowed = {"_json", "_cli"}
         private = [
             m
             for m in dir(microquantum)
-            if m.startswith("_") and not (m.startswith("__") and m.endswith("__")) and m != "_json"
+            if m.startswith("_")
+            and not (m.startswith("__") and m.endswith("__"))
+            and m not in allowed
         ]
         assert private == []
 

@@ -25,6 +25,7 @@ Everything they mention links into the same generated reference.
    experiments
    analysis
    backends
+   runtime
    adapters
    benchmarks
    optimization

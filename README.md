@@ -38,6 +38,7 @@ algorithm is implemented from scratch with NumPy as the only hard dependency.
 | **Mitigation** | Zero-noise extrapolation (ZNE), probabilistic error cancellation (PEC), measurement-error mitigation (MEM) |
 | **Result contract** | `microquantum.analytics.result.Result` — a standardized, JSON-safe decision schema |
 | **Domain framework** | `DomainAdapter` ABC: validate → encode → execute → decode, with `QuantumProblem` / `QuantumResult` / `ResultCache` |
+| **Runtime & tooling** | configurable `ExecutionRuntime` (`RuntimeConfig`, `configure(...)`, stage-tagged errors, `runtime_info()` introspection) and a `microquantum` CLI (`version`, `info`, `backends`, `run file.qasm`) |
 
 ---
 ---

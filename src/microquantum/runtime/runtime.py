@@ -29,6 +29,13 @@ from ..core.circuit import QuantumCircuit
 from ..core.device import Target
 from ..core.parameter import Parameter
 from ..ir import CompilationResult, Compiler, from_ir
+from .config import RuntimeConfig
+from .errors import (
+    BackendExecutionError,
+    CompilationError,
+    PlanningError,
+    RuntimeDispatchError,
+)
 from .plan import ExecutionPlan, ParameterBinding
 from .strategy import STRATEGY_HANDLERS, ExecutionStrategy
 from .trace import ExecutionTrace
@@ -69,6 +76,11 @@ class ExecutionRuntime:
         default_target: Default :class:`Target` applied to plans that do not
             specify a target.  ``None`` disables default target processing.
         history_size: Maximum number of records kept in :attr:`history`.
+            ``None`` defers to the :class:`RuntimeConfig` value (default 200).
+        config: Optional :class:`RuntimeConfig` holding runtime defaults.
+            Explicit constructor arguments override config values.
+        default_optimization_level: Compiler optimization level (0-2) used
+            when a plan is built from a raw circuit.
     """
 
     def __init__(
@@ -77,12 +89,35 @@ class ExecutionRuntime:
         *,
         registry: Optional[BackendRegistry] = None,
         default_target: Optional[Target] = None,
-        history_size: int = 200,
+        history_size: Optional[int] = None,
+        config: Optional[RuntimeConfig] = None,
+        default_optimization_level: Optional[int] = None,
     ) -> None:
-        self._backend = backend
-        self._registry = registry
-        self._default_target = default_target
-        self._history_size = max(0, int(history_size))
+        if config is not None and not isinstance(config, RuntimeConfig):
+            raise TypeError(
+                f"ExecutionRuntime config must be a RuntimeConfig or None, "
+                f"got {type(config).__name__}"
+            )
+        base = config if config is not None else RuntimeConfig()
+        resolved_optimization = (
+            base.default_optimization_level
+            if default_optimization_level is None
+            else default_optimization_level
+        )
+        resolved = RuntimeConfig(
+            backend=backend if backend is not None else base.backend,
+            registry=registry if registry is not None else base.registry,
+            default_target=(
+                default_target if default_target is not None else base.default_target
+            ),
+            history_size=base.history_size if history_size is None else history_size,
+            default_optimization_level=resolved_optimization,
+        )
+        self._config = resolved
+        self._backend = resolved.backend
+        self._registry = resolved.registry
+        self._default_target: Optional[Target] = resolved.default_target
+        self._history_size = resolved.history_size
         self._history: list[dict[str, Any]] = []
         self._simulator: Optional[StatevectorBackend] = None
         self.handlers: dict[ExecutionStrategy, Any] = dict(STRATEGY_HANDLERS)
@@ -99,6 +134,24 @@ class ExecutionRuntime:
         return [dict(entry) for entry in self._history]
 
     @property
+    def config(self) -> RuntimeConfig:
+        """Immutable configuration this runtime was constructed with."""
+        return self._config
+
+    def configure(self, **overrides: Any) -> "ExecutionRuntime":
+        """Return a new runtime with merged configuration overrides.
+
+        Built from :meth:`config` plus the given keyword overrides (same
+        fields as :class:`RuntimeConfig`), reusing the resolved backend,
+        registry and target.  The original runtime is left untouched.
+
+        Examples:
+            ``runtime.configure(history_size=50)``,
+            ``runtime.configure(default_optimization_level=2)``.
+        """
+        return ExecutionRuntime(config=replace(self._config, **overrides))
+
+    @property
     def registry(self) -> Optional[BackendRegistry]:
         """Registry used to resolve backend names (may be ``None``)."""
         return self._registry
@@ -111,7 +164,9 @@ class ExecutionRuntime:
         a lazily created :class:`StatevectorBackend` (name ``"statevector"``).
         """
         if self._backend is not None:
-            return self._backend
+            if isinstance(self._backend, Backend):
+                return self._backend
+            return self.resolve_backend(cast(BackendRef, self._backend))
         if self._registry is not None:
             backend = self._registry.default
             if backend is not None:
@@ -176,7 +231,7 @@ class ExecutionRuntime:
             )
         problems = plan.validate()
         if problems:
-            raise ValueError(
+            raise PlanningError(
                 f"ExecutionPlan '{plan.name}' has problems: {'; '.join(problems)}"
             )
         return plan
@@ -224,7 +279,7 @@ class ExecutionRuntime:
         )
         explicit = target is not None or plan.target is not None
         if explicit and not compiled.is_compatible:
-            raise ValueError(
+            raise CompilationError(
                 f"compilation produced target problems: "
                 f"{'; '.join(compiled.diagnostics)}"
             )
@@ -324,7 +379,7 @@ class ExecutionRuntime:
         strategy = ExecutionStrategy.classify(plan)
         handler = self.handlers.get(strategy)
         if handler is None:
-            raise ValueError(
+            raise RuntimeDispatchError(
                 f"no execution handler registered for strategy {strategy.value!r}"
             )
         return cast(BackendResult, handler(self, plan))
@@ -730,7 +785,7 @@ class ExecutionRuntime:
             from ..core.dynamic import DynamicCircuit
 
             if isinstance(work, DynamicCircuit):
-                raise ValueError(
+                raise PlanningError(
                     "dynamic circuits must be converted first; "
                     "use to_ir_dynamic() + a compiled plan"
                 )
@@ -739,6 +794,7 @@ class ExecutionRuntime:
                 backend=backend,
                 shots=shots if shots is not None else 1024,
                 seed=seed if seed is not None else None,
+                optimization_level=self._config.default_optimization_level,
                 metadata=metadata or {},
             )
         raise TypeError(
@@ -760,7 +816,7 @@ class ExecutionRuntime:
             base = base.bind_parameters(dict(plan.parameter_bindings))
         if base.is_parameterized:
             remaining = sorted(p.name for p in base.parameters)
-            raise ValueError(
+            raise PlanningError(
                 f"plan '{plan.name}' remains parameterized; "
                 f"unbound parameters: {remaining}"
             )
@@ -790,7 +846,7 @@ class ExecutionRuntime:
                 )
                 explicit_target = plan.target is not None or self._default_target is not None
                 if explicit_target and not compiled.is_compatible:
-                    raise ValueError(
+                    raise CompilationError(
                         f"plan '{plan.name}' is incompatible with its target: "
                         f"{'; '.join(compiled.diagnostics)}"
                     )
@@ -832,7 +888,7 @@ class ExecutionRuntime:
         if plan.parameter_bindings:
             executable = executable.bind_parameters(dict(plan.parameter_bindings))
         if executable.is_parameterized:
-            raise ValueError(
+            raise PlanningError(
                 f"plan '{plan.name}' remains parameterized; "
                 f"unbound parameters: {sorted(p.name for p in executable.parameters)}"
             )
@@ -864,7 +920,7 @@ class ExecutionRuntime:
         if not compiled.is_compatible and plan.options.get(
             "raise_on_incompatible", True
         ):
-            raise ValueError(
+            raise CompilationError(
                 f"compiled plan '{plan.name}' is incompatible with its target: "
                 f"{'; '.join(compiled.diagnostics)}"
             )
@@ -894,7 +950,7 @@ class ExecutionRuntime:
                 )
         problems.extend(backend.validate(plan))
         if problems:
-            raise ValueError(
+            raise RuntimeDispatchError(
                 f"plan '{plan.name}' cannot run on backend '{backend.name}': "
                 f"{'; '.join(problems)}"
             )
@@ -910,15 +966,15 @@ class ExecutionRuntime:
         if job.status is JobStatus.CANCELLED:
             trace.record("cancelled")
             self._record_history(plan, backend, job, trace, elapsed, error=job.error)
-            raise ValueError("job was cancelled before completion")
+            raise BackendExecutionError("job was cancelled before completion")
         if job.status is JobStatus.FAILED:
             trace.record("failed", error=job.error)
             self._record_history(plan, backend, job, trace, elapsed, error=job.error)
-            raise ValueError(job.error or "backend job failed")
+            raise BackendExecutionError(job.error or "backend job failed")
         if job.result is None:
             trace.record("empty")
             self._record_history(plan, backend, job, trace, elapsed)
-            raise ValueError(f"job {job.job_id} produced no result")
+            raise BackendExecutionError(f"job {job.job_id} produced no result")
 
         trace.record("completed", job_id=job.job_id)
         strategy = ExecutionStrategy.classify(plan)

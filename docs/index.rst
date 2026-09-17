@@ -89,6 +89,7 @@ architecture that is ready for future hardware providers.
 
    execution/execution-plan
    execution/runtime
+   execution/cli
    execution/execution-core
    execution/backends
    execution/simulation
@@ -137,6 +138,7 @@ architecture that is ready for future hardware providers.
    api/experiments
    api/analysis
    api/backends
+   api/runtime
    api/adapters
    api/benchmarks
    api/optimization

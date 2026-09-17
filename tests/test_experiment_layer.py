@@ -104,7 +104,7 @@ class TestExecutionRecord:
         assert not record.is_success
         assert record.status is ExecutionStatus.FAILED
         assert record.error is not None
-        assert record.error.error_type == "ValueError"
+        assert record.error.error_type == "PlanningError"
         assert record.error.execution_id == record.execution_id
         assert record.error.plan_name == "unbound"
         assert "nope" in record.error.message
@@ -431,5 +431,5 @@ class TestFailureInspection:
         assert err is not None
         assert err.execution_id == failed[0].execution_id
         assert err.backend == "mock"
-        assert err.error_type == "ValueError"
+        assert err.error_type == "PlanningError"
         assert failed[0].plan_name == "p1"
