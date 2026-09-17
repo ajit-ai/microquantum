@@ -147,6 +147,7 @@ architecture that is ready for future hardware providers.
    :caption: Developer Guide
 
    developer-guide/architecture
+   developer-guide/package-ecosystem
    developer-guide/development
    developer-guide/extending
 

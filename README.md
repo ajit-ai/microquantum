@@ -159,20 +159,25 @@ result = Executor(backend=backend).run(qc, shots=1024)
 ```
 microquantum/
 ├── src/microquantum/
-│   ├── core/          # Quantum engine, circuits, operators, transpiler
+│   ├── core/          # Quantum engine, circuits, gates, states, transpiler
+│   ├── ir/            # Intermediate representation & compiler
+│   ├── backends/      # Simulators, noise, tensor networks, Executor
+│   ├── runtime/       # ExecutionPlan, ExecutionRuntime, strategies
+│   ├── problems/      # Sampling / optimization / Hamiltonian / search
 │   ├── algorithms/    # 23+ quantum algorithms
 │   ├── experiments/   # Execution records, sweeps, experiments (MQ-07)
 │   ├── analysis/      # Sampling / expectation / state analysis (MQ-07)
-│   ├── backends/      # Simulators, noise, tensor networks, Executor
-│   ├── providers/     # IBM Quantum & IonQ hardware clients (REST)
-│   ├── analytics/     # CSV loading, result contract, analytics base
 │   ├── optimization/  # QUBO / Ising toolchain
+│   ├── providers/     # IBM Quantum & IonQ hardware clients (REST)
+│   ├── adapters/      # Domain adapters (QuantumProblem/QuantumResult)
+│   ├── analytics/     # CSV loading, result contract, analytics base
 │   ├── qml/           # Quantum machine learning
 │   ├── qec/           # Error correction codes
 │   ├── benchmarks/    # Quantum benchmarking suite
 │   ├── chemistry/     # Molecular Hamiltonians and ansätze
 │   ├── mitigation/    # Error mitigation (ZNE, PEC, MEM)
-│   └── optimizers/    # Classical optimizers
+│   ├── optimizers/    # Classical optimizers
+│   └── stdlib/        # System standard library: bits, numbers, states
 ├── examples/          # Runnable demo scripts
 ├── docs/              # Sphinx documentation
 └── pyproject.toml     # Package configuration

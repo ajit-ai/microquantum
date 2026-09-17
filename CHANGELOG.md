@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 118: Package Ecosystem** — establishes and locks the public package
+  organization around the existing core, compiler, runtime, backends and the
+  Phase-117 `microquantum.stdlib`.  The nine conceptual boundaries (core /
+  circuit / gates / states / measurement / compiler / runtime / backends /
+  stdlib) map onto the existing modules without file moves or renamed imports:
+  a new `docs/developer-guide/package-ecosystem.rst` canonical import map, an
+  updated architecture source tree and README project structure, and an
+  expanded top-level package docstring.  Conformance tests
+  (`tests/test_package_ecosystem.py`) lock the surface: every public
+  subpackage imports with a curated `__all__` (no star imports, no private
+  leaks), the top-level gateway stays fully resolvable, re-exports are
+  identity-canonical (no duplicate implementations), stdlib utilities live
+  only in `microquantum.stdlib.*`, and packaging discovery (setuptools
+  `find` under `src/`) reaches every subpackage including `stdlib`.
 - **Phase 117: System Standard Library** — new `microquantum.stdlib`
   package (also re-exported from the top-level `microquantum` module):
   `stdlib.bits` (MSB-first `int`↔bitstring conversions and Hamming
