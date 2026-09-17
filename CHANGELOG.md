@@ -5,6 +5,22 @@ All notable changes to the open-source `microquantum` SDK are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- **Cross-platform support** — the GA (1.0.0) release is documented for
+  Windows, Linux, macOS and BSD:
+  - CI matrix expanded from Ubuntu-only to GitHub-hosted Ubuntu Linux,
+    Windows and macOS across Python 3.10 - 3.13 (plus an import check and CLI
+    smoke step in each test job).
+  - `pyproject.toml` classifiers now declare `MacOS`, `Microsoft :: Windows`,
+    `POSIX :: BSD` and `POSIX :: Linux`.
+  - New `docs/releases/platform-support.rst` restates the designed-vs-verified
+    distinction; `installation.rst` gains per-platform Linux / Windows / macOS
+    / BSD instructions; README, `compatibility.rst` and `ga.rst` updated to
+    the accurate cross-platform support statement.  BSD is reported as
+    supported by design but not CI-verified.
+
 ## [1.0.0] - 2026-09-17
 
 MicroQuantum **1.0.0** is the General Availability (GA) release.  It wraps up

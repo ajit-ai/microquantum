@@ -47,6 +47,13 @@ algorithm is implemented from scratch with NumPy as the only hard dependency.
 
 Requires **Python 3.10, 3.11, 3.12, or 3.13** and NumPy ≥ 1.20 (installed automatically).
 
+MicroQuantum is a pure-Python/NumPy quantum SDK designed for cross-platform use on
+**Windows, Linux, macOS, and BSD** systems where the required Python and NumPy
+environments are available. The wheel is `py3-none-any` — no platform-specific
+binaries. Windows, Linux and macOS are verified in CI; BSD is supported at the
+portable Python/package level. See the [platform support](docs/releases/platform-support.rst)
+page for the exact verification status.
+
 ```bash
 pip install microquantum
 ```

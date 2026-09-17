@@ -167,6 +167,7 @@ architecture that is ready for future hardware providers.
    releases/developer-preview
    releases/changelog
    releases/compatibility
+   releases/platform-support
    contributing
    faq
    troubleshooting

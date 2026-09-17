@@ -13,6 +13,9 @@ Status
 
 - **Version**: 1.0.0.
 - **Runtime**: Pure Python + NumPy.  Python 3.10 - 3.13.
+- **Platforms**: designed for Windows, Linux, macOS and BSD; CI-verified on
+  GitHub-hosted Ubuntu Linux, Windows and macOS.  See
+  :doc:`/releases/platform-support` for the per-platform status.
 - **Dependency**: NumPy is the only hard runtime dependency.
 - **Documentation**: https://ajit-ai.github.io/microquantum/
 - **License**: MIT.
