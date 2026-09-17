@@ -8,9 +8,11 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ["3.10", "3.11", "3.12", "3.13"]
 
     steps:
@@ -34,6 +36,12 @@ jobs:
 
       - name: Check installed surface
         run: uv run python -c "import microquantum; print(microquantum.__version__)"
+
+      - name: CLI smoke
+        run: |
+          uv run microquantum --version
+          uv run microquantum info
+          uv run microquantum backends --json
 
   lint:
     runs-on: ubuntu-latest

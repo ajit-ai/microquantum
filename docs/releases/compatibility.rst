@@ -4,8 +4,11 @@ Compatibility
 Platforms
 ---------
 
-MicroQuantum is pure Python + NumPy and runs wherever NumPy runs.  CI tests on
-Windows, Linux and macOS for Python 3.10 - 3.13:
+MicroQuantum is pure Python + NumPy and is **platform-independent at the
+package level**.  It is designed for Windows, Linux, macOS and BSD; see
+:doc:`/releases/platform-support` for the per-platform verification status.
+CI runs the full test matrix on GitHub-hosted Ubuntu Linux, Windows and macOS
+for Python 3.10 - 3.13:
 
 .. list-table::
    :widths: 30 70
@@ -21,6 +24,10 @@ Windows, Linux and macOS for Python 3.10 - 3.13:
      - Supported (primary development version)
    * - 3.13
      - Supported
+
+BSD is supported by design (pure Python wheels, no platform-specific binary
+dependencies) but is not currently covered by native CI runners; the BSD
+report in :doc:`/releases/platform-support` documents that distinction.
 
 Dependencies
 ------------
