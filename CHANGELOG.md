@@ -5,9 +5,21 @@ All notable changes to the open-source `microquantum` SDK are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.0] - 2026-09-17
+
+MicroQuantum **1.0.0** is the General Availability (GA) release.  It wraps up
+the final Phase 120 roadmap phase; the roadmap is complete and future work, if
+any, is post-GA.  Every feature and change below ships in this release.
 
 ### Added
+- **Phase 120: Final GA / Release Readiness** — final planned roadmap phase:
+  version bumped to `1.0.0` across `microquantum/__init__.py` and
+  `docs/conf.py`; packaging classifier updated to "Development Status :: 5 -
+  Production/Stable"; new `docs/releases/ga.rst` release notes with the final
+  roadmap statement (Phase 120 COMPLETE; Phase 121+ NOT CREATED); the 0.4.x
+  Developer Preview page archived; README, getting-started and compatibility
+  docs refreshed to the GA status and the post-1.0 stability contract; the
+  "Unreleased" section finalized as this release entry.
 - **Phase 119: Runtime & Tooling** — makes the compiler/runtime stack directly
   usable as a developer-facing system without redesigning the Phase-118
   ecosystem:

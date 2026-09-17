@@ -9,16 +9,16 @@ and adds no dependencies beyond the Python standard library.
 .. code-block:: console
 
    $ microquantum --version
-   microquantum 0.4.1
+   microquantum 1.0.0
 
    $ microquantum info
-   MicroQuantum 0.4.1
+   MicroQuantum 1.0.0
    Runtime:   ExecutionRuntime
    Python:    3.12.8
    NumPy:     2.2.1
    Strategies: batch, compiled, direct, hybrid, parameter_sweep
    Backends:  local_simulator
-   Default:   statevector
+   Default:   local_simulator
 
 Commands
 --------

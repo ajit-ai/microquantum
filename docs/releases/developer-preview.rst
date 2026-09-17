@@ -3,7 +3,14 @@
 Developer Preview
 =================
 
-MicroQuantum **v0.4.0 Developer Preview** is the first release that is
+.. note::
+
+   This page records the archived **0.4.x Developer Preview** series and is
+   retained for historical reference.  It was superseded by the
+   :ref:`ga` (v1.0.0) release; the limitations described here no longer apply
+   to the current SDK.
+
+MicroQuantum **v0.4.0 Developer Preview** was the first release that was
 installable from PyPI, fully documented on GitHub Pages, and covered by CI.
 
 Status

@@ -21,8 +21,8 @@ architecture that is ready for future hardware providers.
    :widths: 30 70
 
    * - Status
-     - **Developer Preview** (v0.4.1). Clean, tested, documented — but ``0.x``:
-       APIs may still evolve before 1.0.
+     - **General Availability** (v1.0.0). Stable, tested, documented,
+       dependency-light and published to PyPI.
    * - Runtime
      - Pure Python + NumPy. No Qiskit, Cirq or OpenQASM dependency.
    * - Execution
@@ -163,6 +163,7 @@ architecture that is ready for future hardware providers.
    :maxdepth: 2
    :caption: Project
 
+   releases/ga
    releases/developer-preview
    releases/changelog
    releases/compatibility
@@ -202,7 +203,7 @@ What the SDK provides today:
 * **Experiments** — :class:`~microquantum.ExecutionRecord` s,
   :class:`~microquantum.ParameterSweep` s and :class:`~microquantum.Experiment` s
   with reproducibility fingerprints and JSON-safe serialization.
-* **Analysis** — sampling, expectation, state and result-aggreation analysis on
+* **Analysis** — sampling, expectation, state and result-aggregation analysis on
   top of the existing result contracts.
 
 Indices and tables

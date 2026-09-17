@@ -6,9 +6,9 @@ Common issues and their fixes.
 ``pip install microquantum`` fails to find a version
 ----------------------------------------------------
 
-Make sure you target PyPI releases (0.4.0+).  A much older public package of
-the same name existed before the SDK; installing the current release gives the
-SDK, not that old stub.  Verify with:
+Make sure you get the current PyPI release (1.0.0+).  A much older public
+package of the same name existed before the SDK; installing the current
+release gives the SDK, not that old stub.  Verify with:
 
 .. code-block:: console
 

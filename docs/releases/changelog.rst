@@ -10,6 +10,25 @@ https://github.com/ajit-ai/microquantum/blob/main/CHANGELOG.md
 Release history
 ---------------
 
+1.0.0 (General Availability)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The GA release completes the final Phase 120 roadmap phase — the roadmap is
+complete:
+
+* System standard library (``microquantum.stdlib``: ``bits``, ``numbers``,
+  ``states``).
+* Package ecosystem locked through the canonical package / import map.
+* Runtime & tooling: ``RuntimeConfig``, stage-tagged runtime errors,
+  ``runtime_info`` introspection and the ``microquantum`` CLI
+  (``version`` / ``info`` / ``backends`` / ``run``).
+* Final GA readiness: version 1.0.0, production/stable packaging
+  classifiers, ``docs/releases/ga.rst`` release notes and the post-1.0
+  stability contract.
+
+The 0.4.x Developer Preview series that preceded this release is archived on
+the :ref:`developer-preview` page.
+
 0.4.0 (Developer Preview)
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 

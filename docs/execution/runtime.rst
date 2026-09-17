@@ -110,7 +110,7 @@ as it is — nothing is guessed or hand-maintained:
    from microquantum import runtime_info
 
    info = runtime_info(runtime)
-   print(info.runtime, info.version)      # e.g. 'ExecutionRuntime' '0.4.1'
+   print(info.runtime, info.version)      # e.g. 'ExecutionRuntime' '1.0.0'
    print(info.strategies)                 # sorted ExecutionStrategy values
    print(info.default_backend)            # backend used when a plan names none
    print(info.backends)                   # live capability summaries per backend

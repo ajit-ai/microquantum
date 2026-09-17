@@ -3,8 +3,8 @@
 project = "MicroQuantum"
 copyright = "2026, Ajit Kumar"
 author = "Ajit Kumar"
-version = "0.4.1"
-release = "0.4.1"
+version = "1.0.0"
+release = "1.0.0"
 
 extensions = [
     "sphinx.ext.autodoc",
@@ -29,8 +29,8 @@ html_theme_options = {
     "sidebar_hide_name": False,
     "navigation_with_keys": True,
     "announcement": (
-        "MicroQuantum is a Developer Preview. APIs may change before a stable "
-        "1.0 release."
+        "MicroQuantum 1.0.0 (General Availability) — MIT licensed, "
+        "NumPy-only quantum computing SDK."
     ),
     "light_css_variables": {
         "color-announcement-background": "#dee5ff",

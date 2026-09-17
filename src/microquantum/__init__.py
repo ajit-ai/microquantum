@@ -25,7 +25,7 @@ private module boundary is ``microquantum._json`` (JSON helpers) and
 ``microquantum._cli`` (developer CLI).
 """
 
-__version__ = "0.4.1"
+__version__ = "1.0.0"
 
 from .adapters import DomainAdapter, QuantumProblem, QuantumResult, ResultCache
 from .algorithms import (
