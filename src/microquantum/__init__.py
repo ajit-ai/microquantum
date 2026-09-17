@@ -249,8 +249,42 @@ from .runtime import (
     submit,
     submit_batch,
 )
+from .stdlib import (
+    basis_state,
+    bell_state,
+    bits_to_int,
+    bitstring_to_int,
+    ghz_state,
+    hamming_distance,
+    hamming_weight,
+    int_to_bits,
+    int_to_bitstring,
+    is_angle_close,
+    is_identity_angle,
+    mod_2pi,
+    uniform_superposition,
+    w_state,
+    wrap_angle,
+)
 
 __all__ = [
+    # Standard Library (Phase 117)
+    "stdlib",
+    "int_to_bits",
+    "bits_to_int",
+    "int_to_bitstring",
+    "bitstring_to_int",
+    "hamming_weight",
+    "hamming_distance",
+    "mod_2pi",
+    "wrap_angle",
+    "is_angle_close",
+    "is_identity_angle",
+    "basis_state",
+    "uniform_superposition",
+    "bell_state",
+    "ghz_state",
+    "w_state",
     # Core
     "CouplingMap",
     "QuantumCircuit",

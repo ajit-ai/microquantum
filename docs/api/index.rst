@@ -28,3 +28,4 @@ Everything they mention links into the same generated reference.
    adapters
    benchmarks
    optimization
+   stdlib
