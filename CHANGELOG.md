@@ -21,6 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     the accurate cross-platform support statement.  BSD is reported as
     supported by design but not CI-verified.
 
+### Fixed
+- **Wheel-vs-source conformance test on POSIX** — the conformance suite in
+  `tests/conformance/test_source_vs_wheel_install.py` only used the Windows
+  layout (`venv\Scripts\python.exe`, `venv\Lib\site-packages`); it now locates
+  the created venv's interpreter and site-packages per platform, so the
+  wheel/source equivalence checks run on Linux and macOS as well as Windows.
+
 ## [1.0.0] - 2026-09-17
 
 MicroQuantum **1.0.0** is the General Availability (GA) release.  It wraps up

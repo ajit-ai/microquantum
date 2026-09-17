@@ -116,8 +116,9 @@ def wheel_output(tmp_path_factory) -> str:
     assert wheel.exists() and wheel.stat().st_size > 0
 
     venv = tmp / "venv"
-    sub = "Scripts" if sys.platform == "win32" else "bin"
-    venv_py = venv / sub / "python.exe"
+    venv_bin = "Scripts" if sys.platform == "win32" else "bin"
+    venv_exe = "python.exe" if sys.platform == "win32" else "python"
+    venv_py = venv / venv_bin / venv_exe
     proc = subprocess.run(
         ["uv", "venv", "--python", sys.executable, "--system-site-packages", str(venv)],
         capture_output=True,
@@ -147,7 +148,15 @@ def wheel_output(tmp_path_factory) -> str:
             if p.rstrip("/\\").endswith("site-packages")
         )
     )
-    venv_site = venv / "Lib" / "site-packages"
+    venv_site = Path(
+        subprocess.run(
+            [str(venv_py), "-c", "import sysconfig; print(sysconfig.get_paths()['purelib'])"],
+            capture_output=True,
+            text=True,
+            timeout=120,
+        ).stdout.strip()
+    )
+    assert venv_site.is_dir(), f"venv site-packages not found: {venv_site}"
     _copy_runtime_deps(dev_site, venv_site)
 
     code, out = _run_python(str(venv_py), tmp)
