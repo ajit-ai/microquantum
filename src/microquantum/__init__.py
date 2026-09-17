@@ -1,6 +1,31 @@
-"""microquantum: A lightweight Python quantum computing SDK."""
+"""microquantum: A lightweight Python quantum computing SDK.
 
-__version__ = "0.4.1"
+Package ecosystem
+-----------------
+The public surface follows a stable, layered package layout (see
+``docs/developer-guide/package-ecosystem.rst`` for the full map):
+
+- ``microquantum.core`` — engine: circuits (``core.circuit``), operators/gate
+  library (``core.operators``), states (``core.state``), measurement
+  (``core.measurement``), transpiler passes, parameters, registers.
+- ``microquantum.ir`` — the compiler layer: the semantic intermediate
+  representation, its passes and ``Compiler``.
+- ``microquantum.runtime`` — execution plans, the execution runtime and its
+  strategies.
+- ``microquantum.backends`` — the backend contract, capabilities/registry and
+  local simulators.
+- ``microquantum.stdlib`` — the system standard library: ``stdlib.bits``,
+  ``stdlib.numbers`` and ``stdlib.states`` factories.
+
+``__init__`` is the friendly gateway: names are re-exported from their single
+canonical home so ``from microquantum import X`` always resolves to the same
+object as the subpackage import.  Private implementation helpers stay private
+(module-level ``_`` prefix) and are not part of the public surface; the entire
+private module boundary is ``microquantum._json`` (JSON helpers) and
+``microquantum._cli`` (developer CLI).
+"""
+
+__version__ = "1.0.0"
 
 from .adapters import DomainAdapter, QuantumProblem, QuantumResult, ResultCache
 from .algorithms import (
@@ -237,6 +262,7 @@ from .runtime import (
     ExecutionRuntime,
     ExecutionStrategy,
     ExecutionTrace,
+    RuntimeConfig,
     TraceEvent,
     default_runtime,
     execute,
@@ -246,6 +272,7 @@ from .runtime import (
     run_experiment,
     run_hybrid,
     run_parameter_sweep,
+    runtime_info,
     submit,
     submit_batch,
 )
@@ -525,6 +552,8 @@ __all__ = [
     # Execution runtime
     "ExecutionPlan",
     "ExecutionRuntime",
+    "RuntimeConfig",
+    "runtime_info",
     "ExecutionStrategy",
     "ExecutionTrace",
     "TraceEvent",

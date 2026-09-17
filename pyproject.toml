@@ -29,7 +29,7 @@ keywords = [
     "sdk",
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
@@ -62,6 +62,9 @@ all = [
     "sphinx-autoapi>=3.8.0",
     "furo>=2024.8.6",
 ]
+
+[project.scripts]
+microquantum = "microquantum._cli:main"
 
 [project.urls]
 Homepage = "https://github.com/ajit-ai/microquantum"

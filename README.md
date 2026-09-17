@@ -38,6 +38,7 @@ algorithm is implemented from scratch with NumPy as the only hard dependency.
 | **Mitigation** | Zero-noise extrapolation (ZNE), probabilistic error cancellation (PEC), measurement-error mitigation (MEM) |
 | **Result contract** | `microquantum.analytics.result.Result` — a standardized, JSON-safe decision schema |
 | **Domain framework** | `DomainAdapter` ABC: validate → encode → execute → decode, with `QuantumProblem` / `QuantumResult` / `ResultCache` |
+| **Runtime & tooling** | configurable `ExecutionRuntime` (`RuntimeConfig`, `configure(...)`, stage-tagged errors, `runtime_info()` introspection) and a `microquantum` CLI (`version`, `info`, `backends`, `run file.qasm`) |
 
 ---
 ---
@@ -64,7 +65,7 @@ cd microquantum
 uv sync --group dev
 ```
 
-Documentation for the Developer Preview is published at
+Documentation for the General Availability release is published at
 <https://ajit-ai.github.io/microquantum/> (auto-deployed from the `main`
 branch); the Sphinx sources live in `docs/`.
 
@@ -159,20 +160,25 @@ result = Executor(backend=backend).run(qc, shots=1024)
 ```
 microquantum/
 ├── src/microquantum/
-│   ├── core/          # Quantum engine, circuits, operators, transpiler
+│   ├── core/          # Quantum engine, circuits, gates, states, transpiler
+│   ├── ir/            # Intermediate representation & compiler
+│   ├── backends/      # Simulators, noise, tensor networks, Executor
+│   ├── runtime/       # ExecutionPlan, ExecutionRuntime, strategies
+│   ├── problems/      # Sampling / optimization / Hamiltonian / search
 │   ├── algorithms/    # 23+ quantum algorithms
 │   ├── experiments/   # Execution records, sweeps, experiments (MQ-07)
 │   ├── analysis/      # Sampling / expectation / state analysis (MQ-07)
-│   ├── backends/      # Simulators, noise, tensor networks, Executor
-│   ├── providers/     # IBM Quantum & IonQ hardware clients (REST)
-│   ├── analytics/     # CSV loading, result contract, analytics base
 │   ├── optimization/  # QUBO / Ising toolchain
+│   ├── providers/     # IBM Quantum & IonQ hardware clients (REST)
+│   ├── adapters/      # Domain adapters (QuantumProblem/QuantumResult)
+│   ├── analytics/     # CSV loading, result contract, analytics base
 │   ├── qml/           # Quantum machine learning
 │   ├── qec/           # Error correction codes
 │   ├── benchmarks/    # Quantum benchmarking suite
 │   ├── chemistry/     # Molecular Hamiltonians and ansätze
 │   ├── mitigation/    # Error mitigation (ZNE, PEC, MEM)
-│   └── optimizers/    # Classical optimizers
+│   ├── optimizers/    # Classical optimizers
+│   └── stdlib/        # System standard library: bits, numbers, states
 ├── examples/          # Runnable demo scripts
 ├── docs/              # Sphinx documentation
 └── pyproject.toml     # Package configuration
@@ -206,15 +212,22 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution workflow and
 
 ## Roadmap
 
-- **v0.4.1** (current) — Developer Preview (see `docs/releases/developer-preview.rst`):
-  complete warning-free documentation with auto-generated API reference,
-  GitHub Pages deployment, a consolidated CI/packaging pipeline, and PyPI +
-  TestPyPI releases via Trusted Publishing (`python-publish.yml`,
-  `testpypi-publish.yml`).
+- **v1.0.0** (current) — **General Availability**: the final planned
+  MicroQuantum roadmap phase. Complete stdlib (`microquantum.stdlib`), locked
+  package ecosystem, configurable runtime & tooling (`RuntimeConfig`,
+  stage-tagged errors, `runtime_info`, the `microquantum` CLI), production/
+  stable packaging and the GA release notes —
+  see `docs/releases/ga.rst`.
+- **v0.4.x** — Developer Preview series: warning-free documentation with an
+  auto-generated API reference, GitHub Pages deployment, a consolidated
+  CI/packaging pipeline, and PyPI + TestPyPI releases via Trusted Publishing
+  (`python-publish.yml`, `testpypi-publish.yml`).
 - **v0.3.0** — public open-source release: unified `Backend.run()`,
   serializable results (`to_dict()`), SPDX/legacy metadata cleanup, coverage +
   ruff gates, SDK-only docs.
-- **Next** — more hardware providers and tutorials.
+
+The roadmap is **complete**; there are no Phase 121+ roadmap phases. Future
+enhancements are post-GA release work.
 
 ---
 

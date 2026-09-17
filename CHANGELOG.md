@@ -5,9 +5,65 @@ All notable changes to the open-source `microquantum` SDK are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.0] - 2026-09-17
+
+MicroQuantum **1.0.0** is the General Availability (GA) release.  It wraps up
+the final Phase 120 roadmap phase; the roadmap is complete and future work, if
+any, is post-GA.  Every feature and change below ships in this release.
 
 ### Added
+- **Phase 120: Final GA / Release Readiness** — final planned roadmap phase:
+  version bumped to `1.0.0` across `microquantum/__init__.py` and
+  `docs/conf.py`; packaging classifier updated to "Development Status :: 5 -
+  Production/Stable"; new `docs/releases/ga.rst` release notes with the final
+  roadmap statement (Phase 120 COMPLETE; Phase 121+ NOT CREATED); the 0.4.x
+  Developer Preview page archived; README, getting-started and compatibility
+  docs refreshed to the GA status and the post-1.0 stability contract; the
+  "Unreleased" section finalized as this release entry.
+- **Phase 119: Runtime & Tooling** — makes the compiler/runtime stack directly
+  usable as a developer-facing system without redesigning the Phase-118
+  ecosystem:
+  - **Runtime configuration** — new `RuntimeConfig` (frozen, JSON-safe) holding
+    the backend (instance or registered name), `BackendRegistry`, default
+    target, history cap and default optimization level; `ExecutionRuntime`
+    accepts `config=...` (legacy kwargs still override), exposes `.config`, and
+    `configure(**overrides)` returns a fresh runtime with merged settings.
+  - **Stage-tagged errors** — new `microquantum.runtime.errors` hierarchy:
+    `ExecutionError(ValueError)` with `PlanningError`, `CompilationError`,
+    `RuntimeDispatchError`, `BackendExecutionError`, raised at the exact
+    pipeline stage (messages unchanged).  All subclass `ValueError`, so
+    existing `except ValueError` handlers keep working; `TypeError` plan-shape
+    errors are deliberately not wrapped.
+  - **Runtime introspection** — `runtime_info(runtime=None, registry=None)`
+    returns a JSON-safe `RuntimeInfo` snapshot (SDK/Python/NumPy versions,
+    sorted `ExecutionStrategy` values, live per-backend capability summaries
+    from the real registries, default backend and optimization level).
+  - **Developer CLI** — new `microquantum` console script (also
+    `python -m microquantum`) implemented dependency-free in the private
+    `microquantum._cli`: `version`/`--version`, `info`, `backends [--json]`
+    and `run FILE [--shots N --seed N --backend NAME --optimization-level N]`
+    for OpenQASM 2.0 files.  Runs through the canonical public Python APIs,
+    prints one-line errors to stderr with a non-zero exit (no traceback noise;
+    `--debug` restores it).
+  - Docs: `execution/runtime.rst` extended with configuration, errors and
+    introspection; new `execution/cli.rst` and curated `api/runtime.rst`;
+    package-ecosystem private-boundary rule updated to `_json` + `_cli`.
+    Tests: `test_runtime_config.py`, `test_runtime_info.py`,
+    `test_runtime_errors.py`, `test_cli.py`.
+- **Phase 118: Package Ecosystem** — establishes and locks the public package
+  organization around the existing core, compiler, runtime, backends and the
+  Phase-117 `microquantum.stdlib`.  The nine conceptual boundaries (core /
+  circuit / gates / states / measurement / compiler / runtime / backends /
+  stdlib) map onto the existing modules without file moves or renamed imports:
+  a new `docs/developer-guide/package-ecosystem.rst` canonical import map, an
+  updated architecture source tree and README project structure, and an
+  expanded top-level package docstring.  Conformance tests
+  (`tests/test_package_ecosystem.py`) lock the surface: every public
+  subpackage imports with a curated `__all__` (no star imports, no private
+  leaks), the top-level gateway stays fully resolvable, re-exports are
+  identity-canonical (no duplicate implementations), stdlib utilities live
+  only in `microquantum.stdlib.*`, and packaging discovery (setuptools
+  `find` under `src/`) reaches every subpackage including `stdlib`.
 - **Phase 117: System Standard Library** — new `microquantum.stdlib`
   package (also re-exported from the top-level `microquantum` module):
   `stdlib.bits` (MSB-first `int`↔bitstring conversions and Hamming

@@ -32,7 +32,7 @@ Verify the installation:
 
    python -c "import microquantum; print(microquantum.__version__)"
 
-You should see ``0.4.1``.
+You should see ``1.0.0``.
 
 From source
 -----------

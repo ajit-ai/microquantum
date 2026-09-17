@@ -5,7 +5,7 @@ MicroQuantum is a **general-purpose Python quantum computing SDK foundation**.
 It is implemented independently, from scratch, with NumPy as the only hard
 dependency — it is not a wrapper around Qiskit, Cirq or OpenQASM.
 
-This Developer Preview (v0.4.1) ships a complete local stack:
+MicroQuantum **1.0.0 (General Availability)** ships a complete local stack:
 
 .. code-block:: text
 
@@ -41,12 +41,11 @@ Goals of this release
   hardware / cloud providers without rearchitecting the SDK.
 * **Reproducible, serializable results** end to end.
 
-What it is *not* (yet)
-----------------------
+What it is *not*
+----------------
 
-This release does **not** provide hardware execution, a cloud platform, an
+MicroQuantum does **not** provide hardware execution, a cloud platform, an
 enterprise database-backed experiment service, or an analytics dashboard.  The
-architecture contains the boundaries where those would plug in later — it does
-not yet implement them.
+architecture contains the boundaries where those would plug in later.
 
-See the :ref:`developer-preview` page for the full status and limitations.
+See the :ref:`ga` page for the full status and release notes.

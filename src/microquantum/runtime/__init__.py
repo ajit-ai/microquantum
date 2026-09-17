@@ -24,6 +24,15 @@ from ..core.circuit import QuantumCircuit
 from ..core.device import Target
 from ..experiments.experiment import ExperimentResult
 from ..experiments.record import ExecutionRecord
+from .config import RuntimeConfig
+from .errors import (
+    BackendExecutionError,
+    CompilationError,
+    ExecutionError,
+    PlanningError,
+    RuntimeDispatchError,
+)
+from .info import RuntimeInfo, runtime_info
 from .plan import ExecutionPlan, ParameterBinding
 from .runtime import BatchResult, ExecutionRuntime, SweepValues
 from .strategy import (
@@ -206,9 +215,20 @@ __all__ = [
     # Plan
     "ExecutionPlan",
     "ParameterBinding",
+    # Configuration
+    "RuntimeConfig",
     # Runtime
     "ExecutionRuntime",
     "default_runtime",
+    # Introspection
+    "RuntimeInfo",
+    "runtime_info",
+    # Errors (stage-tagged, subclass ValueError)
+    "ExecutionError",
+    "PlanningError",
+    "CompilationError",
+    "RuntimeDispatchError",
+    "BackendExecutionError",
     # Strategy
     "ExecutionStrategy",
     "StrategyHandler",

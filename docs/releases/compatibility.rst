@@ -70,8 +70,8 @@ option for large ``n``.
 Versioning contract
 -------------------
 
-* ``0.x`` releases do not guarantee API stability across minor versions while
-  the public surface settles.
+* The public API is **stable since 1.0.0 (General Availability)** under Semantic
+  Versioning.
 * Backward-compatible additions land as minor versions; breaking changes as
-  major releases after 1.0.
+  major releases.
 * Serialized result schemas are versioned; new fields are additive.

@@ -42,7 +42,13 @@ Source layout
    ├── providers/           optional vendor boundary (never imported by SDK)
    ├── adapters/            domain adapters (QuantumProblem/QuantumResult)
    ├── qml/ qec/ chemistry/ benchmarks/ mitigation/   feature libraries
-   └── analytics/           CSV loaders & base analytics
+   ├── analytics/           CSV loaders & base analytics
+   └── stdlib/              system standard library: bits · numbers · states
+                            (canonical home for shared utilities)
+
+See :doc:`package-ecosystem` for the canonical import map of the nine
+conceptual boundaries (core / circuit / gates / states / measurement /
+compiler / runtime / backends / stdlib).
 
 Layering rules
 --------------
