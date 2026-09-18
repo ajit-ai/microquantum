@@ -80,6 +80,10 @@ docs/autoapi/
 # autoapi-generated reference pages (source is autoapi_dirs)
 docs/api/microquantum/
 
+# Stray / ad-hoc files not required for the release
+# Leftover phase-worker scripts from earlier build sessions.
+_mq*_worker.py
+
 # OS
 .DS_Store
 Thumbs.db
