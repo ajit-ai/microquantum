@@ -13,10 +13,10 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-from .circuit import QuantumCircuit
-from .coupling import CouplingMap
-from .operators import Operator
-from .optimization import (
+from ..circuit import QuantumCircuit
+from ..coupling import CouplingMap
+from ..operators import Operator
+from ..optimization import (
     cancel_inverse_pairs,
     fuse_single_qubit_gates,
     remove_identity_gates,

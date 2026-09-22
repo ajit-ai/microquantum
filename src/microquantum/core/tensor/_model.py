@@ -6,8 +6,8 @@ from typing import Union
 
 import numpy as np
 
-from .operators import Operator
-from .state import StateVector
+from ..operators import Operator
+from ..state import StateVector
 
 
 def tensor(
