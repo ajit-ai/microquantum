@@ -8,14 +8,14 @@ from typing import TYPE_CHECKING, Any, Optional, Union, cast
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from ..ir import IRCircuit
+    from ...ir import IRCircuit
 
 import numpy as np
 
-from .operators import Operator
-from .parameter import Parameter, ParameterExpression
-from .state import StateVector
-from .tensor import expand_operator
+from ..operators import Operator
+from ..parameter import Parameter, ParameterExpression
+from ..state import StateVector
+from ..tensor import expand_operator
 
 if TYPE_CHECKING:
     pass
@@ -410,7 +410,7 @@ class QuantumCircuit:
                 gate_type = p_instr[0]
                 param = p_instr[1]
                 target = p_instr[2]
-                from .parameter import Parameter, ParameterExpression
+                from ..parameter import Parameter, ParameterExpression
                 if isinstance(param, ParameterExpression):
                     angle = param.evaluate({})
                 elif isinstance(param, Parameter):
@@ -601,7 +601,7 @@ class QuantumCircuit:
         Raises:
             ValueError: If circuit contains unbound parameters.
         """
-        from .engine import apply_gate
+        from ..engine import apply_gate
 
         self._ensure_bound()
         if initial_state is None:
@@ -703,7 +703,7 @@ class QuantumCircuit:
         Raises:
             ValueError: If circuit contains unbound parameters.
         """
-        from .measurement import expectation_value as _expectation_value
+        from ..measurement import expectation_value as _expectation_value
 
         self._ensure_bound()
         state = self.run()
@@ -724,7 +724,7 @@ class QuantumCircuit:
         Returns:
             An :class:`~microquantum.ir.IRCircuit` representing the gates.
         """
-        from ..ir import to_ir as _ir_to_ir
+        from ...ir import to_ir as _ir_to_ir
         return _ir_to_ir(self, include_terminal_measurements=include_terminal_measurements)
 
     @staticmethod
@@ -737,7 +737,7 @@ class QuantumCircuit:
         Returns:
             A QuantumCircuit executing the IR's gates.
         """
-        from ..ir import from_ir as _ir_from_ir
+        from ...ir import from_ir as _ir_from_ir
         return _ir_from_ir(ir)
 
     def qasm(self, header: bool = True) -> str:
@@ -749,7 +749,7 @@ class QuantumCircuit:
         Returns:
             OpenQASM 2.0 string.
         """
-        from .qasm import to_qasm
+        from ..qasm import to_qasm
         return to_qasm(self, header=header)
 
     @staticmethod
@@ -762,7 +762,7 @@ class QuantumCircuit:
         Returns:
             QuantumCircuit constructed from the QASM.
         """
-        from .qasm import from_qasm
+        from ..qasm import from_qasm
         return from_qasm(qasm_str)
 
     def draw(self, title: Optional[str] = None) -> str:
@@ -774,7 +774,7 @@ class QuantumCircuit:
         Returns:
             Multi-line string with the ASCII circuit.
         """
-        from .visualization import draw
+        from ..visualization import draw
         return draw(self, title=title)
 
     def to_json(self, indent: Optional[int] = 2) -> str:
@@ -786,7 +786,7 @@ class QuantumCircuit:
         Returns:
             JSON string.
         """
-        from .serialization import to_json
+        from ..serialization import to_json
         return to_json(self, indent=indent)
 
     @staticmethod
@@ -799,7 +799,7 @@ class QuantumCircuit:
         Returns:
             Reconstructed QuantumCircuit.
         """
-        from .serialization import from_json
+        from ..serialization import from_json
         return from_json(json_str)
 
     def save(self, path: Union[str, "Path"]) -> None:
@@ -808,7 +808,7 @@ class QuantumCircuit:
         Args:
             path: File path to write to.
         """
-        from .serialization import save
+        from ..serialization import save
         save(self, path)
 
     @staticmethod
@@ -821,7 +821,7 @@ class QuantumCircuit:
         Returns:
             Loaded QuantumCircuit.
         """
-        from .serialization import load
+        from ..serialization import load
         return load(path)
 
     # ------------------------------------------------------------------

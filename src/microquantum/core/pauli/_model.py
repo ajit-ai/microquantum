@@ -6,10 +6,10 @@ from typing import TYPE_CHECKING, Iterator
 
 import numpy as np
 
-from .state import StateVector
+from ..state import StateVector
 
 if TYPE_CHECKING:
-    from .operators import Operator
+    from ..operators import Operator
 
 
 class PauliString:
@@ -80,7 +80,7 @@ class PauliString:
         Returns:
             Operator representing the full 2^n × 2^n matrix.
         """
-        from .operators import Operator
+        from ..operators import Operator
 
         pauli_matrices = {
             "I": np.eye(2, dtype=np.complex128),
@@ -171,7 +171,7 @@ class PauliString:
 
     def __add__(self, other: PauliString) -> "PauliSum":
         """Add two Pauli strings to form a PauliSum."""
-        from .pauli import PauliSum
+        from ..pauli import PauliSum
         if isinstance(other, PauliString):
             return PauliSum([self, other])
         return NotImplemented
@@ -267,7 +267,7 @@ class PauliSum:
         Returns:
             Operator representing the full 2^n × 2^n matrix.
         """
-        from .operators import Operator
+        from ..operators import Operator
 
         if not self._terms:
             raise ValueError("Cannot convert empty PauliSum to Operator")

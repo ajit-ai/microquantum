@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional
 
-from ..core.circuit import QuantumCircuit, _narrow_concrete, _narrow_parameterized
+from ..circuit import QuantumCircuit, _narrow_concrete, _narrow_parameterized
 
 _DEFAULT_GATE_COSTS: dict[str, float] = {
     "h": 1.0,

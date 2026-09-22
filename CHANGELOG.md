@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Core engine expansion** — `src/microquantum/core/` grows 17 focused
+  subpackages (`circuit`, `gates`, `operators`, `pauli`, `observables`,
+  `states`, `channels`, `registers`, `measurements`, `parameters`,
+  `tensor`, `information`, `execution`, `architecture`, `resources`,
+  `gradients`, `serialization`, `transpiler`) with real, tested
+  functionality: a gate hierarchy, first-class observables/states/channels,
+  a backend-independent execution model, hardware-independent architecture
+  descriptions, a pass-based transpiler framework and versioned
+  serialization. The eight pre-existing flat modules
+  (`circuit`, `operators`, `pauli`, `registers`, `resources`,
+  `serialization`, `tensor`, `transpiler`) moved verbatim into
+  `<package>/_model.py` and are re-exported unchanged, so every existing
+  import, test, example and doc reference keeps working. New tests in
+  `tests/test_core_expansion_a.py` / `tests/test_core_expansion_b.py`,
+  a runnable tour in `examples/40_core_expansion.py` and a
+  `docs/concepts/core-expansion.rst` guide are included.
+
 ### Changed
 - **Cross-platform support** — the GA (1.0.0) release is documented for
   Windows, Linux, macOS and BSD:

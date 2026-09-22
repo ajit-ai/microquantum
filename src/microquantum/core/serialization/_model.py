@@ -14,9 +14,9 @@ from typing import Any, Optional, Union
 
 import numpy as np
 
-from .circuit import QuantumCircuit
-from .operators import Operator
-from .parameter import Parameter, ParameterExpression
+from ..circuit import QuantumCircuit
+from ..operators import Operator
+from ..parameter import Parameter, ParameterExpression
 
 FORMAT_VERSION = "1.0"
 

@@ -8,7 +8,7 @@ from typing import Any, Union
 import numpy as np
 from numpy.typing import NDArray
 
-from .state import StateVector
+from ..state import StateVector
 
 
 class Operator:
