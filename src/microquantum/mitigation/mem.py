@@ -67,6 +67,28 @@ class MeasurementErrorMitigation:
     def is_calibrated(self) -> bool:
         return self._mitigation is not None
 
+    def set_calibration(self, matrix: MitigationMatrix) -> None:
+        """Adopt an externally measured calibration matrix.
+
+        Useful when the confusion matrix comes from hardware
+        characterization rather than :meth:`calibrate`.
+
+        Raises:
+            ValueError: If the matrix dimensions do not match
+                ``num_qubits``.
+        """
+        dim = 2**self._num_qubits
+        if matrix.num_qubits != self._num_qubits:
+            raise ValueError(
+                f"Calibration is for {matrix.num_qubits} qubits, "
+                f"mitigator covers {self._num_qubits}"
+            )
+        if matrix.confusion.shape != (dim, dim) or matrix.inverse.shape != (dim, dim):
+            raise ValueError(
+                f"Calibration matrices must have shape ({dim}, {dim})"
+            )
+        self._mitigation = matrix
+
     def calibrate(
         self,
         noisy_circuit_fn: Optional[Callable[[QuantumCircuit], QuantumCircuit]] = None,

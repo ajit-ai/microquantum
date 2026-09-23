@@ -34,6 +34,10 @@ class SPSA(Optimizer):
         max_iter: Maximum number of iterations.
         tol: Convergence tolerance.
         seed: Random seed for reproducibility.
+        blocking: Only accept updates that do not worsen the cost
+            (extra cost evaluations per iteration).
+        resamples: Cost evaluations averaged per perturbed point
+            (variance reduction for shot-noisy objectives).
 
     Reference:
         J.C. Spall, "Multivariate Stochastic Approximation using
@@ -50,7 +54,11 @@ class SPSA(Optimizer):
         max_iter: int = 200,
         tol: float = 1e-6,
         seed: int | None = None,
+        blocking: bool = False,
+        resamples: int = 1,
     ) -> None:
+        if resamples < 1:
+            raise ValueError("resamples must be >= 1")
         self._a = a
         self._c = c
         self._alpha = alpha
@@ -59,6 +67,8 @@ class SPSA(Optimizer):
         self._max_iter = max_iter
         self._tol = tol
         self._rng = random.Random(seed)
+        self._blocking = blocking
+        self._resamples = resamples
 
     @property
     def max_iter(self) -> int:
@@ -82,16 +92,19 @@ class SPSA(Optimizer):
             p: float(self._rng.choice([-1.0, 1.0])) for p in params
         }
 
-        # Evaluate cost at perturbed points
+        # Evaluate cost at perturbed points (averaged over resamples)
         params_plus = {
             p: params[p] + ck * delta[p] for p in params
         }
         params_minus = {
             p: params[p] - ck * delta[p] for p in params
         }
-
-        cost_plus = cost_fn(params_plus)
-        cost_minus = cost_fn(params_minus)
+        cost_plus = float(
+            sum(cost_fn(params_plus) for _ in range(self._resamples)) / self._resamples
+        )
+        cost_minus = float(
+            sum(cost_fn(params_minus) for _ in range(self._resamples)) / self._resamples
+        )
 
         # Estimate gradient
         ghat = {
@@ -103,6 +116,16 @@ class SPSA(Optimizer):
         new_params = {
             p: params[p] - ak * ghat[p] for p in params
         }
+
+        if self._blocking:
+            current = float(
+                sum(cost_fn(params) for _ in range(self._resamples)) / self._resamples
+            )
+            candidate = float(
+                sum(cost_fn(new_params) for _ in range(self._resamples)) / self._resamples
+            )
+            if candidate > current:
+                return dict(params)
         return new_params
 
     def _converged(self, history: list[float]) -> bool:

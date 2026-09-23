@@ -5,6 +5,7 @@ data-loading and visualization helpers that depend only on NumPy.
 """
 from .base import AnalysisResult, BaseAnalytics
 from .csv_loader import load_csv, load_csv_column, load_distance_matrix
+from .report import ReportBuilder, to_records
 from .result import Result
 from .visualization import (
     format_analysis_report,
@@ -24,6 +25,8 @@ __all__ = [
     "AnalysisResult",
     "BaseAnalytics",
     "Result",
+    "ReportBuilder",
+    "to_records",
     "load_csv",
     "load_csv_column",
     "load_distance_matrix",

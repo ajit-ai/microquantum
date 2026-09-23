@@ -23,6 +23,7 @@ visualization dependency.  Every public entry point also exposes JSON-safe
 
 from .aggregation import ResultAggregator
 from .expectation import ExpectationAnalysis
+from .inference import HypothesisTest, TestOutcome, bootstrap_ci, float_mean
 from .sampling import SamplingAnalysis
 from .state import StateAnalysis
 from .statistics import (
@@ -41,6 +42,10 @@ __all__ = [
     "ExpectationAnalysis",
     "StateAnalysis",
     "ResultAggregator",
+    "HypothesisTest",
+    "TestOutcome",
+    "bootstrap_ci",
+    "float_mean",
     "mean",
     "variance",
     "standard_deviation",

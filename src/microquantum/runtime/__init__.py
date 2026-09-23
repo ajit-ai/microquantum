@@ -24,6 +24,8 @@ from ..core.circuit import QuantumCircuit
 from ..core.device import Target
 from ..experiments.experiment import ExperimentResult
 from ..experiments.record import ExecutionRecord
+from .budget import Budget
+from .caching import ResultCache, plan_fingerprint
 from .config import RuntimeConfig
 from .errors import (
     BackendExecutionError,
@@ -35,6 +37,7 @@ from .errors import (
 from .info import RuntimeInfo, runtime_info
 from .plan import ExecutionPlan, ParameterBinding
 from .runtime import BatchResult, ExecutionRuntime, SweepValues
+from .scheduling import DAGScheduler, ScheduledBatch
 from .strategy import (
     STRATEGY_HANDLERS,
     ExecutionStrategy,
@@ -215,6 +218,11 @@ __all__ = [
     # Plan
     "ExecutionPlan",
     "ParameterBinding",
+    "Budget",
+    "ResultCache",
+    "plan_fingerprint",
+    "DAGScheduler",
+    "ScheduledBatch",
     # Configuration
     "RuntimeConfig",
     # Runtime

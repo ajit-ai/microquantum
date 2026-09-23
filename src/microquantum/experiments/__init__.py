@@ -17,6 +17,8 @@ This package provides the backend-independent *experiment layer*:
 Everything is fully in-memory and JSON-safe serializable.
 """
 
+from .adaptive import AdaptiveSweep
+from .checkpoint import Checkpoint
 from .experiment import Experiment, ExperimentResult
 from .record import (
     ExecutionFailure,
@@ -32,6 +34,8 @@ __all__ = [
     "ExecutionFailure",
     "ExecutionStatus",
     "ParameterSweep",
+    "AdaptiveSweep",
+    "Checkpoint",
     "Experiment",
     "ExperimentResult",
     "execution_fingerprint",

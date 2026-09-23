@@ -15,9 +15,11 @@ vendor error into the validation/execution error style used by the SDK.
 
 from __future__ import annotations
 
+import time
 from abc import abstractmethod
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, Optional, Union
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, Callable, Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -29,6 +31,50 @@ from .base import Backend, BackendResult
 
 if TYPE_CHECKING:
     pass
+
+
+@dataclass(frozen=True)
+class RetryPolicy:
+    """Transient-error retry policy for vendor calls.
+
+    Attributes:
+        max_attempts: Total attempts including the first (must be >= 1).
+        backoff_s: Base backoff in seconds, doubled after each failure.
+        retry_on: Exception types that trigger a retry.
+    """
+
+    max_attempts: int = 3
+    backoff_s: float = 0.5
+    retry_on: tuple[type[BaseException], ...] = (ConnectionError, TimeoutError)
+
+    def __post_init__(self) -> None:
+        if self.max_attempts < 1:
+            raise ValueError("max_attempts must be >= 1")
+        if self.backoff_s < 0:
+            raise ValueError("backoff_s must be >= 0")
+
+
+def with_retry(
+    policy: RetryPolicy, fn: Callable[[], Any], *, description: str = "vendor call"
+) -> Any:
+    """Run ``fn()`` with :class:`RetryPolicy` retries.
+
+    The last error is re-raised when attempts are exhausted.
+    """
+    delay = policy.backoff_s
+    last_error: Optional[BaseException] = None
+    for attempt in range(policy.max_attempts):
+        try:
+            return fn()
+        except policy.retry_on as exc:
+            last_error = exc
+            if attempt + 1 >= policy.max_attempts:
+                break
+            if delay > 0:
+                time.sleep(delay)
+            delay *= 2
+    assert last_error is not None  # guaranteed by max_attempts >= 1
+    raise RuntimeError(f"{description} failed after {policy.max_attempts} attempts") from last_error
 
 
 class BackendAdapter(Backend):
@@ -90,4 +136,4 @@ class BackendAdapter(Backend):
         )
 
 
-__all__ = ["BackendAdapter"]
+__all__ = ["BackendAdapter", "RetryPolicy", "with_retry"]

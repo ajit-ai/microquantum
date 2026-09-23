@@ -8,8 +8,17 @@ Techniques:
 - ProbabilisticErrorCancellation: Invert noise via quasi-probability
 - MeasurementErrorMitigation: Correct readout errors via calibration
 """
+from .cdr import CDRTrainingPoint, CliffordDataRegression
 from .mem import MeasurementErrorMitigation, MitigationMatrix
 from .pec import ProbabilisticErrorCancellation
+from .protocol import (
+    MEMProtocol,
+    MitigationData,
+    MitigationOutcome,
+    MitigationProtocol,
+    PECProtocol,
+    ZNEProtocol,
+)
 from .zne import ExtrapolationResult, ZeroNoiseExtrapolation
 
 __all__ = [
@@ -18,4 +27,12 @@ __all__ = [
     "ProbabilisticErrorCancellation",
     "MeasurementErrorMitigation",
     "MitigationMatrix",
+    "CliffordDataRegression",
+    "CDRTrainingPoint",
+    "MitigationData",
+    "MitigationOutcome",
+    "MitigationProtocol",
+    "ZNEProtocol",
+    "MEMProtocol",
+    "PECProtocol",
 ]

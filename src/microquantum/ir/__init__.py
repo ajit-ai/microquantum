@@ -16,12 +16,16 @@ Node hierarchy::
                    ├── Measurement
                    ├── Reset
                    ├── Barrier
-                   └── ConditionalBlock
+                   ├── ConditionalBlock
+                   ├── Loop
+                   └── Switch
 """
 
 from .builder import from_ir, to_ir, to_ir_dynamic
 from .circuit_ir import IRCircuit, IRModule
 from .compiler import CompilationResult, Compiler
+from .control import Loop, Switch, loop_from_dict, switch_from_dict
+from .cost import AliasAnalysis, CostModel
 from .nodes import (
     Barrier,
     Condition,
@@ -57,6 +61,10 @@ __all__ = [
     "Barrier",
     "Condition",
     "ConditionalBlock",
+    "Loop",
+    "Switch",
+    "loop_from_dict",
+    "switch_from_dict",
     # Conversion
     "to_ir",
     "to_ir_dynamic",
@@ -72,7 +80,10 @@ __all__ = [
     "CombineRotations",
     "BindParameters",
     "GateDecomposition",
+    "AliasAnalysis",
     "optimize",
+    # Cost model
+    "CostModel",
     # Compilation
     "Compiler",
     "CompilationResult",

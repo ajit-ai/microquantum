@@ -25,6 +25,7 @@ from .._json import JSONSerializable, json_safe, json_string
 from ..core.device import Target
 from .builder import from_ir, to_ir
 from .circuit_ir import IRCircuit
+from .cost import CostModel
 from .nodes import (
     ConditionalBlock,
     Gate,
@@ -158,19 +159,29 @@ class Compiler:
         optimization_level: 0 = validation only (no passes), 1 = identity
             removal + inverse cancellation, 2 = also fuse same-axis
             rotations.  Levels outside 0..2 are rejected.
+        cost_model: Optional :class:`CostModel` used to record an
+            ``estimated_cost`` entry in the result metadata.
     """
 
-    def __init__(self, optimization_level: int = 1) -> None:
+    def __init__(
+        self, optimization_level: int = 1, cost_model: Optional[CostModel] = None
+    ) -> None:
         if not 0 <= optimization_level <= 2:
             raise ValueError(
                 f"optimization_level must be in 0..2, got {optimization_level}"
             )
         self._optimization_level = optimization_level
+        self._cost_model = cost_model
 
     @property
     def optimization_level(self) -> int:
         """Optimization level configured for this compiler."""
         return self._optimization_level
+
+    @property
+    def cost_model(self) -> Optional[CostModel]:
+        """Cost model configured for this compiler (if any)."""
+        return self._cost_model
 
     def compile(
         self,
@@ -220,6 +231,11 @@ class Compiler:
         if target is not None:
             diagnostics = _compat_diagnostics(compiled, target)
 
+        metadata = _compilation_metadata(source, compiled, self._optimization_level)
+        if self._cost_model is not None:
+            metadata["estimated_cost"] = self._cost_model.total(compiled)
+            metadata["cost_breakdown"] = self._cost_model.breakdown(compiled)
+
         return CompilationResult(
             source=source,
             result=compiled,
@@ -227,7 +243,7 @@ class Compiler:
             passes_applied=[p.name for p in pipeline],
             diagnostics=diagnostics,
             mapping=mapping,
-            metadata=_compilation_metadata(source, compiled, self._optimization_level),
+            metadata=metadata,
         )
 
 

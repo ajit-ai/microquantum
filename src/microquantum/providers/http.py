@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import urllib.error
 import urllib.request
+from collections.abc import Callable
 from typing import Any, Optional
 
 from .base import HttpResponder
@@ -30,6 +31,7 @@ def http_request(
     url: str,
     headers: Optional[dict[str, str]] = None,
     body: Optional[bytes] = None,
+    proxy: Optional[str] = None,
 ) -> tuple[int, dict[str, Any]]:
     """Perform an HTTP request and return (status, parsed JSON).
 
@@ -38,6 +40,8 @@ def http_request(
         url: Fully-qualified URL.
         headers: Optional request headers.
         body: Optional raw request body bytes.
+        proxy: Optional HTTP(S) proxy URL routed via ``urllib``
+            ``ProxyHandler``.
 
     Returns:
         Tuple of (status_code, decoded JSON response).
@@ -51,8 +55,15 @@ def http_request(
         headers=headers or {},
         method=method.upper(),
     )
+    if proxy is not None:
+        opener = urllib.request.build_opener(
+            urllib.request.ProxyHandler({"http": proxy, "https": proxy})
+        )
+        open_request: Callable[..., Any] = opener.open
+    else:
+        open_request = urllib.request.urlopen
     try:
-        with urllib.request.urlopen(request, timeout=60) as response:
+        with open_request(request, timeout=60) as response:
             raw = response.read()
             status = int(response.status)
     except urllib.error.HTTPError as exc:

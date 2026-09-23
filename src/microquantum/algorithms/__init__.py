@@ -4,10 +4,13 @@ from .adapt_vqe import AdaptResult, AdaptVQE
 from .amplitude_estimation import AmplitudeEstimation, AmplitudeEstimationResult
 from .base import Algorithm, AlgorithmResult
 from .bernstein_vazirani import BernsteinVazirani, BVResult
+from .counting import QuantumCounting, QuantumCountingResult
 from .deutsch_jozsa import DeutschJozsa, DJResult
+from .filters import QPEPhaseFilter
 from .grover import GroverResult, GroverSearch
 from .hamiltonian_simulation import HamiltonianSimulation, TrotterResult
 from .hhl import HHL, HHLResult
+from .initial import InitialPoint, initial_parameters
 from .phase_estimation import PhaseEstimation, PhaseEstimationResult
 from .qaoa import QAOA
 from .qft import QFT, inverse_qft_circuit, qft_circuit
@@ -56,6 +59,11 @@ __all__ = [
     "DJResult",
     "HHL",
     "HHLResult",
+    "QuantumCounting",
+    "QuantumCountingResult",
+    "QPEPhaseFilter",
+    "InitialPoint",
+    "initial_parameters",
     "fourth_order_simulation",
     "qdrift_simulation",
 ]

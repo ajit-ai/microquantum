@@ -20,12 +20,19 @@ from .execution import ExecutionOptions, ExecutionRequest, ExecutionResult
 from .gates import (
     CompositeGate,
     ControlledGate,
+    ControlledUnitary,
     ParameterizedGate,
     UnitaryGate,
 )
 from .gradient import gradient, parameter_shift_gradient
 from .gradients import GradientEngine, GradientResult
-from .information import fidelity, trace_distance, von_neumann_entropy
+from .information import (
+    concurrence,
+    entanglement_entropy,
+    fidelity,
+    trace_distance,
+    von_neumann_entropy,
+)
 from .measurement import (
     MeasurementResult,
     expectation_value,
@@ -119,6 +126,7 @@ __all__ = [
     "ExecutionRequest",
     "ExecutionResult",
     "ControlledGate",
+    "ControlledUnitary",
     "CompositeGate",
     "ParameterizedGate",
     "UnitaryGate",
@@ -127,6 +135,8 @@ __all__ = [
     "fidelity",
     "trace_distance",
     "von_neumann_entropy",
+    "entanglement_entropy",
+    "concurrence",
     "POVM",
     "ProjectiveMeasurement",
     "MatrixObservable",

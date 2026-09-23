@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import time
 import uuid
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Optional, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -307,6 +308,63 @@ class Job:
 
     def __repr__(self) -> str:
         return f"Job(id={self.job_id}, status={self.status.value})"
+
+
+@dataclass
+class AsyncJob(Job):
+    """A job that completes asynchronously via vendor polling.
+
+    Extends :class:`Job` with :meth:`poll` / :meth:`wait` driven by a
+    caller-supplied ``check`` callable (typically a provider status
+    query), so hardware adapters share one polling implementation.
+
+    Attributes:
+        max_polls: Maximum poll attempts per :meth:`wait` call.
+        poll_interval_s: Seconds between polls.
+    """
+
+    max_polls: int = 100
+    poll_interval_s: float = 0.5
+
+    def __post_init__(self) -> None:
+        if self.max_polls < 1:
+            raise ValueError("max_polls must be >= 1")
+        if self.poll_interval_s < 0:
+            raise ValueError("poll_interval_s must be >= 0")
+
+    def poll(self, check: Callable[[], JobStatus]) -> JobStatus:
+        """Query once via *check* and update :attr:`status`.
+
+        Terminal statuses also stamp ``finished_at``.
+        """
+        self.status = check()
+        if self.status.final and self.finished_at is None:
+            self.finished_at = _now_iso()
+        return self.status
+
+    def wait(self, check: Callable[[], JobStatus], timeout: float = 60.0) -> JobStatus:
+        """Poll until a terminal status or *timeout* seconds elapse.
+
+        Raises:
+            TimeoutError: If no terminal status is reached in time.
+        """
+        if timeout < 0:
+            raise ValueError("timeout must be >= 0")
+        deadline = time.monotonic() + timeout
+        polls = 0
+        while polls < self.max_polls:
+            status = self.poll(check)
+            if status.final:
+                return status
+            polls += 1
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                break
+            time.sleep(min(self.poll_interval_s, remaining))
+        raise TimeoutError(
+            f"Job {self.job_id} did not finish within {timeout}s "
+            f"({polls} polls, status={self.status.value})"
+        )
 
 
 class Backend(ABC):

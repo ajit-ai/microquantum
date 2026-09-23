@@ -5,6 +5,13 @@ functionality for variational quantum eigensolver (VQE) calculations.
 """
 from .ansatz import HardwareEfficientAnsatz, UCCSDAnsatz
 from .hamiltonians import H2Hamiltonian, LiHHamiltonian, MolecularHamiltonian
+from .transforms import (
+    ActiveSpace,
+    ActiveSpaceSelection,
+    FermionicOp,
+    IntegralSource,
+    jordan_wigner,
+)
 
 __all__ = [
     "MolecularHamiltonian",
@@ -12,4 +19,9 @@ __all__ = [
     "LiHHamiltonian",
     "HardwareEfficientAnsatz",
     "UCCSDAnsatz",
+    "IntegralSource",
+    "ActiveSpace",
+    "ActiveSpaceSelection",
+    "FermionicOp",
+    "jordan_wigner",
 ]

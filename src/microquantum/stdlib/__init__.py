@@ -18,17 +18,27 @@ behaviour, and never duplicates APIs defined elsewhere in the SDK.
 from .bits import (
     bits_to_int,
     bitstring_to_int,
+    gray_code,
     hamming_distance,
     hamming_weight,
     int_to_bits,
     int_to_bitstring,
 )
 from .numbers import is_angle_close, is_identity_angle, mod_2pi, wrap_angle
-from .states import basis_state, bell_state, ghz_state, uniform_superposition, w_state
+from .states import (
+    basis_state,
+    bell_state,
+    dicke_state,
+    ghz_state,
+    graph_state,
+    uniform_superposition,
+    w_state,
+)
 
 __all__ = [
     "bits_to_int",
     "bitstring_to_int",
+    "gray_code",
     "hamming_distance",
     "hamming_weight",
     "int_to_bits",
@@ -39,7 +49,9 @@ __all__ = [
     "wrap_angle",
     "basis_state",
     "bell_state",
+    "dicke_state",
     "ghz_state",
+    "graph_state",
     "uniform_superposition",
     "w_state",
 ]

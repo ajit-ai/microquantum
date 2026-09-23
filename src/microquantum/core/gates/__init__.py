@@ -60,6 +60,7 @@ __all__ = [
     "CCX",
     "Fredkin",
     "CSWAP",
+    "ControlledUnitary",
 ]
 
 _Scalar = Union[float, complex, str]
@@ -623,6 +624,25 @@ def make_gate(name: str, params: tuple[Any, ...] = ()) -> Gate:
             raise ValueError("Gate 'u' needs 3 parameters")
         return ParameterizedGate("u", 1, params)
     raise ValueError(f"Unknown gate '{name}'")
+
+
+def ControlledUnitary(
+    matrix: NDArray[np.complex128] | list[Any], num_controls: int = 1, name: str = "cu"
+) -> ControlledGate:
+    """Build a controlled gate from an arbitrary unitary matrix.
+
+    Args:
+        matrix: Square power-of-two unitary matrix for the target.
+        num_controls: Number of control qubits (must be >= 1).
+        name: Base gate name used in the controlled name.
+
+    Raises:
+        ValueError: If the matrix is not unitary or controls < 1.
+    """
+    if num_controls < 1:
+        raise ValueError("num_controls must be >= 1")
+    base = UnitaryGate(matrix, name=name)
+    return ControlledGate(base, num_controls)
 
 
 @dataclass(frozen=True)

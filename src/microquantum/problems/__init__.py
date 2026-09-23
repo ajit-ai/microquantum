@@ -12,6 +12,8 @@ it.  The hierarchy is intentionally small:
 """
 
 from .base import Problem, SamplingProblem
+from .constrained import ConstrainedOptimizationProblem, LinearConstraint
+from .dynamics import ExcitedStateProblem, TimeEvolutionProblem
 from .eigenvalue import (
     EigenvalueProblem,
     Hamiltonian,
@@ -25,6 +27,10 @@ __all__ = [
     "Problem",
     "SamplingProblem",
     "OptimizationProblem",
+    "ConstrainedOptimizationProblem",
+    "LinearConstraint",
+    "TimeEvolutionProblem",
+    "ExcitedStateProblem",
     "HamiltonianProblem",
     "EigenvalueProblem",
     "SearchProblem",

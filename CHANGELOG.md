@@ -8,6 +8,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 121: SDK extension surface** — one additive phase across all
+  packages (no breaking changes, no new hard dependencies):
+  - Contracts & protocols: `ConstrainedOptimizationProblem`,
+    `TimeEvolutionProblem`, `ExcitedStateProblem`, `AdapterRegistry`,
+    `Budget` (+ `ExecutionPlan.budget`/`cacheable`), `Bounds`,
+    `CallbackProtocol`/`minimize_with_callbacks` (also wired into
+    `VQE.compute_minimum_eigenvalue`), unified `MitigationProtocol`
+    with `ZNE`/`MEM`/`PEC` adapters (plus a `set_calibration` hook on
+    `MeasurementErrorMitigation`), SPSA `blocking`/`resamples`.
+  - Compilation & execution: IR `Loop`/`Switch` nodes (validated,
+    traversed, serializable), `CostModel` (+ `Compiler(cost_model)`),
+    `AliasAnalysis`, `CalibrationData` (+ capability fields),
+    `AsyncJob`, `RetryPolicy`/`with_retry`, `ReadoutMitigator`,
+    `DAGScheduler`, runtime `ResultCache`.
+  - Domain I: `QuantumCounting`, `QPEPhaseFilter`, `InitialPoint`,
+    `HypothesisTest`, `bootstrap_ci`, `PUBOBuilder`/`PUBOProblem`,
+    `IsingToPauli`, `qubo_to_pauli_sum`, `pubo_to_qubo_projection`.
+  - Domain II: `DataReuploadingClassifier` (+ `fit`),
+    `kernel_alignment`, `SteaneCode`, `Syndrome`/`Decoder`/
+    `LookupDecoder`, `IntegralSource`, `ActiveSpace`,
+    `FermionicOp`/`jordan_wigner`, `CliffordDataRegression`.
+  - Experience & hardware: `PollingJob`, `ProviderErrorMapper`,
+    credential `proxy` support (stdlib HTTP transport),
+    `ReportBuilder`/`to_records`, `MirrorBenchmarking`,
+    `BenchmarkSuite`, `Checkpoint`, `AdaptiveSweep`.
+  - Foundations: `gray_code`, `dicke_state`, `graph_state`,
+    `ControlledUnitary`, experimental `entanglement_entropy` /
+    `concurrence`; top-level gateway grows to ~360 names.
+  - Tests `test_phase121_w1..w6.py` (90+ cases), examples
+    `41-46_phase121_*.py`, `docs/concepts/phase121.rst`.
 - **Core engine expansion** — `src/microquantum/core/` grows 17 focused
   subpackages (`circuit`, `gates`, `operators`, `pauli`, `observables`,
   `states`, `channels`, `registers`, `measurements`, `parameters`,

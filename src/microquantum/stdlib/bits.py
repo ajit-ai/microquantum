@@ -193,9 +193,28 @@ def hamming_distance(left: int | str, right: int | str) -> int:
     return (left_int ^ right_int).bit_count()
 
 
+def gray_code(num_bits: int) -> list[str]:
+    """Binary reflected Gray code of *num_bits* bits.
+
+    Adjacent entries differ in exactly one bit; the sequence starts at
+    ``"0" * num_bits``.  MSB-first strings matching SDK conventions.
+
+    Args:
+        num_bits: Code width (must be >= 1).
+
+    Returns:
+        The ``2**num_bits`` Gray-code words in order.
+    """
+    _validate_int(num_bits, name="num_bits")
+    if num_bits < 1:
+        raise ValueError(f"num_bits must be >= 1, got {num_bits}")
+    return [format(index ^ (index >> 1), f"0{num_bits}b") for index in range(1 << num_bits)]
+
+
 __all__ = [
     "bits_to_int",
     "bitstring_to_int",
+    "gray_code",
     "hamming_distance",
     "hamming_weight",
     "int_to_bits",

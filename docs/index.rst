@@ -52,6 +52,7 @@ architecture that is ready for future hardware providers.
 
     concepts/overview
     concepts/core-expansion
+    concepts/phase121
     concepts/quantum-states
    concepts/circuits
    concepts/gates
