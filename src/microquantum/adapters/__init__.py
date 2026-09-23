@@ -7,10 +7,12 @@ into quantum circuits and decodes results back to domain language.
 
 from .base import DomainAdapter, QuantumProblem, QuantumResult
 from .caching import ResultCache
+from .registry import AdapterRegistry
 
 __all__ = [
     "DomainAdapter",
     "QuantumProblem",
     "QuantumResult",
     "ResultCache",
+    "AdapterRegistry",
 ]

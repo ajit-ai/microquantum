@@ -1,6 +1,6 @@
 """Execution backends for quantum circuits."""
 
-from .adapter import BackendAdapter
+from .adapter import BackendAdapter, RetryPolicy, with_retry
 from .array_backend import (
     available_backends,
     get_array_backend,
@@ -8,7 +8,7 @@ from .array_backend import (
     is_gpu,
     set_array_backend,
 )
-from .base import Backend, BackendResult, Job, JobStatus
+from .base import AsyncJob, Backend, BackendResult, Job, JobStatus
 from .capabilities import (
     CIRCUIT_FEATURES,
     EXECUTION_CAPABILITIES,
@@ -25,6 +25,7 @@ from .capabilities import (
     FEATURE_PARAMETERIZED_CIRCUITS,
     FEATURE_RESET,
     BackendCapabilities,
+    CalibrationData,
     TargetClass,
 )
 from .density_matrix import DensityMatrixBackend
@@ -32,7 +33,7 @@ from .executor import Executor, ExecutorResult
 from .local import LocalSimulatorBackend
 from .mock import MockBackend
 from .mps import MatrixProductState, MPSBackend
-from .noise import NoiseChannel, NoiseModel
+from .noise import IdentityReadoutMitigator, NoiseChannel, NoiseModel, ReadoutMitigator
 from .provider import LocalProvider, Provider
 from .registry import BackendRegistry, default_registry
 from .statevector import StatevectorBackend
@@ -44,6 +45,10 @@ __all__ = [
     "BackendCapabilities",
     "BackendResult",
     "BackendRegistry",
+    "AsyncJob",
+    "RetryPolicy",
+    "with_retry",
+    "CalibrationData",
     "CIRCUIT_FEATURES",
     "EXECUTION_CAPABILITIES",
     "EXECUTION_DENSITY_MATRIX",
@@ -72,6 +77,8 @@ __all__ = [
     "TreeTensorNetworkBackend",
     "NoiseModel",
     "NoiseChannel",
+    "ReadoutMitigator",
+    "IdentityReadoutMitigator",
     "Executor",
     "ExecutorResult",
     "default_registry",

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Optional, Union, cast
 
@@ -17,6 +17,7 @@ from ..core.parameter import Parameter
 from ..core.pauli import PauliSum
 from ..core.state import StateVector
 from ..optimizers.base import Optimizer, OptimizerResult
+from ..optimizers.callbacks import CallbackProtocol, minimize_with_callbacks
 from ..problems.eigenvalue import EigenvalueProblem, HamiltonianProblem
 
 Hamiltonian = Union[Operator, PauliSum]
@@ -160,12 +161,16 @@ class VQE:
     def compute_minimum_eigenvalue(
         self,
         initial_params: Optional[dict[Union[str, Parameter], float]] = None,
+        callbacks: Sequence[CallbackProtocol] = (),
     ) -> VQEResult:
         """Run VQE to find the minimum eigenvalue.
 
         Args:
             initial_params: Starting parameter values. If None,
                 all parameters initialized to 0.0.
+            callbacks: Optional iteration observers (see
+                :mod:`microquantum.optimizers.callbacks`); a callback
+                returning ``True`` stops the run early.
 
         Returns:
             VQEResult with eigenvalue, optimal parameters, and history.
@@ -183,11 +188,20 @@ class VQE:
             else:
                 init[p] = 0.0
 
-        opt_result = self._optimizer.minimize(
-            cost_fn=self._cost_fn,
-            gradient_fn=self._gradient_fn,
-            initial_params=init,
-        )
+        if callbacks:
+            opt_result = minimize_with_callbacks(
+                self._optimizer,
+                cost_fn=self._cost_fn,
+                gradient_fn=self._gradient_fn,
+                initial_params=init,
+                callbacks=callbacks,
+            )
+        else:
+            opt_result = self._optimizer.minimize(
+                cost_fn=self._cost_fn,
+                gradient_fn=self._gradient_fn,
+                initial_params=init,
+            )
 
         return VQEResult(
             eigenvalue=opt_result.optimal_value,

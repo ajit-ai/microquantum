@@ -146,10 +146,82 @@ def w_state(num_qubits: int) -> StateVector:
     return state
 
 
+def dicke_state(num_qubits: int, weight: int) -> StateVector:
+    """Dicke state: uniform superposition over Hamming-weight states.
+
+    Args:
+        num_qubits: Number of qubits (>= 1, within the dense budget).
+        weight: Number of ``1`` bits (0 <= weight <= num_qubits).
+
+    Returns:
+        ``sum_{|x|=weight} |x> / sqrt(C(num_qubits, weight))`` with
+        qubit 0 read as the most-significant bit.
+
+    Raises:
+        TypeError: If arguments are not ``int``.
+        ValueError: If out of range or beyond the dense budget.
+    """
+    if isinstance(num_qubits, bool) or not isinstance(num_qubits, int):
+        raise TypeError(f"num_qubits must be an int, got {type(num_qubits).__name__}")
+    if isinstance(weight, bool) or not isinstance(weight, int):
+        raise TypeError(f"weight must be an int, got {type(weight).__name__}")
+    if num_qubits < 1:
+        raise ValueError(f"num_qubits must be >= 1, got {num_qubits}")
+    if not 0 <= weight <= num_qubits:
+        raise ValueError(f"weight must be in 0..{num_qubits}, got {weight}")
+    state = StateVector(num_qubits, amplitudes=_allocate(num_qubits))
+    members = [index for index in range(state.dim) if bin(index).count("1") == weight]
+    scale = complex(1.0 / math.sqrt(len(members)))
+    for index in members:
+        state.amplitudes[index] = scale
+    return state
+
+
+def graph_state(edges: list[tuple[int, int]], num_qubits: int) -> StateVector:
+    """Graph state for *edges* on ``num_qubits`` qubits.
+
+    Prepares ``|+>^⊗n`` then applies CZ for every edge.  Qubit ``q``
+    is read as bit ``(num_qubits - 1 - q)`` (MSB-first, matching the
+    core circuit convention).
+
+    Args:
+        edges: Undirected ``(a, b)`` pairs with ``a != b``.
+        num_qubits: Number of qubits (>= 1, within the dense budget).
+
+    Returns:
+        The normalized graph state vector.
+    """
+    if isinstance(num_qubits, bool) or not isinstance(num_qubits, int):
+        raise TypeError(f"num_qubits must be an int, got {type(num_qubits).__name__}")
+    if num_qubits < 1:
+        raise ValueError(f"num_qubits must be >= 1, got {num_qubits}")
+    normalized: list[tuple[int, int]] = []
+    for edge in edges:
+        first, second = edge
+        if first == second:
+            raise ValueError(f"Self-loop edge {edge} is not allowed")
+        if not 0 <= first < num_qubits or not 0 <= second < num_qubits:
+            raise ValueError(f"Edge {edge} out of range for {num_qubits} qubits")
+        normalized.append((min(first, second), max(first, second)))
+    state = StateVector(num_qubits, amplitudes=_allocate(num_qubits))
+    scale = complex(1.0 / math.sqrt(state.dim))
+    for index in range(state.dim):
+        sign = 1.0
+        for first, second in normalized:
+            bit_first = (index >> (num_qubits - 1 - first)) & 1
+            bit_second = (index >> (num_qubits - 1 - second)) & 1
+            if bit_first and bit_second:
+                sign = -sign
+        state.amplitudes[index] = complex(sign * scale.real)
+    return state
+
+
 __all__ = [
     "basis_state",
     "bell_state",
+    "dicke_state",
     "ghz_state",
+    "graph_state",
     "uniform_superposition",
     "w_state",
 ]

@@ -85,6 +85,59 @@ CIRCUIT_FEATURES: tuple[str, ...] = (
 
 
 @dataclass
+class CalibrationData(JSONSerializable):
+    """Backend-reported calibration snapshot.
+
+    Attributes:
+        gate_errors: Per-gate error rates keyed by gate name.
+        readout_errors: Per-qubit readout error rates keyed by qubit
+            label (e.g. ``"q0"``).
+        t1_us: Per-qubit T1 times in microseconds.
+        t2_us: Per-qubit T2 times in microseconds.
+        timestamp: ISO-8601 capture time (empty = unknown).
+    """
+
+    gate_errors: dict[str, float] = field(default_factory=dict)
+    readout_errors: dict[str, float] = field(default_factory=dict)
+    t1_us: dict[str, float] = field(default_factory=dict)
+    t2_us: dict[str, float] = field(default_factory=dict)
+    timestamp: str = ""
+
+    def __post_init__(self) -> None:
+        for table_name in ("gate_errors", "readout_errors"):
+            for key, value in getattr(self, table_name).items():
+                if not 0.0 <= value <= 1.0:
+                    raise ValueError(f"{table_name}[{key!r}] must be in [0, 1]")
+        for table_name in ("t1_us", "t2_us"):
+            for key, value in getattr(self, table_name).items():
+                if value < 0:
+                    raise ValueError(f"{table_name}[{key!r}] must be >= 0")
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to a JSON-safe dictionary."""
+        return {
+            "gate_errors": dict(self.gate_errors),
+            "readout_errors": dict(self.readout_errors),
+            "t1_us": dict(self.t1_us),
+            "t2_us": dict(self.t2_us),
+            "timestamp": self.timestamp,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> CalibrationData:
+        """Rebuild calibration data from :meth:`to_dict` output."""
+        return cls(
+            gate_errors={str(k): float(v) for k, v in data.get("gate_errors", {}).items()},
+            readout_errors={
+                str(k): float(v) for k, v in data.get("readout_errors", {}).items()
+            },
+            t1_us={str(k): float(v) for k, v in data.get("t1_us", {}).items()},
+            t2_us={str(k): float(v) for k, v in data.get("t2_us", {}).items()},
+            timestamp=str(data.get("timestamp", "")),
+        )
+
+
+@dataclass
 class BackendCapabilities(JSONSerializable):
     """Structured capability description of a backend.
 
@@ -101,6 +154,9 @@ class BackendCapabilities(JSONSerializable):
         precision: Optional execution precision descriptor, e.g. ``16``
             (bits) or ``"double"``.
         metadata: Free-form extra capability metadata (JSON-safe).
+        calibration: Optional backend calibration snapshot.
+        max_circuit_depth: Maximum circuit depth supported
+            (``None`` = unbounded).
     """
 
     target_class: TargetClass = TargetClass.SIMULATOR
@@ -128,6 +184,8 @@ class BackendCapabilities(JSONSerializable):
     native_gates: tuple[str, ...] = field(default_factory=tuple)
     precision: Optional[Any] = None
     metadata: dict[str, Any] = field(default_factory=dict)
+    calibration: Optional[CalibrationData] = None
+    max_circuit_depth: Optional[int] = None
 
     # -- helpers ---------------------------------------------------------
 
@@ -193,6 +251,10 @@ class BackendCapabilities(JSONSerializable):
             native_gates=self.native_gates or other.native_gates,
             precision=self.precision or other.precision,
             metadata={**self.metadata, **other.metadata},
+            calibration=self.calibration or other.calibration,
+            max_circuit_depth=_min_optional(
+                self.max_circuit_depth, other.max_circuit_depth
+            ),
         )
 
     # -- construction from a serialized description -------------------------
@@ -213,6 +275,12 @@ class BackendCapabilities(JSONSerializable):
             native_gates=tuple(data.get("native_gates", ())),
             precision=data.get("precision"),
             metadata=dict(data.get("metadata", {})),
+            calibration=(
+                CalibrationData.from_dict(data["calibration"])
+                if data.get("calibration") is not None
+                else None
+            ),
+            max_circuit_depth=data.get("max_circuit_depth"),
         )
 
     # -- serialization ------------------------------------------------------
@@ -232,6 +300,8 @@ class BackendCapabilities(JSONSerializable):
             "native_gates": list(self.native_gates),
             "precision": json_safe(self.precision),
             "metadata": json_safe(self.metadata),
+            "calibration": self.calibration.to_dict() if self.calibration is not None else None,
+            "max_circuit_depth": self.max_circuit_depth,
         }
 
 
@@ -278,6 +348,7 @@ def simulator_capabilities(
 
 __all__ = [
     "BackendCapabilities",
+    "CalibrationData",
     "CIRCUIT_FEATURES",
     "EXECUTION_CAPABILITIES",
     "EXECUTION_DENSITY_MATRIX",

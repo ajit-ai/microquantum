@@ -13,6 +13,7 @@ from .base import (
 )
 from .ibm import IBMQuantumCredentials, IBMQuantumProvider
 from .ionq import IonQCredentials, IonQProvider
+from .jobs import TERMINAL_STATUSES, PollingJob, ProviderErrorMapper
 from .serializer import CircuitSerializer, UnsupportedGateError
 
 __all__ = [
@@ -20,6 +21,9 @@ __all__ = [
     "HardwareJob",
     "HardwareStatus",
     "ProviderCredentials",
+    "PollingJob",
+    "ProviderErrorMapper",
+    "TERMINAL_STATUSES",
     "HardwareBackend",
     "IBMQuantumCredentials",
     "IBMQuantumProvider",

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from ..core.parameter import Parameter, ParameterExpression
 from .circuit_ir import IRCircuit
+from .control import Loop, Switch
 from .nodes import (
     Barrier,
     Condition,
@@ -102,6 +103,26 @@ def validate_operation(
         for nested in op.operations:
             validate_operation(
                 nested, num_qubits, num_classical_bits, errors, loc
+            )
+
+    elif isinstance(op, Loop):
+        if isinstance(op.trip_count, Parameter) and not op.trip_count.name:
+            errors.append(f"{loc}loop has an unnamed trip-count parameter")
+        for nested in op.body:
+            validate_operation(
+                nested, num_qubits, num_classical_bits, errors, f"{loc}loop"
+            )
+
+    elif isinstance(op, Switch):
+        validate_condition(op.condition, num_classical_bits, errors, loc)
+        for value, body in op.cases:
+            for nested in body:
+                validate_operation(
+                    nested, num_qubits, num_classical_bits, errors, f"{loc}switch[{value}]"
+                )
+        for nested in op.default:
+            validate_operation(
+                nested, num_qubits, num_classical_bits, errors, f"{loc}switch[default]"
             )
 
     else:  # pragma: no cover - guarded by type system

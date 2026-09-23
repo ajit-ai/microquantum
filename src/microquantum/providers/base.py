@@ -97,10 +97,13 @@ class ProviderCredentials:
     Attributes:
         api_token: Secret API token / key.
         base_url: Optional API base URL override (for mirrors/e2e).
+        proxy: Optional HTTP(S) proxy URL (e.g. ``"http://proxy:8080"``)
+            honored by the default transport.
     """
 
     api_token: str
     base_url: Optional[str] = None
+    proxy: Optional[str] = None
 
     @classmethod
     def from_env(cls) -> "ProviderCredentials":
@@ -108,12 +111,14 @@ class ProviderCredentials:
         raise NotImplementedError
 
     def validate(self) -> None:
-        """Ensure the token is present, else raise ValueError."""
+        """Ensure the token (and proxy, if set) is present and well-formed."""
         if not self.api_token:
             raise ValueError(
                 "Provider API token is required. Set the appropriate "
                 "environment variable before constructing a provider."
             )
+        if self.proxy is not None and not self.proxy.startswith(("http://", "https://")):
+            raise ValueError(f"proxy must be an http(s) URL, got {self.proxy!r}")
 
 
 class HardwareProvider(ABC):

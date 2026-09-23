@@ -74,6 +74,8 @@ class ExecutionPlan(JSONSerializable):
         optimization_level: Compiler optimization level (0-2).
         options: Free-form runtime/compiler options.
         metadata: Free-form user metadata merged into the result.
+        budget: Optional :class:`~microquantum.runtime.Budget` cost guard.
+        cacheable: Whether the runtime may serve a cached record.
     """
 
     name: str = "main"
@@ -89,6 +91,8 @@ class ExecutionPlan(JSONSerializable):
     optimization_level: int = 0
     options: dict[str, Any] = field(default_factory=dict)
     metadata: dict[str, Any] = field(default_factory=dict)
+    budget: Optional[Any] = None
+    cacheable: bool = True
 
     def __post_init__(self) -> None:
         self.shots = _validate_shots(self.shots)
@@ -125,6 +129,8 @@ class ExecutionPlan(JSONSerializable):
         optimization_level: int = 0,
         options: Optional[dict[str, Any]] = None,
         metadata: Optional[dict[str, Any]] = None,
+        budget: Optional[Any] = None,
+        cacheable: bool = True,
     ) -> ExecutionPlan:
         """Build a plan directly from a circuit with convenient defaults."""
         return cls(
@@ -139,6 +145,8 @@ class ExecutionPlan(JSONSerializable):
             optimization_level=optimization_level,
             options=dict(options or {}),
             metadata=dict(metadata or {}),
+            budget=budget,
+            cacheable=cacheable,
         )
 
     @property
@@ -257,6 +265,8 @@ class ExecutionPlan(JSONSerializable):
             "optimization_level": self.optimization_level,
             "options": json_safe(dict(self.options)),
             "metadata": json_safe(dict(self.metadata)),
+            "budget": self.budget.to_dict() if self.budget is not None else None,
+            "cacheable": self.cacheable,
         }
 
     def to_json(self) -> str:

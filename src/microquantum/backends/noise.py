@@ -435,3 +435,44 @@ class NoiseModel:
             ],
         ))
         return self
+
+
+class ReadoutMitigator:
+    """Interface for readout-error correction hooks.
+
+    Simulators and hardware adapters share this hook: given raw counts
+    and optional calibration, return corrected counts.  The default
+    implementation is the identity.
+    """
+
+    @property
+    def name(self) -> str:
+        """Mitigator identifier."""
+        return "readout-mitigator"
+
+    def mitigate(
+        self,
+        counts: dict[str, int],
+        calibration: Optional[dict[str, float]] = None,
+    ) -> dict[str, float]:
+        """Return corrected outcome weights for raw *counts*."""
+        raise NotImplementedError
+
+
+class IdentityReadoutMitigator(ReadoutMitigator):
+    """Pass-through mitigator: normalized raw frequencies."""
+
+    @property
+    def name(self) -> str:
+        return "identity"
+
+    def mitigate(
+        self,
+        counts: dict[str, int],
+        calibration: Optional[dict[str, float]] = None,
+    ) -> dict[str, float]:
+        """Return normalized frequencies, ignoring *calibration*."""
+        total = sum(counts.values())
+        if total == 0:
+            return {}
+        return {bitstring: count / total for bitstring, count in counts.items()}

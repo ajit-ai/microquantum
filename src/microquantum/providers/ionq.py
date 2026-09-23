@@ -8,6 +8,7 @@ Reference API docs (public, no auth required to read):
 """
 from __future__ import annotations
 
+import functools
 import os
 from typing import Any, Optional
 
@@ -47,7 +48,9 @@ class IonQProvider(HardwareProvider):
     ) -> None:
         super().__init__(credentials or IonQCredentials.from_env())
         self._target = target
-        self._transport = transport or http_request
+        self._transport = transport or functools.partial(
+            http_request, proxy=self._credentials.proxy
+        )
         self._base_url = self._credentials.base_url or _DEFAULT_BASE_URL
         self._shots_by_job: dict[str, int] = {}
 

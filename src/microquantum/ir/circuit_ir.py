@@ -70,11 +70,22 @@ class IRCircuit:
     # ------------------------------------------------------------------
 
     def walk(self) -> Iterator[IRNode]:
-        """Iterate operations in order, descending into conditional blocks."""
+        """Iterate operations in order, descending into nested blocks."""
+        from .control import Loop, Switch  # noqa: PLC0415
+
         for op in self.operations:
             yield op
             if isinstance(op, ConditionalBlock):
                 for nested in op.operations:
+                    yield nested
+            elif isinstance(op, Loop):
+                for nested in op.body:
+                    yield nested
+            elif isinstance(op, Switch):
+                for _, body in op.cases:
+                    for nested in body:
+                        yield nested
+                for nested in op.default:
                     yield nested
 
     @property

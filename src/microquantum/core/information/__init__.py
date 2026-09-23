@@ -21,6 +21,8 @@ __all__ = [
     "relative_entropy",
     "mutual_information",
     "state_overlap",
+    "entanglement_entropy",
+    "concurrence",
 ]
 
 
@@ -179,3 +181,40 @@ def state_overlap(a: Any, b: Any) -> float:
     if rho.shape != sigma.shape:
         raise ValueError("State dimensions do not match")
     return float(np.real(np.trace(rho @ sigma)))
+
+
+def entanglement_entropy(state: Any, keep: list[int], base: float = 2.0) -> float:
+    """EXPERIMENTAL: entanglement entropy across a bipartition.
+
+    Von Neumann entropy of the reduced state keeping the qubits in
+    *keep* (pure overall states give the bipartite entanglement).
+    The API is experimental and may gain Rényi-order support.
+    """
+    from microquantum.core.tensor import partial_trace_matrix  # noqa: PLC0415
+
+    rho = _to_density(state)
+    dim = rho.shape[0]
+    num_qubits = int(np.log2(dim))
+    if rho.shape != (dim, dim) or dim & (dim - 1) != 0:
+        raise ValueError("State dimension must be a power of 2")
+    reduced = partial_trace_matrix(rho, keep, num_qubits)
+    return von_neumann_entropy(reduced, base)
+
+
+def concurrence(state: Any) -> float:
+    """EXPERIMENTAL: Wootters concurrence of a two-qubit state.
+
+    ``max(0, √λ₁ − √λ₂ − √λ₃ − √λ₄)`` with ``λᵢ`` the descending
+    eigenvalues of ``ρ(Y⊗Y)ρ*(Y⊗Y)``.  The API is experimental and
+    limited to two qubits.
+    """
+    rho = _to_density(state)
+    if rho.shape != (4, 4):
+        raise ValueError(f"Concurrence needs a 2-qubit state, got shape {rho.shape}")
+    pauli_y = np.array([[0, -1j], [1j, 0]], dtype=np.complex128)
+    spin_flip = np.kron(pauli_y, pauli_y)
+    matrix = rho @ spin_flip @ rho.conj() @ spin_flip
+    eigenvalues = np.real(np.linalg.eigvals(matrix))
+    ordered = sorted((max(value, 0.0) for value in eigenvalues), reverse=True)
+    roots = [float(np.sqrt(value)) for value in ordered]
+    return max(0.0, roots[0] - roots[1] - roots[2] - roots[3])

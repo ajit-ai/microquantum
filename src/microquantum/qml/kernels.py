@@ -172,3 +172,33 @@ class QuantumKernel:
             f"QuantumKernel(encoder={self._encoder!r}, "
             f"entangle={self._entangle})"
         )
+
+
+def kernel_alignment(kernel: np.ndarray, labels: list[int]) -> float:
+    """Kernel-target alignment score for model selection.
+
+    Computes ``yᵀKy / (n·‖K‖_F)`` with ``y`` the ±1 label vector: 1.0
+    for a perfectly aligned kernel, 0.0 for orthogonal.  Higher is
+    better when comparing feature maps on the same dataset.
+
+    Args:
+        kernel: Square kernel matrix ``(n, n)``.
+        labels: Binary class labels (0/1) of length ``n``.
+
+    Raises:
+        ValueError: On shape mismatch, empty input, non-binary labels
+            or a zero kernel matrix.
+    """
+    matrix = np.asarray(kernel, dtype=float)
+    if matrix.ndim != 2 or matrix.shape[0] != matrix.shape[1]:
+        raise ValueError(f"kernel must be square, got shape {matrix.shape}")
+    count = matrix.shape[0]
+    if count == 0:
+        raise ValueError("kernel must be non-empty")
+    if len(labels) != count or any(label not in (0, 1) for label in labels):
+        raise ValueError("labels must be binary with one entry per kernel row")
+    norm = float(np.linalg.norm(matrix, ord="fro"))
+    if norm == 0:
+        raise ValueError("kernel matrix must be non-zero")
+    signed = np.array([1.0 if label == 1 else -1.0 for label in labels])
+    return float((signed @ matrix @ signed) / (count * norm))

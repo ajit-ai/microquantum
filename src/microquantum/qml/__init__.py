@@ -16,7 +16,8 @@ from .encoding import (
     IQPEncoding,
     ZFeatureMap,
 )
-from .kernels import QuantumKernel
+from .kernels import QuantumKernel, kernel_alignment
+from .reuploading import DataReuploadingClassifier
 
 __all__ = [
     "AngleEncoding",
@@ -24,6 +25,8 @@ __all__ = [
     "IQPEncoding",
     "ZFeatureMap",
     "QuantumKernel",
+    "kernel_alignment",
     "VariationalClassifier",
     "ClassifierResult",
+    "DataReuploadingClassifier",
 ]
