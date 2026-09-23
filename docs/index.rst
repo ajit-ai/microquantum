@@ -50,10 +50,10 @@ architecture that is ready for future hardware providers.
    :maxdepth: 2
    :caption: Concepts
 
-    concepts/overview
-    concepts/core-expansion
-    concepts/phase121
-    concepts/quantum-states
+   concepts/overview
+   concepts/core-expansion
+   concepts/phase121
+   concepts/quantum-states
    concepts/circuits
    concepts/gates
    concepts/parameters
