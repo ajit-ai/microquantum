@@ -25,7 +25,7 @@ private module boundary is ``microquantum._json`` (JSON helpers) and
 ``microquantum._cli`` (developer CLI).
 """
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 from .adapters import (
     AdapterRegistry,

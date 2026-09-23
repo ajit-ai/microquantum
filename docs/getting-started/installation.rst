@@ -38,7 +38,7 @@ Verify the installation (on every platform):
 
    python -c "import microquantum; print(microquantum.__version__)"
 
-You should see ``1.0.0``. When the ``microquantum`` entry point is on your
+You should see ``1.1.0``. When the ``microquantum`` entry point is on your
 ``PATH``:
 
 .. code-block:: bash

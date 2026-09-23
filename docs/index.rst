@@ -20,9 +20,9 @@ architecture that is ready for future hardware providers.
 .. list-table::
    :widths: 30 70
 
-   * - Status
-     - **General Availability** (v1.0.0). Stable, tested, documented,
-       dependency-light and published to PyPI.
+    * - Status
+      - **General Availability** (v1.1.0). Stable, tested, documented,
+        dependency-light and published to PyPI.
    * - Runtime
      - Pure Python + NumPy. No Qiskit, Cirq or OpenQASM dependency.
    * - Execution
@@ -166,6 +166,7 @@ architecture that is ready for future hardware providers.
    :maxdepth: 2
    :caption: Project
 
+   releases/1_1_0
    releases/ga
    releases/developer-preview
    releases/changelog
