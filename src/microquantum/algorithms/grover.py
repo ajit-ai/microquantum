@@ -272,7 +272,12 @@ class GroverSearch:
 
         target = problem.target
         if target is not None:
-            targets = [target] if isinstance(target, int) else list(target)
+            if isinstance(target, int):
+                targets = [target]
+            elif isinstance(target, str):
+                targets = [int(target, 2)]
+            else:
+                targets = list(target)
             return cls(
                 problem.num_qubits,
                 target=targets,

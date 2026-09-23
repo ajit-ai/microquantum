@@ -171,6 +171,51 @@ class QuantumCounting:
             metadata={"shots": num_shots or self._shots, "seed": self._seed},
         )
 
+    def estimate_count(
+        self,
+        num_qubits: int,
+        targets: Sequence[int | str],
+        *,
+        num_evaluation_qubits: Optional[int] = None,
+        num_shots: Optional[int] = None,
+    ) -> QuantumCountingResult:
+        """Count via QPE sampling (:class:`AmplitudeEstimation`).
+
+        Runs the hardware-faithful QPE path instead of the exact
+        spectral analysis: the estimate lands on the nearest QPE bin,
+        so results carry genuine sampling/precision behavior.  Agrees
+        with :meth:`count` whenever the marked fraction is exactly
+        representable with the evaluation-qubit precision.
+        """
+        oracle = self.build_oracle(num_qubits, targets)
+        preparation = self.build_state_preparation(num_qubits)
+        precision = num_evaluation_qubits or self._num_evaluation_qubits
+        estimator = AmplitudeEstimation(
+            num_evaluation_qubits=precision,
+            state_preparation=preparation,
+            oracle=oracle,
+        )
+        estimate = estimator.estimate(
+            num_qubits,
+            state_prep=preparation,
+            oracle=oracle,
+            num_shots=num_shots or self._shots,
+        )
+        size = 2**num_qubits
+        fraction = min(max(estimate.estimated_amplitude, 0.0), 1.0)
+        return QuantumCountingResult(
+            estimated_count=int(round(size * fraction)),
+            fraction=fraction,
+            num_qubits=num_qubits,
+            confidence=estimate.confidence_interval,
+            evaluations=estimate.num_evaluations,
+            metadata={
+                "shots": num_shots or self._shots,
+                "seed": self._seed,
+                "method": "qpe-sampling",
+            },
+        )
+
     def solve(self, problem: Any, runtime: Any = None) -> QuantumCountingResult:
         """Count the marked targets of a :class:`SearchProblem`."""
         errors = self.validate(problem)

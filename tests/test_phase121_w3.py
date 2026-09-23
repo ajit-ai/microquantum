@@ -67,6 +67,15 @@ class TestQuantumCounting:
         with pytest.raises(ValueError):
             counter.solve(object())
 
+    def test_estimate_count_agrees_on_exact_fractions(self) -> None:
+        counter = QuantumCounting(num_evaluation_qubits=4, shots=64)
+        assert counter.estimate_count(1, [1]).estimated_count == 1
+        assert counter.estimate_count(2, [0, 3]).estimated_count == 2
+        assert counter.estimate_count(2, []).estimated_count == 0
+        near = counter.estimate_count(2, [3], num_evaluation_qubits=5)
+        assert near.estimated_count == 1
+        assert near.metadata["method"] == "qpe-sampling"
+
 
 class TestQPEPhaseFilter:
     def test_schedule_and_circuit(self) -> None:

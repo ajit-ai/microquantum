@@ -8,6 +8,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 122: correctness hardening & hardware readiness** — one
+  additive phase closing gaps found in Phase 121:
+  - Estimator correctness: fixed `AmplitudeEstimation._controlled_unitary`
+    (diagonal/zero entries were dropped, corrupting every controlled
+    power) and replaced the divergent hand-rolled inverse QFT with the
+    canonical `inverse_qft_circuit(do_swaps=False)` (as `PhaseEstimation`
+    uses); QPE now resolves exact fractions exactly with correct
+    nearest-bin behavior otherwise. New accuracy tests;
+    `QuantumCounting.estimate_count()` runs the hardware-faithful QPE
+    path alongside the exact spectral `count()`.
+  - Contracts: single-sourced `sdk_version()` (fixes the 3
+    version-metadata test failures), `SearchProblem` bitstring
+    normalization with strict type rejection, `ReplayTransport`
+    record/replay fixture harness (which also exposed and fixed
+    falsy-transport fallback in the IBM/IonQ providers).
+  - Execution at scale: array-backend CPU coverage (+ GPU skip-guarded
+    tests), `DAGScheduler` wiring into `execute_batch`/`execute_batch`,
+    `Budget` enforcement in `ExecutionRuntime.execute`, MPS/TTN depth
+    scaling tests.
+  - Compiler depth: `SwapRoutingPass` (BFS SWAP insertion, verified
+    `U_routed = M·U_orig`), `NoiseAwareLayout` (readout-error greedy
+    placement), `CommutationAwareCancellation` (verified X/Z sliding
+    rules with unitary-equivalence tests).
+  - Foundations: `gray_code`, `dicke_state`, circuit-verified
+    `graph_state`, `ControlledUnitary`, experimental
+    `entanglement_entropy`/`concurrence`; gateway grows to 368 names.
+  - Tests `test_phase122_w*.py`, examples `47-49_phase122_*.py`,
+    `docs/concepts/phase122.rst`, notebook section 16.
 - **Phase 121: SDK extension surface** — one additive phase across all
   packages (no breaking changes, no new hard dependencies):
   - Contracts & protocols: `ConstrainedOptimizationProblem`,

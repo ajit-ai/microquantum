@@ -43,6 +43,7 @@ from .trace import ExecutionTrace
 if TYPE_CHECKING:
     from ..experiments.experiment import ExperimentResult
     from ..experiments.record import ExecutionRecord
+    from .scheduling import DAGScheduler
 
 Work = Union[ExecutionPlan, QuantumCircuit]
 BatchResult = Union[BackendResult, str]
@@ -373,6 +374,8 @@ class ExecutionRuntime:
             seed=seed,
             metadata=metadata,
         )
+        if plan.budget is not None:
+            plan.budget.check(shots=plan.shots, circuits=1)
         return self._dispatch(plan)
 
     def _dispatch(self, plan: ExecutionPlan) -> BackendResult:
@@ -396,6 +399,7 @@ class ExecutionRuntime:
         seed: Optional[int] = None,
         backend: Optional[BackendRef] = None,
         raise_on_error: bool = True,
+        scheduler: Optional[DAGScheduler] = None,
     ) -> list[BatchResult]:
         """Execute a sequence of plans/circuits and collect their results.
 
@@ -404,24 +408,79 @@ class ExecutionRuntime:
         messages in their original position so a single bad circuit does not
         discard the rest of the batch.
 
+        Args:
+            work: Plans or circuits to execute.
+            shots: Shots override for circuit inputs.
+            seed: Seed override for circuit inputs.
+            backend: Backend override for circuit inputs.
+            raise_on_error: Abort on the first failure when True.
+            scheduler: Optional :class:`DAGScheduler` ordering plan
+                execution (e.g. dependency levels); results always come
+                back in input order.
+
         Returns:
             List with one :class:`BackendResult` (or error string) per input.
         """
+        from .scheduling import DAGScheduler as _Scheduler  # noqa: PLC0415
+
+        if scheduler is not None and not isinstance(scheduler, _Scheduler):
+            raise TypeError(
+                f"scheduler must be a DAGScheduler, got {type(scheduler).__name__}"
+            )
         batch_id = uuid.uuid4().hex[:8]
-        results: list[BatchResult] = []
-        for index, item in enumerate(work):
+        items = list(work)
+        if scheduler is None:
+            results: list[BatchResult] = []
+            for index, item in enumerate(items):
+                try:
+                    plan = self._as_plan(item, backend=backend, shots=shots, seed=seed)
+                    plan = replace(
+                        plan,
+                        metadata={**plan.metadata, "batch_id": batch_id, "batch_index": index},
+                    )
+                    results.append(self.execute(plan))
+                except Exception as exc:
+                    if raise_on_error:
+                        raise
+                    results.append(f"item {index}: {exc}")
+            return results
+        prepared: list[Optional[ExecutionPlan]] = []
+        failures: dict[int, str] = {}
+        for index, item in enumerate(items):
             try:
-                plan = self._as_plan(item, backend=backend, shots=shots, seed=seed)
-                plan = replace(
-                    plan,
-                    metadata={**plan.metadata, "batch_id": batch_id, "batch_index": index},
+                prepared.append(
+                    self._as_plan(item, backend=backend, shots=shots, seed=seed)
                 )
-                results.append(self.execute(plan))
             except Exception as exc:
                 if raise_on_error:
                     raise
-                results.append(f"item {index}: {exc}")
-        return results
+                failures[index] = f"item {index}: {exc}"
+                prepared.append(None)
+        valid_positions = [i for i, plan in enumerate(prepared) if plan is not None]
+        valid_plans = [prepared[i] for i in valid_positions]
+        order: list[int] = []
+        for batch in scheduler.schedule([p for p in valid_plans if p is not None]):
+            order.extend(valid_positions[i] for i in batch.indices)
+        ordered_results: list[BatchResult] = [failures.get(i, "") for i in range(len(items))]
+        for position, index in enumerate(order):
+            item_plan = prepared[index]
+            assert item_plan is not None
+            item_plan = replace(
+                item_plan,
+                metadata={
+                    **item_plan.metadata,
+                    "batch_id": batch_id,
+                    "batch_index": index,
+                    "schedule_order": position,
+                },
+            )
+            try:
+                ordered_results[index] = self.execute(item_plan)
+            except Exception as exc:
+                if raise_on_error:
+                    raise
+                ordered_results[index] = f"item {index}: {exc}"
+        return ordered_results
 
     def execute_record(
         self,

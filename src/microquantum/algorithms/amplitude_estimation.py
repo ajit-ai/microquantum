@@ -23,6 +23,7 @@ from .._json import JSONSerializable
 from ..core.circuit import QuantumCircuit, _narrow_concrete
 from ..core.operators import Operator
 from ..core.tensor import expand_operator
+from .qft import inverse_qft_circuit
 
 
 @dataclass
@@ -182,16 +183,11 @@ class AmplitudeEstimation:
             controlled = self._controlled_unitary(powered, i, list(range(m, total)), total)
             qc.append(Operator(controlled), list(range(total)))
 
-        # Inverse QFT on evaluation qubits (embedded in total qubit space)
-        iqft = self._inverse_qft(m)
-        for instr in iqft._gate_instructions:
-            if QuantumCircuit._is_parameterized_gate(instr):
-                continue
-            iqft_op, iqft_targets = _narrow_concrete(instr)
-            # Shift target qubits to evaluation qubit positions
-            shifted = [t for t in iqft_targets]
-            expanded = expand_operator(iqft_op, shifted, total)
-            qc.append(expanded, list(range(total)))
+        # Inverse QFT on evaluation qubits (canonical no-swap form,
+        # mirroring PhaseEstimation so bit order matches the readout).
+        iqft = inverse_qft_circuit(m, do_swaps=False)
+        for iqft_op, iqft_targets in iqft.gates:
+            qc.append(iqft_op, list(iqft_targets))
 
         # Run and get phase estimate
         state = qc.run()
@@ -245,105 +241,47 @@ class AmplitudeEstimation:
     ) -> np.ndarray:
         """Create a controlled unitary gate.
 
-        Applies unitary to target_qubits when control_qubit is |1>.
+        Applies unitary to target_qubits when control_qubit is |1>
+        (big-endian qubit ordering: qubit 0 is the most significant
+        bit), identity otherwise.
         """
+        matrix = np.asarray(unitary, dtype=np.complex128)
+        if matrix.ndim != 2 or matrix.shape[0] != matrix.shape[1]:
+            raise ValueError("unitary must be a square matrix")
+        if matrix.shape[0] != 2 ** len(target_qubits):
+            raise ValueError("unitary dimension must match the target qubit count")
+        if not 0 <= control_qubit < total_qubits:
+            raise ValueError("control_qubit out of range")
+        if any(not 0 <= target < total_qubits for target in target_qubits):
+            raise ValueError("target qubit out of range")
+        if control_qubit in target_qubits:
+            raise ValueError("control qubit must not be a target")
         dim = 2**total_qubits
-        np.eye(dim, dtype=np.complex128)
-
-        # Extract the sub-matrix for the control=|1> block
-        2**total_qubits
         n_targets = len(target_qubits)
-
-        for i in range(dim):
-            if not (i >> (total_qubits - 1 - control_qubit)) & 1:
-                continue  # Control is 0, identity
-            # Apply unitary to target qubits
-            target_indices = []
-            for t in target_qubits:
-                bit = (i >> (total_qubits - 1 - t)) & 1
-                target_indices.append(bit)
-
-            # Build target state index
-            new_target = 0
-            for j, bit in enumerate(target_indices):
-                new_target |= bit << (n_targets - 1 - j)
-
-            # Map full state
-            new_i = i
-            for j, t in enumerate(target_qubits):
-                old_bit = (i >> (total_qubits - 1 - t)) & 1
-                new_bit = (new_target >> (n_targets - 1 - j)) & 1
-                if old_bit != new_bit:
-                    new_i ^= 1 << (total_qubits - 1 - t)
-
-            # Only set non-diagonal elements if not identity
-            if new_i != i:
-                # Build the column for this row
-                pass
-
-        # Simpler approach: construct full matrix element by element
         result = np.eye(dim, dtype=np.complex128)
         for row in range(dim):
             if not (row >> (total_qubits - 1 - control_qubit)) & 1:
                 continue  # Control=0: identity
+            row_targets = [(row >> (total_qubits - 1 - t)) & 1 for t in target_qubits]
+            row_other = row
+            for t in target_qubits:
+                row_other &= ~(1 << (total_qubits - 1 - t))
             for col in range(dim):
-                if col == row:
-                    continue
                 if not (col >> (total_qubits - 1 - control_qubit)) & 1:
                     continue  # Control=0 column
-
-                # Check if target qubits match the transformation
-                row_targets = []
-                col_targets = []
-                for t in target_qubits:
-                    row_targets.append((row >> (total_qubits - 1 - t)) & 1)
-                    col_targets.append((col >> (total_qubits - 1 - t)) & 1)
-
-                # Check non-target qubits match
-                row_other = row
                 col_other = col
                 for t in target_qubits:
-                    mask = 1 << (total_qubits - 1 - t)
-                    row_other &= ~mask
-                    col_other &= ~mask
-
+                    col_other &= ~(1 << (total_qubits - 1 - t))
                 if row_other != col_other:
                     continue
-
-# Compute unitary matrix element
+                col_targets = [(col >> (total_qubits - 1 - t)) & 1 for t in target_qubits]
                 row_t_idx = 0
                 col_t_idx = 0
-                for j, _t in enumerate(target_qubits):
+                for j in range(n_targets):
                     row_t_idx |= row_targets[j] << (n_targets - 1 - j)
                     col_t_idx |= col_targets[j] << (n_targets - 1 - j)
-
-                val = unitary[row_t_idx, col_t_idx]
-                if val != 0:
-                    result[row, col] = val
-
+                result[row, col] = matrix[row_t_idx, col_t_idx]
         return result
-
-    @staticmethod
-    def _inverse_qft(num_qubits: int) -> QuantumCircuit:
-        """Build inverse QFT circuit."""
-        qc = QuantumCircuit(num_qubits)
-
-        for i in range(num_qubits // 2):
-            qc.swap(i, num_qubits - 1 - i)
-
-        for i in range(num_qubits):
-            for j in range(i):
-                # Controlled phase gate: Rz(-pi / 2^(i-j))
-                angle = -math.pi / (2 ** (i - j))
-                # Apply controlled-Rz using decomposition
-                qc.cx(j, i)
-                qc.rz(angle / 2, i)
-                qc.cx(j, i)
-                qc.rz(-angle / 2, j)
-                qc.rz(angle / 2, i)
-            qc.h(i)
-
-        return qc
 
     def __repr__(self) -> str:
         return (

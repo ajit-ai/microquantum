@@ -30,8 +30,9 @@ class SearchProblem(Problem):
 
     Attributes:
         num_qubits: Size of the search register.
-        target: Integer or list of integers identifying the solution basis
-            state(s).
+        target: Integer, list of integers, or MSB-first bitstring (e.g.
+            ``"101"``) identifying the solution basis state(s).
+            Bitstrings are normalized to integers on construction.
         oracle: Callable returning a circuit that marks the solutions.
         predicate: Callable ``predicate(bitstring) -> bool``.
         num_targets: Number of marked states (only used for the optimal
@@ -39,7 +40,7 @@ class SearchProblem(Problem):
     """
 
     num_qubits: int = 1
-    target: Optional[Union[int, list[int]]] = None
+    target: Optional[Union[int, list[int], str]] = None
     oracle: Optional[Callable[[int], Any]] = None
     predicate: Optional[Callable[[int], bool]] = None
     num_targets: int = 1
@@ -48,6 +49,14 @@ class SearchProblem(Problem):
         if self.num_qubits is None or self.num_qubits < 1:
             raise ValueError(f"num_qubits must be >= 1, got {self.num_qubits}")
         n = 2**self.num_qubits
+        if isinstance(self.target, str):
+            if not self.target or any(char not in "01" for char in self.target):
+                raise TypeError(
+                    f"target bitstring must contain only '0'/'1', got {self.target!r}"
+                )
+            self.target = int(self.target, 2)
+        if isinstance(self.target, bool):
+            raise TypeError("target must be int or list[int], got bool")
         if isinstance(self.target, int):
             if self.target < 0 or self.target >= n:
                 raise ValueError(
@@ -56,10 +65,19 @@ class SearchProblem(Problem):
                 )
         elif isinstance(self.target, (list, tuple)):
             for t in self.target:
+                if isinstance(t, bool) or not isinstance(t, int):
+                    raise TypeError(
+                        f"target entries must be int, got {type(t).__name__}"
+                    )
                 if t < 0 or t >= n:
                     raise ValueError(
                         f"target {t} out of range for {self.num_qubits}-qubit system"
                     )
+        elif self.target is not None:
+            raise TypeError(
+                f"target must be int, list[int] or bitstring, "
+                f"got {type(self.target).__name__}"
+            )
         if self.num_targets < 1:
             raise ValueError(f"num_targets must be >= 1, got {self.num_targets}")
 
@@ -83,7 +101,11 @@ class SearchProblem(Problem):
     def target_indices(self) -> list[int]:
         """Return the integer indices of the marked states (if known)."""
         if self.target is not None:
-            return [self.target] if isinstance(self.target, int) else list(self.target)
+            if isinstance(self.target, int):
+                return [self.target]
+            if isinstance(self.target, str):
+                return [int(self.target, 2)]
+            return list(self.target)
         seen: list[int] = []
         for i in range(2**self.num_qubits):
             if self.predicate is not None and self.predicate(i):
@@ -96,7 +118,12 @@ class SearchProblem(Problem):
         if self.predicate is not None:
             return bool(self.predicate(index))
         if self.target is not None:
-            targets = [self.target] if isinstance(self.target, int) else list(self.target)
+            if isinstance(self.target, int):
+                targets = [self.target]
+            elif isinstance(self.target, str):
+                targets = [int(self.target, 2)]
+            else:
+                targets = list(self.target)
             return index in targets
         raise ValueError("search problem has no predicate or target to evaluate")
 
