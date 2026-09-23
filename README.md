@@ -219,7 +219,13 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution workflow and
 
 ## Roadmap
 
-- **v1.0.0** (current) — **General Availability**: the final planned
+- **v1.1.0** (current) — first post-GA minor release: Core engine expansion
+  (17 `microquantum.core` subpackages), the Phase 121 SDK extension
+  surface, and Phase 122 correctness hardening (fixed amplitude
+  estimation, single-sourced version, hardware-aware transpiler
+  passes) — see `docs/releases/1_1_0.rst`. Strictly additive over
+  v1.0.0; no code changes required to upgrade.
+- **v1.0.0** — **General Availability**: the final planned
   MicroQuantum roadmap phase. Complete stdlib (`microquantum.stdlib`), locked
   package ecosystem, configurable runtime & tooling (`RuntimeConfig`,
   stage-tagged errors, `runtime_info`, the `microquantum` CLI), production/

@@ -1,0 +1,64 @@
+.. _release-1-1-0:
+
+Release 1.1.0
+=============
+
+MicroQuantum **1.1.0** is the first minor release after General
+Availability.  It is strictly additive over 1.0.0: no public API was
+renamed or removed, and every 1.0.0 program keeps working unchanged.
+
+Status
+------
+
+- **Version**: 1.1.0.
+- **Runtime**: Pure Python + NumPy.  Python 3.10 - 3.13.
+- **Platforms**: designed for Windows, Linux, macOS and BSD; CI-verified on
+  GitHub-hosted Ubuntu Linux, Windows and macOS.  See
+  :doc:`/releases/platform-support` for the per-platform status.
+- **Dependency**: NumPy is the only hard runtime dependency.
+- **Documentation**: https://ajit-ai.github.io/microquantum/
+- **License**: MIT.
+
+What 1.1.0 adds over 1.0.0
+--------------------------
+
+* **Core engine expansion** — ``microquantum.core`` grows 17 focused
+  subpackages (gates, operators, observables, states, channels,
+  measurements, parameters, tensor, information, execution,
+  architecture, resources, gradients, serialization, transpiler, plus
+  circuit/pauli/registers packages): gate hierarchies, first-class
+  observables/states/channels, a backend-independent execution model,
+  hardware-independent architecture descriptions and a pass-based
+  transpiler framework.  See :doc:`/concepts/core-expansion`.
+* **SDK extension surface (Phase 121)** — contracts
+  (``ConstrainedOptimizationProblem``, ``TimeEvolutionProblem``,
+  ``ExcitedStateProblem``, ``AdapterRegistry``, ``Budget``),
+  IR control nodes (``Loop``/``Switch``) with cost models, execution
+  scheduling and caching, quantum counting, PUBO support, a
+  data-reuploading classifier with ``fit``, the Steane code,
+  Jordan-Wigner transforms, CDR mitigation, provider polling/proxy
+  support, mirror benchmarking, experiment checkpoints and stdlib
+  factories.  See :doc:`/concepts/phase121`.
+* **Correctness hardening (Phase 122)** — fixed amplitude-estimation
+  QPE accuracy, single-sourced SDK version reporting, strict search
+  typing, offline provider replay fixtures, scheduled/budgeted batch
+  execution, tensor-network depth coverage and hardware-aware
+  transpiler passes (SWAP routing, noise-aware layout,
+  commutation-aware cancellation).  See :doc:`/concepts/phase122`.
+
+Stability
+---------
+
+The 1.0.0 SemVer commitments from :doc:`/releases/ga` still hold:
+backward-compatible additions land in minor releases, serialized
+schemas stay versioned with additive-only fields, and the 368-name
+public gateway is covered by contract tests.
+
+Upgrading from 1.0.0
+--------------------
+
+``pip install --upgrade microquantum`` — no code changes required.
+One intentional behavior note: optimizer RNG streams were never part
+of the compatibility contract and may differ where new
+resampling/blocking options are enabled (defaults preserve prior
+behavior).

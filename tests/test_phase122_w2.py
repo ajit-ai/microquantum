@@ -15,7 +15,7 @@ from microquantum.runtime.info import _sdk_version
 class TestVersionSingleSource:
     def test_sdk_version_matches_package(self) -> None:
         assert _sdk_version() == package_version
-        assert _sdk_version() == "1.0.0"
+        assert package_version == "1.1.0"
 
     def test_runtime_info_matches_package(self) -> None:
         assert runtime_info().version == package_version

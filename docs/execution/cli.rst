@@ -9,10 +9,10 @@ and adds no dependencies beyond the Python standard library.
 .. code-block:: console
 
    $ microquantum --version
-   microquantum 1.0.0
+   microquantum 1.1.0
 
    $ microquantum info
-   MicroQuantum 1.0.0
+   MicroQuantum 1.1.0
    Runtime:   ExecutionRuntime
    Python:    3.12.8
    NumPy:     2.2.1
