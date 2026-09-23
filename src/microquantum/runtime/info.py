@@ -3,7 +3,7 @@
 :class:`RuntimeInfo` / :func:`runtime_info` expose a small, JSON-safe snapshot
 of what the runtime can actually do — nothing is guessed:
 
-* MicroQuantum version (from installed distribution metadata);
+* MicroQuantum version (single-sourced from the running code);
 * Python / NumPy versions of the running interpreter;
 * the runtime implementation and its execution strategies
   (:class:`~microquantum.runtime.ExecutionStrategy`);
@@ -20,7 +20,6 @@ from __future__ import annotations
 
 import platform
 from dataclasses import dataclass
-from importlib import metadata
 from typing import Any, Optional
 
 import numpy as np
@@ -28,10 +27,28 @@ import numpy as np
 from ..backends.registry import BackendRegistry, default_registry
 from .strategy import ExecutionStrategy
 
-try:  # pragma: no cover - defensive fallback
-    _MQ_VERSION = metadata.version("microquantum")
-except metadata.PackageNotFoundError:  # pragma: no cover - bare source tree
-    _MQ_VERSION = "unknown"
+
+def _sdk_version() -> str:
+    """Single-sourced SDK version: the running code first, dist metadata next.
+
+    Prefers ``microquantum.__version__`` so CLIs, introspection and
+    records always report the code that is actually executing.
+    """
+    try:
+        from .. import __version__ as source_version
+    except ImportError:  # pragma: no cover - defensive fallback
+        source_version = ""
+    if isinstance(source_version, str) and source_version:
+        return source_version
+    try:
+        from importlib import metadata
+
+        return metadata.version("microquantum")
+    except metadata.PackageNotFoundError:  # pragma: no cover - bare source tree
+        return "unknown"
+
+
+_MQ_VERSION = _sdk_version()
 
 RUNTIME_IMPLEMENTATION = "ExecutionRuntime"
 

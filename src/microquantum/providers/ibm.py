@@ -63,8 +63,10 @@ class IBMQuantumProvider(HardwareProvider):
     ) -> None:
         super().__init__(credentials or IBMQuantumCredentials.from_env())
         self._backend = backend
-        self._transport = transport or functools.partial(
-            http_request, proxy=self._credentials.proxy
+        self._transport = (
+            transport
+            if transport is not None
+            else functools.partial(http_request, proxy=self._credentials.proxy)
         )
         self._base_url = self._credentials.base_url or _DEFAULT_BASE_URL
         self._shots_by_job: dict[str, int] = {}

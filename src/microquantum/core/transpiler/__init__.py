@@ -57,6 +57,9 @@ __all__ = [
     "GateFusionPass",
     "LayoutPass",
     "SchedulingPass",
+    "SwapRoutingPass",
+    "NoiseAwareLayout",
+    "CommutationAwareCancellation",
     "default_pipeline",
     "transpile_with",
 ]
@@ -329,6 +332,326 @@ class SchedulingPass(AnalysisPass):
         context.record("depth", circuit.depth())
         context.record("num_gates", circuit.num_gates)
         return circuit
+
+
+def _bfs_path(
+    adjacency: dict[int, set[int]], source: int, target: int
+) -> list[int]:
+    """Shortest path (inclusive) or empty list when disconnected."""
+    if source == target:
+        return [source]
+    visited: dict[int, int | None] = {source: None}
+    queue = [source]
+    while queue:
+        node = queue.pop(0)
+        for neighbor in sorted(adjacency.get(node, ())):
+            if neighbor not in visited:
+                visited[neighbor] = node
+                if neighbor == target:
+                    path = [target]
+                    while path[-1] != source:
+                        previous = visited[path[-1]]
+                        assert previous is not None
+                        path.append(previous)
+                    return list(reversed(path))
+                queue.append(neighbor)
+    return []
+
+
+class SwapRoutingPass(TransformationPass):
+    """Route two-qubit gates onto device connectivity with SWAPs.
+
+    Greedily walks each non-adjacent pair together along a shortest
+    path, inserting logical SWAPs while tracking the logical→slot
+    permutation.  Output satisfies ``U_routed = M · U_orig`` with ``M``
+    the logical-to-slot basis permutation from ``final_layout``
+    (initial mapping is identity, so readout remaps by ``final_layout``;
+    measurement indices are rewritten to physical slots accordingly).
+    The inserted-SWAP count is recorded as ``"swaps_added"`` and the
+    final mapping as ``"final_layout"`` (``{logical: slot}``).
+
+    Args:
+        architecture: Hardware-independent architecture providing a
+            ``topology`` with ``edges`` (or a ``to_coupling_map()``).
+        coupling: Explicit edge list alternative to *architecture*.
+    """
+
+    def __init__(
+        self, architecture: Any = None, coupling: list[tuple[int, int]] | None = None
+    ) -> None:
+        self._architecture = architecture
+        self._coupling = list(coupling) if coupling is not None else None
+
+    @property
+    def name(self) -> str:
+        return "swap-routing"
+
+    def _edges(self) -> list[tuple[int, int]]:
+        """Resolve the connectivity edge list."""
+        if self._coupling is not None:
+            return [(int(a), int(b)) for a, b in self._coupling]
+        arch = self._architecture
+        if arch is None:
+            return []
+        topo = getattr(arch, "topology", None)
+        raw = getattr(topo, "edges", None) if topo is not None else None
+        if raw:
+            return [(int(a), int(b)) for a, b in raw]
+        return []
+
+    def transform(self, circuit: Any, context: PassContext) -> Any:
+        from microquantum.core.circuit import (  # noqa: PLC0415
+            QuantumCircuit,
+            _narrow_concrete,
+        )
+
+        edges = self._edges()
+        if not edges:
+            context.record("swaps_added", 0)
+            return circuit
+        if self._architecture is not None and hasattr(
+            self._architecture, "validate_circuit_qubits"
+        ):
+            self._architecture.validate_circuit_qubits(circuit.num_qubits)
+        adjacency: dict[int, set[int]] = {}
+        for first, second in edges:
+            adjacency.setdefault(first, set()).add(second)
+            adjacency.setdefault(second, set()).add(first)
+        out = QuantumCircuit(circuit.num_qubits)
+        at = list(range(circuit.num_qubits))
+        loc = list(range(circuit.num_qubits))
+        swaps = 0
+
+        def emit_swap(slot_a: int, slot_b: int) -> None:
+            """Emit SWAP on slots and update the permutation."""
+            nonlocal swaps
+            out.swap(slot_a, slot_b)
+            logical_a, logical_b = at[slot_a], at[slot_b]
+            at[slot_a], at[slot_b] = logical_b, logical_a
+            loc[logical_a], loc[logical_b] = slot_b, slot_a
+            swaps += 1
+
+        def emit_concrete(op: Any, slots: list[int]) -> None:
+            """Emit a concrete gate on physical slots."""
+            name = op.name.lower()
+            if hasattr(out, name):
+                getattr(out, name)(*[int(s) for s in slots])
+            else:
+                out.append(op, [int(s) for s in slots])
+
+        for instr in circuit._gate_instructions:  # noqa: SLF001
+            if circuit._is_parameterized_gate(instr):  # noqa: SLF001
+                from microquantum.core.circuit import _narrow_parameterized  # noqa: PLC0415
+
+                gate_name, param, target = _narrow_parameterized(instr)
+                getattr(out, str(gate_name))(param, int(loc[int(target)]))
+                continue
+            op, targets = _narrow_concrete(instr)
+            logical = [int(t) for t in targets]
+            if len(logical) == 1:
+                emit_concrete(op, [loc[logical[0]]])
+            elif len(logical) == 2:
+                slot_a, slot_b = loc[logical[0]], loc[logical[1]]
+                if slot_b in adjacency.get(slot_a, ()):
+                    emit_concrete(op, [slot_a, slot_b])
+                else:
+                    path = _bfs_path(adjacency, slot_a, slot_b)
+                    if len(path) < 2:
+                        raise ValueError(
+                            f"No routing path between qubits {slot_a} and {slot_b}"
+                        )
+                    # Walk `a` adjacent to `b` without crossing it: all
+                    # steps except the last, so `b` keeps its slot.
+                    for step in range(len(path) - 2):
+                        emit_swap(path[step], path[step + 1])
+                    emit_concrete(op, [loc[logical[0]], loc[logical[1]]])
+            else:
+                emit_concrete(op, [loc[t] for t in logical])
+        for m in circuit._measurements:  # noqa: SLF001
+            out.measure(int(loc[int(m)]))
+        context.record("swaps_added", swaps)
+        context.record("final_layout", {logical: slot for logical, slot in enumerate(loc)})
+        return out
+
+
+class NoiseAwareLayout(TransformationPass):
+    """Assign logical qubits to physical qubits by error rates.
+
+    Greedily places the most-measured logical qubits onto the physical
+    qubits with the lowest readout error (ties broken by gate-error
+    average, then index).  The circuit passes through unchanged; the
+    decision — the measurable product — is recorded as ``"layout"``
+    (``{logical: physical}``) plus ``"estimated_readout_error"``.
+
+    Args:
+        architecture: Architecture with ``num_qubits`` (topology edges
+            are not required for placement).
+        calibration: Readout/gate error mapping or a
+            ``CalibrationData`` object (``readout_errors`` / 
+            ``gate_errors`` attributes).  Missing entries default to 0.
+    """
+
+    def __init__(self, architecture: Any, calibration: Any = None) -> None:
+        if architecture is None:
+            raise ValueError("NoiseAwareLayout requires an architecture")
+        self._architecture = architecture
+        self._calibration = calibration
+
+    @property
+    def name(self) -> str:
+        return "noise-aware-layout"
+
+    def _readout_error(self, physical: int) -> float:
+        """Readout error for a physical qubit (0 when unknown)."""
+        calibration = self._calibration
+        if calibration is None:
+            return 0.0
+        table = getattr(calibration, "readout_errors", None)
+        if isinstance(table, dict):
+            for key in (f"q{physical}", str(physical), physical):
+                if key in table:
+                    value = table[key]
+                    return float(value) if isinstance(value, (int, float)) else 0.0
+            return 0.0
+        if isinstance(calibration, dict):
+            raw = calibration.get(f"q{physical}", calibration.get(physical, 0.0))
+            return float(raw) if isinstance(raw, (int, float)) else 0.0
+        return 0.0
+
+    def transform(self, circuit: Any, context: PassContext) -> Any:
+        if hasattr(self._architecture, "validate_circuit_qubits"):
+            self._architecture.validate_circuit_qubits(circuit.num_qubits)
+        num_physical = int(self._architecture.num_qubits)
+        measurements = list(getattr(circuit, "_measurements", []) or [])
+        pressure = [0] * circuit.num_qubits
+        for m in measurements:
+            pressure[int(m)] += 10
+        for instr in circuit._gate_instructions:  # noqa: SLF001
+            for target in circuit._get_targets(instr):  # noqa: SLF001
+                pressure[int(target)] += 1
+        logical_order = sorted(range(circuit.num_qubits), key=lambda q: (-pressure[q], q))
+        physical_order = sorted(
+            range(num_physical), key=lambda p: (self._readout_error(p), p)
+        )
+        layout = {logical: physical_order[i] for i, logical in enumerate(logical_order)}
+        context.layout = dict(layout)
+        context.record("layout", dict(layout))
+        context.record(
+            "estimated_readout_error",
+            sum(self._readout_error(layout[q]) for q in range(circuit.num_qubits) if q in measurements),
+        )
+        return circuit
+
+
+# (two-qubit gate, single-qubit gate, allowed position) commutation facts.
+# Position is "control"/"target" for asymmetric gates, "either" for symmetric.
+_COMMUTING_SINGLES: set[tuple[str, str, str]] = {
+    ("cx", "x", "target"),
+    ("cnot", "x", "target"),
+    ("cx", "z", "control"),
+    ("cnot", "z", "control"),
+    ("cz", "z", "either"),
+}
+
+
+class CommutationAwareCancellation(TransformationPass):
+    """Cancel inverses separated only by commuting gates.
+
+    Slides commuting single-qubit gates (X past a CX target, Z past a
+    CX control or either CZ side) until self-inverse pairs become
+    adjacent, then cancels them.  Records ``"slid"`` (slides performed)
+    and ``"cancelled_pairs"``.  Parameterized and >2-qubit gates block
+    sliding conservatively.
+    """
+
+    _SELF_INVERSE = frozenset({"h", "x", "y", "z", "cx", "cnot", "cy", "cz", "swap"})
+
+    @property
+    def name(self) -> str:
+        return "commutation-aware-cancellation"
+
+    @staticmethod
+    def _key(
+        instr: Any, narrow_concrete: Any, narrow_parameterized: Any, is_parameterized: Any
+    ) -> tuple[str, tuple[int, ...], bool] | None:
+        """Normalize an instruction to (kind, targets, is_single_concrete)."""
+        if is_parameterized(instr):
+            name, _, target = narrow_parameterized(instr)
+            return (f"p:{name}", (int(target),), False)
+        op, targets = narrow_concrete(instr)
+        return (op.name.lower(), tuple(int(t) for t in targets), len(targets) == 1)
+
+    @classmethod
+    def _commutes(cls, single: str, gate: str, targets: tuple[int, ...], qubit: int) -> bool:
+        """True when single-qubit *single* on *qubit* commutes with 2q *gate*."""
+        if len(targets) != 2:
+            return False
+        if (gate, single, "either") in _COMMUTING_SINGLES:
+            return True
+        position = "control" if targets[0] == qubit else "target" if targets[1] == qubit else ""
+        return bool(position) and (gate, single, position) in _COMMUTING_SINGLES
+
+    def transform(self, circuit: Any, context: PassContext) -> Any:
+        from microquantum.core.circuit import (  # noqa: PLC0415
+            QuantumCircuit,
+            _narrow_concrete,
+            _narrow_parameterized,
+        )
+
+        items: list[Any] = list(circuit._gate_instructions)  # noqa: SLF001
+        slid = 0
+        is_param = circuit._is_parameterized_gate  # noqa: SLF001
+        for _ in range(len(items) + 1):
+            moved = False
+            index = 0
+            while index < len(items) - 1:
+                first = self._key(items[index], _narrow_concrete, _narrow_parameterized, is_param)
+                second = self._key(items[index + 1], _narrow_concrete, _narrow_parameterized, is_param)
+                if (
+                    first is not None
+                    and second is not None
+                    and first[2]
+                    and not second[0].startswith("p:")
+                    and len(second[1]) == 2
+                    and first[1][0] in second[1]
+                    and self._commutes(first[0], second[0], second[1], first[1][0])
+                ):
+                    items[index], items[index + 1] = items[index + 1], items[index]
+                    slid += 1
+                    moved = True
+                index += 1
+            if not moved:
+                break
+        out = QuantumCircuit(circuit.num_qubits)
+        pending: list[tuple[Any, list[int]]] = []
+        cancelled = 0
+        for instr in items:
+            if is_param(instr):
+                for op, tg in pending:
+                    out.append(op, tg)
+                pending.clear()
+                gate_name, param, target = _narrow_parameterized(instr)
+                getattr(out, str(gate_name))(param, int(target))
+                continue
+            op, targets = _narrow_concrete(instr)
+            key = (op.name.lower(), [int(t) for t in targets])
+            if (
+                pending
+                and pending[-1][0].name.lower() == key[0]
+                and pending[-1][1] == key[1]
+                and key[0] in self._SELF_INVERSE
+            ):
+                pending.pop()
+                cancelled += 1
+            else:
+                pending.append((op, key[1]))
+        for op, tg in pending:
+            out.append(op, tg)
+        for m in circuit._measurements:  # noqa: SLF001
+            out.measure(int(m))
+        context.record("slid", slid)
+        context.record("cancelled_pairs", cancelled)
+        return out
 
 
 def default_pipeline(target: TargetGateSet | None = None) -> PassManager:

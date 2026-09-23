@@ -127,6 +127,7 @@ def execute_batch(
     seed: Optional[int] = None,
     backend: Optional[Backend] = None,
     raise_on_error: bool = True,
+    scheduler: Optional[DAGScheduler] = None,
 ) -> list[BatchResult]:
     """Execute a sequence of circuits/plans, collecting all results."""
     return _DEFAULT_RUNTIME.execute_batch(
@@ -135,6 +136,7 @@ def execute_batch(
         seed=seed,
         backend=backend,
         raise_on_error=raise_on_error,
+        scheduler=scheduler,
     )
 
 

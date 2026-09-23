@@ -63,9 +63,12 @@ from .states import State
 from .tensor import expand_operator, tensor
 from .transpiler import (
     AnalysisPass,
+    CommutationAwareCancellation,
+    NoiseAwareLayout,
     Pass,
     PassContext,
     PassManager,
+    SwapRoutingPass,
     TargetGateSet,
     TransformationPass,
 )
@@ -161,5 +164,8 @@ __all__ = [
     "State",
     "AnalysisPass",
     "PassContext",
+    "SwapRoutingPass",
+    "NoiseAwareLayout",
+    "CommutationAwareCancellation",
     "TransformationPass",
 ]
